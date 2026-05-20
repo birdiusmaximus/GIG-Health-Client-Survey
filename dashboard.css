@@ -44,7 +44,7 @@ body.dashboard .progress {
 /* Stats row */
 .stats {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
   margin-bottom: 2.5rem;
 }
@@ -84,62 +84,60 @@ body.dashboard .progress {
 .stat-value.is-warn { color: var(--sodium); }
 .stat-value.is-bad  { color: var(--flame); }
 
-/* Budget stat — replaces the "case-study %" with a visual indicator */
+/* Budget stat — 3-zone scale (Higher / On par / Cheaper) with a
+   vertical marker positioned at the weighted average of all responses */
 .stat.is-budget {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 0.7rem;
+  gap: 0.8rem;
 }
 .budget-display {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.55rem;
 }
-.budget-bar {
-  height: 12px;
-  width: 100%;
-  background: rgba(254, 246, 246, 0.05);
-  border-radius: 999px;
-  overflow: hidden;
-  display: flex;
-}
-.budget-seg {
-  height: 100%;
-  transition: width 0.4s ease;
-}
-.budget-seg.is-higher  { background: var(--flame); }
-.budget-seg.is-on-par  { background: rgba(254, 246, 246, 0.55); }
-.budget-seg.is-cheaper { background: var(--copper); }
 
-.budget-legend {
+.budget-scale {
+  position: relative;
   display: flex;
-  gap: 0.9rem;
-  font-size: 0.72rem;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(254, 246, 246, 0.06);
+  overflow: visible;        /* let the marker extend beyond the bar */
+}
+.budget-zone { flex: 1; }
+.budget-zone.is-higher  { background: color-mix(in srgb, var(--flame)  55%, transparent); border-radius: 999px 0 0 999px; }
+.budget-zone.is-on-par  { background: rgba(254, 246, 246, 0.18); }
+.budget-zone.is-cheaper { background: color-mix(in srgb, var(--copper) 55%, transparent); border-radius: 0 999px 999px 0; }
+
+.budget-marker {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 3px;
+  background: var(--paper);
+  border-radius: 2px;
+  transform: translateX(-50%);
+  box-shadow: 0 0 0 2px rgba(13, 26, 45, 0.7), 0 0 12px rgba(254, 246, 246, 0.4);
+  z-index: 2;
+  transition: left 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.budget-marker.is-empty { display: none; }
+
+.budget-axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.58rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--ink-soft);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
 }
-.budget-legend-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3em;
-}
-.budget-legend-item.is-mute { color: var(--ink-faint); font-weight: 500; }
-.budget-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  display: inline-block;
-}
-.budget-dot.is-higher  { background: var(--flame); }
-.budget-dot.is-on-par  { background: rgba(254, 246, 246, 0.55); }
-.budget-dot.is-cheaper { background: var(--copper); }
-.budget-dot.is-na      { background: var(--ink-faint); }
 
 .budget-summary {
-  margin: 0;
-  font-size: 1.05rem;
+  margin: 0.1rem 0 0;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--ink);
   line-height: 1.1;

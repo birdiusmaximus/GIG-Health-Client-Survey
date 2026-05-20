@@ -390,18 +390,21 @@ function renderStats(rs) {
   const cntHigher  = rs.filter(r => r.q4_budget === 'higher').length;
   const cntOnPar   = rs.filter(r => r.q4_budget === 'on_par').length;
   const cntCheaper = rs.filter(r => r.q4_budget === 'cheaper').length;
-  const cntNa      = rs.filter(r => r.q4_budget === 'na').length;
-  const budgetTotal = cntHigher + cntOnPar + cntCheaper; // exclude N/A from the bar
-  const pctHigher  = pct(cntHigher,  budgetTotal);
-  const pctOnPar   = pct(cntOnPar,   budgetTotal);
-  const pctCheaper = pct(cntCheaper, budgetTotal);
+  const budgetTotal = cntHigher + cntOnPar + cntCheaper;     // exclude N/A
 
-  // Dominant budget summary
+  // Score per response: higher = -1, on par = 0, cheaper = +1
+  // Average across responses → range [-1, +1]
+  // Then convert to a 0–100% position along the scale bar (0 = far left = higher, 100 = far right = cheaper)
+  let markerPos = 50;
   let dom = 'No data';
   if (budgetTotal > 0) {
-    if (cntOnPar >= cntHigher && cntOnPar >= cntCheaper) dom = 'Mostly on par';
-    else if (cntHigher > cntCheaper) dom = 'Often higher';
-    else dom = 'Often cheaper';
+    const avgScore = (cntCheaper - cntHigher) / budgetTotal;     // [-1, 1]
+    markerPos = ((avgScore + 1) / 2) * 100;                       // [0, 100]
+    if      (markerPos < 25) dom = 'Often higher than others';
+    else if (markerPos < 45) dom = 'Slightly higher';
+    else if (markerPos <= 55) dom = 'On par with the market';
+    else if (markerPos <= 75) dom = 'Slightly cheaper';
+    else                     dom = 'Often cheaper than others';
   }
 
   statsEl.innerHTML = `
@@ -419,16 +422,16 @@ function renderStats(rs) {
     </div>
     <div class="stat is-budget">
       <div class="budget-display">
-        <div class="budget-bar" role="img" aria-label="Budget distribution">
-          <span class="budget-seg is-higher"  style="width:${pctHigher}%"  title="Higher than others: ${cntHigher}"></span>
-          <span class="budget-seg is-on-par"  style="width:${pctOnPar}%"   title="On par: ${cntOnPar}"></span>
-          <span class="budget-seg is-cheaper" style="width:${pctCheaper}%" title="Cheaper than others: ${cntCheaper}"></span>
+        <div class="budget-scale" role="img" aria-label="Budget position scale">
+          <span class="budget-zone is-higher"  title="Higher than others: ${cntHigher}"></span>
+          <span class="budget-zone is-on-par"  title="On par: ${cntOnPar}"></span>
+          <span class="budget-zone is-cheaper" title="Cheaper than others: ${cntCheaper}"></span>
+          <span class="budget-marker ${budgetTotal === 0 ? 'is-empty' : ''}" style="left:${markerPos}%" title="Average of ${budgetTotal} responses"></span>
         </div>
-        <div class="budget-legend">
-          <span class="budget-legend-item"><span class="budget-dot is-higher"></span>${cntHigher}</span>
-          <span class="budget-legend-item"><span class="budget-dot is-on-par"></span>${cntOnPar}</span>
-          <span class="budget-legend-item"><span class="budget-dot is-cheaper"></span>${cntCheaper}</span>
-          ${cntNa ? `<span class="budget-legend-item is-mute"><span class="budget-dot is-na"></span>${cntNa} n/a</span>` : ''}
+        <div class="budget-axis">
+          <span>Higher</span>
+          <span>On par</span>
+          <span>Cheaper</span>
         </div>
         <p class="budget-summary">${dom}</p>
       </div>
