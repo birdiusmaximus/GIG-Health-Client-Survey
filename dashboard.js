@@ -220,12 +220,31 @@ function renderPips(score, total = 5) {
 
 function renderTags(r) {
   const tags = [];
-  if (r.q6_permission === 'yes') tags.push('<span class="r-tag is-flame">Quotable</span>');
-  if (r.q8_marketing === 'yes_as_is') tags.push('<span class="r-tag is-green">Case study</span>');
-  else if (r.q8_marketing === 'yes_adapted') tags.push('<span class="r-tag is-green">Case study · adapted</span>');
-  else if (r.q8_marketing === 'possibly') tags.push('<span class="r-tag is-yellow">Case study · check</span>');
-  if (r.q9_referral && r.q9_referral.trim()) tags.push('<span class="r-tag is-mute">Referral</span>');
-  return tags.length ? `<div class="r-tags">${tags.join('')}</div>` : '<div class="r-tags"></div>';
+
+  // Quotable — always show, green if yes / red if no
+  if (r.q6_permission === 'yes') {
+    tags.push('<span class="r-tag is-good">Quotable</span>');
+  } else {
+    tags.push('<span class="r-tag is-bad">Not quotable</span>');
+  }
+
+  // Case-study tag — colour reflects status (as-is = green, adapted/check = yellow, no = red)
+  if (r.q8_marketing === 'yes_as_is') {
+    tags.push('<span class="r-tag is-good">Case study</span>');
+  } else if (r.q8_marketing === 'yes_adapted') {
+    tags.push('<span class="r-tag is-warn">Case study · adapted</span>');
+  } else if (r.q8_marketing === 'possibly') {
+    tags.push('<span class="r-tag is-warn">Case study · check</span>');
+  } else if (r.q8_marketing === 'no') {
+    tags.push('<span class="r-tag is-bad">No case study</span>');
+  }
+
+  // Referral — only show if present, always green
+  if (r.q9_referral && r.q9_referral.trim()) {
+    tags.push('<span class="r-tag is-good">Referral</span>');
+  }
+
+  return `<div class="r-tags">${tags.join('')}</div>`;
 }
 
 function renderResponse(r) {
@@ -235,23 +254,24 @@ function renderResponse(r) {
 
   return `
     <details class="response" data-id="${escapeHtml(r.id)}" ${isEditing ? 'open' : ''}>
-      <button class="r-delete" type="button" data-delete-id="${escapeHtml(r.id)}" title="Delete this response" aria-label="Delete this response">×</button>
       <summary>
         <div>
           <div class="r-project">${escapeHtml(r.q1_project_name)}</div>
           <div class="r-date">${fmtDate(r.submittedAt)}</div>
         </div>
         <div class="r-rating">
-          <span class="r-rating-label">Quality · ${QUALITY_LABEL[r.q2_quality]}</span>
+          <span class="r-rating-label">Quality</span>
           ${renderPips(qScore)}
+          <span class="r-rating-value">${QUALITY_LABEL[r.q2_quality]}</span>
         </div>
         <div class="r-rating">
-          <span class="r-rating-label">Creativity · ${CREATIVITY_LABEL[r.q3_creativity]}</span>
+          <span class="r-rating-label">Creativity</span>
           ${renderPips(cScore)}
+          <span class="r-rating-value">${CREATIVITY_LABEL[r.q3_creativity]}</span>
         </div>
         <div class="r-rating">
           <span class="r-rating-label">Budget</span>
-          <span style="font-size: 0.85rem; color: var(--ink);">${BUDGET_LABEL[r.q4_budget]}</span>
+          <span class="r-rating-value">${BUDGET_LABEL[r.q4_budget]}</span>
         </div>
         ${renderTags(r)}
       </summary>
@@ -290,6 +310,7 @@ function renderStaticBody(r) {
       </div>
       <div class="r-actions">
         <button class="r-edit-btn" type="button" data-edit-id="${escapeHtml(r.id)}">Edit</button>
+        <button class="r-delete-btn" type="button" data-delete-id="${escapeHtml(r.id)}">Delete</button>
       </div>
     </div>
   `;
@@ -365,8 +386,23 @@ function renderStats(rs) {
   const total = rs.length;
   const highQual = rs.filter(r => r.q2_quality === 'excellent' || r.q2_quality === 'high').length;
   const highCrea = rs.filter(r => r.q3_creativity === 'groundbreaking' || r.q3_creativity === 'really_creative').length;
-  const quotable = rs.filter(r => r.q6_permission === 'yes').length;
-  const caseable = rs.filter(r => r.q8_marketing !== 'no').length;
+
+  const cntHigher  = rs.filter(r => r.q4_budget === 'higher').length;
+  const cntOnPar   = rs.filter(r => r.q4_budget === 'on_par').length;
+  const cntCheaper = rs.filter(r => r.q4_budget === 'cheaper').length;
+  const cntNa      = rs.filter(r => r.q4_budget === 'na').length;
+  const budgetTotal = cntHigher + cntOnPar + cntCheaper; // exclude N/A from the bar
+  const pctHigher  = pct(cntHigher,  budgetTotal);
+  const pctOnPar   = pct(cntOnPar,   budgetTotal);
+  const pctCheaper = pct(cntCheaper, budgetTotal);
+
+  // Dominant budget summary
+  let dom = 'No data';
+  if (budgetTotal > 0) {
+    if (cntOnPar >= cntHigher && cntOnPar >= cntCheaper) dom = 'Mostly on par';
+    else if (cntHigher > cntCheaper) dom = 'Often higher';
+    else dom = 'Often cheaper';
+  }
 
   statsEl.innerHTML = `
     <div class="stat is-accent">
@@ -374,22 +410,44 @@ function renderStats(rs) {
       <span class="stat-label">Responses</span>
     </div>
     <div class="stat">
-      <span class="stat-value">${pct(highQual, total)}<span class="stat-unit">%</span></span>
+      <span class="stat-value ${scoreColorClass(highQual, total)}">${pct(highQual, total)}<span class="stat-unit">%</span></span>
       <span class="stat-label">High quality</span>
     </div>
     <div class="stat">
-      <span class="stat-value">${pct(highCrea, total)}<span class="stat-unit">%</span></span>
+      <span class="stat-value ${scoreColorClass(highCrea, total)}">${pct(highCrea, total)}<span class="stat-unit">%</span></span>
       <span class="stat-label">Creative</span>
     </div>
-    <div class="stat">
-      <span class="stat-value">${pct(quotable, total)}<span class="stat-unit">%</span></span>
-      <span class="stat-label">Quotable</span>
-    </div>
-    <div class="stat">
-      <span class="stat-value">${pct(caseable, total)}<span class="stat-unit">%</span></span>
-      <span class="stat-label">Case-study ok</span>
+    <div class="stat is-budget">
+      <div class="budget-display">
+        <div class="budget-bar" role="img" aria-label="Budget distribution">
+          <span class="budget-seg is-higher"  style="width:${pctHigher}%"  title="Higher than others: ${cntHigher}"></span>
+          <span class="budget-seg is-on-par"  style="width:${pctOnPar}%"   title="On par: ${cntOnPar}"></span>
+          <span class="budget-seg is-cheaper" style="width:${pctCheaper}%" title="Cheaper than others: ${cntCheaper}"></span>
+        </div>
+        <div class="budget-legend">
+          <span class="budget-legend-item"><span class="budget-dot is-higher"></span>${cntHigher}</span>
+          <span class="budget-legend-item"><span class="budget-dot is-on-par"></span>${cntOnPar}</span>
+          <span class="budget-legend-item"><span class="budget-dot is-cheaper"></span>${cntCheaper}</span>
+          ${cntNa ? `<span class="budget-legend-item is-mute"><span class="budget-dot is-na"></span>${cntNa} n/a</span>` : ''}
+        </div>
+        <p class="budget-summary">${dom}</p>
+      </div>
+      <span class="stat-label">Budget position</span>
     </div>
   `;
+}
+
+// Map a count/total ratio to a colour-tone class for stat values
+// - empty dataset → no class (avoid misleading red on zero responses)
+// - ≥ 75% good (Copper green)
+// - 50–74% warn (Sodium yellow)
+// - < 50% bad  (Flame red)
+function scoreColorClass(n, total) {
+  if (!total) return '';
+  const p = (n / total) * 100;
+  if (p >= 75) return 'is-good';
+  if (p >= 50) return 'is-warn';
+  return 'is-bad';
 }
 
 function applyFilters() {
