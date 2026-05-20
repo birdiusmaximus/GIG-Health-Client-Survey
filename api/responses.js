@@ -12,12 +12,12 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY)
-  ? createClient(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY,
-      { auth: { persistSession: false } }
-    )
+// Strip trailing slashes / whitespace defensively (see api/submit.js)
+const cleanUrl = (process.env.SUPABASE_URL || '').trim().replace(/\/+$/, '');
+const cleanKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+
+const supabase = (cleanUrl && cleanKey)
+  ? createClient(cleanUrl, cleanKey, { auth: { persistSession: false } })
   : null;
 
 export default async function handler(req, res) {

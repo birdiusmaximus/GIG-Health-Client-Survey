@@ -7,12 +7,14 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY)
-  ? createClient(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY,
-      { auth: { persistSession: false } }
-    )
+// Strip trailing slashes and accidental whitespace — supabase-js
+// builds URLs by appending paths to SUPABASE_URL, so a trailing slash
+// produces a double-slash that PostgREST rejects as "invalid path".
+const cleanUrl = (process.env.SUPABASE_URL || '').trim().replace(/\/+$/, '');
+const cleanKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+
+const supabase = (cleanUrl && cleanKey)
+  ? createClient(cleanUrl, cleanKey, { auth: { persistSession: false } })
   : null;
 
 // Whitelist of allowed values per radio question — guards against
@@ -76,11 +78,15 @@ export default async function handler(req, res) {
 
   if (error) {
     console.error('[submit] supabase insert error', error);
+    let host = '(none)';
+    try { host = cleanUrl ? new URL(cleanUrl).host : '(empty SUPABASE_URL)'; }
+    catch (e) { host = `(unparseable: "${cleanUrl}")`; }
     return res.status(500).json({
       error: 'failed to save response',
       detail: error.message,
       code: error.code,
       hint: error.hint,
+      _supabaseHost: host,    // diagnostic — remove once working
     });
   }
 
