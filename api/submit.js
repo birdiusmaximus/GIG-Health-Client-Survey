@@ -78,16 +78,7 @@ export default async function handler(req, res) {
 
   if (error) {
     console.error('[submit] supabase insert error', error);
-    let host = '(none)';
-    try { host = cleanUrl ? new URL(cleanUrl).host : '(empty SUPABASE_URL)'; }
-    catch (e) { host = `(unparseable: "${cleanUrl}")`; }
-    return res.status(500).json({
-      error: 'failed to save response',
-      detail: error.message,
-      code: error.code,
-      hint: error.hint,
-      _supabaseHost: host,    // diagnostic — remove once working
-    });
+    return res.status(500).json({ error: 'failed to save response' });
   }
 
   console.log('[submit] saved response id:', data.id);
