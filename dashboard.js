@@ -433,7 +433,6 @@ function renderStats(rs) {
           <span>On par</span>
           <span>Cheaper</span>
         </div>
-        <p class="budget-summary">${dom}</p>
       </div>
       <span class="stat-label">Budget position</span>
     </div>

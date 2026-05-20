@@ -89,8 +89,11 @@ body.dashboard .progress {
 .stat.is-budget {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;        /* bar+axis centred vertically */
   gap: 0.8rem;
+}
+.stat.is-budget .stat-label {
+  margin-top: auto;               /* push label to the bottom of the card */
 }
 .budget-display {
   display: flex;
