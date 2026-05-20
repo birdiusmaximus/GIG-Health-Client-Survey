@@ -574,6 +574,97 @@ body.has-video .scene-overlay { opacity: 1; }
 .continue-arrow { transition: transform 0.25s ease; }
 .continue:not(:disabled):hover .continue-arrow { transform: translateX(4px); }
 
+/* ─── Submission success overlay ─────────────────────────────── */
+.submit-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(120% 90% at 30% 30%, var(--dusk) 0%, var(--night) 60%, #050a14 100%);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+.submit-overlay[hidden] { display: none; }
+.submit-overlay.is-shown {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.submit-card {
+  width: min(560px, 90vw);
+  padding: 4rem 3rem;
+  text-align: left;
+  transform: translateY(24px);
+  transition: transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.submit-overlay.is-shown .submit-card { transform: translateY(0); }
+
+.submit-card .kicker {
+  margin: 0 0 2rem;
+}
+
+.submit-title {
+  margin: 0 0 1.4rem;
+  font-family: var(--font);
+  font-size: clamp(2.6rem, 5.5vw, 4.4rem);
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+}
+
+.submit-text {
+  margin: 0 0 0;
+  font-size: 1.05rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  max-width: 38ch;
+}
+.submit-text em {
+  font-style: normal;
+  color: var(--flame);
+}
+
+.submit-meta {
+  margin: 2.4rem 0 2.4rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: var(--track-cap);
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.submit-close {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9em;
+  font-family: var(--font);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: var(--track-cap);
+  text-transform: uppercase;
+  padding: 1rem 1.6rem;
+  border: 1px solid var(--ink-faint);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.submit-close:hover {
+  border-color: var(--flame);
+  color: var(--flame);
+}
+.submit-close span:last-child {
+  font-size: 1.4em;
+  line-height: 1;
+  opacity: 0.7;
+}
+
 /* ─── Mobile (under 880px) ────────────────────────────────────── */
 @media (max-width: 880px) {
   .numeral {

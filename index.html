@@ -6,7 +6,7 @@
   <title>GIG — Tell us how we did</title>
   <meta name="theme-color" content="#0D1A2D" />
   <link rel="stylesheet" href="https://use.typekit.net/wek0eum.css" />
-  <link rel="stylesheet" href="./styles.css?v=20" />
+  <link rel="stylesheet" href="./styles.css?v=21" />
 </head>
 <body>
 
@@ -236,6 +236,24 @@
     </button>
   </footer>
 
-  <script type="module" src="./main.js?v=20"></script>
+  <!-- Submission success overlay (shown on a successful POST to /api/submit) -->
+  <div class="submit-overlay" id="submit-overlay" hidden aria-hidden="true">
+    <div class="submit-card">
+      <p class="kicker">
+        <span class="kicker-num">Complete</span>
+        <span class="kicker-sep" aria-hidden="true"></span>
+        <span class="kicker-label">10 of 10</span>
+      </p>
+      <h2 class="submit-title">Thank&nbsp;you.</h2>
+      <p class="submit-text">Your feedback on <em id="submit-project">this project</em> was received — we'll read every word.</p>
+      <p class="submit-meta">— Tim &amp; the GIG team</p>
+      <button class="submit-close" id="submit-close" type="button">
+        <span>Close</span>
+        <span aria-hidden="true">×</span>
+      </button>
+    </div>
+  </div>
+
+  <script type="module" src="./main.js?v=21"></script>
 </body>
 </html>

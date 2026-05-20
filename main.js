@@ -262,7 +262,7 @@ async function submitSurvey() {
     if (res.ok && data.ok) {
       state.submitted = true;
       continueLabel.textContent = 'Thanks ✓';
-      alert('Thanks — your feedback was submitted ✓\n\n' + JSON.stringify(state.answers, null, 2));
+      showSubmitOverlay(state.answers.q1_project_name);
     } else {
       continueLabel.textContent = 'Submit';
       continueBtn.disabled = false;
@@ -272,14 +272,42 @@ async function submitSurvey() {
     console.error(err);
     continueLabel.textContent = 'Submit';
     continueBtn.disabled = false;
-    // POST will 404 on the static dev server (no Vercel functions running);
-    // surface the payload so the user can still see their answers were collected
     alert(
-      'POST /api/submit isn\'t available on the static dev server.\n\n' +
-      'Payload that would be sent:\n' + JSON.stringify(state.answers, null, 2)
+      'Couldn\'t reach /api/submit.\n\n' +
+      'On the static dev server this is expected (no serverless functions). ' +
+      'On Vercel, check the function logs.'
     );
   }
 }
+
+// ──────────────────────────────────────────────────────────────
+// Branded submission success overlay
+// ──────────────────────────────────────────────────────────────
+const submitOverlay = document.getElementById('submit-overlay');
+const submitClose   = document.getElementById('submit-close');
+const submitProject = document.getElementById('submit-project');
+
+function showSubmitOverlay(projectName) {
+  if (!submitOverlay) return;
+  if (submitProject && projectName) submitProject.textContent = projectName;
+  submitOverlay.hidden = false;
+  submitOverlay.setAttribute('aria-hidden', 'false');
+  // next frame so the fade transition fires
+  requestAnimationFrame(() => submitOverlay.classList.add('is-shown'));
+}
+function hideSubmitOverlay() {
+  if (!submitOverlay) return;
+  submitOverlay.classList.remove('is-shown');
+  setTimeout(() => {
+    submitOverlay.hidden = true;
+    submitOverlay.setAttribute('aria-hidden', 'true');
+  }, 500);
+}
+submitClose?.addEventListener('click', hideSubmitOverlay);
+// also dismiss on Escape
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && submitOverlay && !submitOverlay.hidden) hideSubmitOverlay();
+});
 
 // ──────────────────────────────────────────────────────────────
 // Wheel-based scene navigation
