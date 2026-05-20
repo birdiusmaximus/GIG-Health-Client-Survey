@@ -76,7 +76,12 @@ export default async function handler(req, res) {
 
   if (error) {
     console.error('[submit] supabase insert error', error);
-    return res.status(500).json({ error: 'failed to save response' });
+    return res.status(500).json({
+      error: 'failed to save response',
+      detail: error.message,
+      code: error.code,
+      hint: error.hint,
+    });
   }
 
   console.log('[submit] saved response id:', data.id);
