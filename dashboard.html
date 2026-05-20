@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#0D1A2D" />
   <link rel="stylesheet" href="https://use.typekit.net/wek0eum.css" />
   <link rel="stylesheet" href="./styles.css?v=20" />
-  <link rel="stylesheet" href="./dashboard.css?v=2" />
+  <link rel="stylesheet" href="./dashboard.css?v=3" />
 </head>
 <body class="dashboard">
 
@@ -22,13 +22,6 @@
   </header>
 
   <main class="dash-main">
-
-    <!-- Live vs mock indicator (hidden when live) -->
-    <div class="mode-banner" id="mode-banner" hidden>
-      <span class="mode-dot"></span>
-      <span class="mode-text">Showing mock data — connect Supabase + Vercel env vars to see live responses (see <code>SUPABASE_SETUP.md</code>)</span>
-      <button class="mode-clear" id="mode-clear" type="button" title="Clear stored token and retry">Reset token</button>
-    </div>
 
     <!-- Summary stats row -->
     <section class="stats" id="stats">
@@ -64,6 +57,23 @@
 
   </main>
 
+  <!-- Branded delete confirmation -->
+  <div class="confirm-overlay" id="confirm-overlay" hidden aria-hidden="true">
+    <div class="confirm-card">
+      <p class="kicker">
+        <span class="kicker-num">Delete</span>
+        <span class="kicker-sep" aria-hidden="true"></span>
+        <span class="kicker-label">Confirm</span>
+      </p>
+      <h2 class="confirm-title">Delete this response?</h2>
+      <p class="confirm-text">You're about to permanently delete the response for <em id="confirm-project">this project</em>. This can't be undone.</p>
+      <div class="confirm-actions">
+        <button class="confirm-cancel" id="confirm-cancel" type="button">Cancel</button>
+        <button class="confirm-delete" id="confirm-delete" type="button">Delete</button>
+      </div>
+    </div>
+  </div>
+
   <footer class="footbar dash-footer">
     <div class="foot-block foot-meta">
       <span class="foot-label">Demo data</span>
@@ -75,6 +85,6 @@
     </div>
   </footer>
 
-  <script type="module" src="./dashboard.js?v=2"></script>
+  <script type="module" src="./dashboard.js?v=3"></script>
 </body>
 </html>

@@ -1,18 +1,16 @@
-// GET /api/responses — returns all survey responses (most recent first).
+// /api/responses
+//   GET                      → all responses (newest first)
+//   PATCH ?id=<uuid>         → update a response (whitelisted fields only)
+//   DELETE ?id=<uuid>        → delete a response
 //
-// Auth: requires a bearer token matching env var DASHBOARD_TOKEN.
+// Auth on every method: bearer token matching env var DASHBOARD_TOKEN.
 //   Authorization: Bearer <token>
 //   …or query string fallback for easy browser testing:
 //   /api/responses?token=<token>
-//
-// Requires env vars (see SUPABASE_SETUP.md):
-//   SUPABASE_URL
-//   SUPABASE_SERVICE_ROLE_KEY
-//   DASHBOARD_TOKEN              — any random string; gates dashboard access
 
 import { createClient } from '@supabase/supabase-js';
 
-// Strip trailing slashes / whitespace defensively (see api/submit.js)
+// Strip trailing slashes / whitespace defensively
 const cleanUrl = (process.env.SUPABASE_URL || '').trim().replace(/\/+$/, '');
 const cleanKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
 
@@ -20,13 +18,23 @@ const supabase = (cleanUrl && cleanKey)
   ? createClient(cleanUrl, cleanKey, { auth: { persistSession: false } })
   : null;
 
-export default async function handler(req, res) {
-  if (req.method !== 'GET') {
-    res.setHeader('Allow', 'GET');
-    return res.status(405).json({ error: 'method not allowed' });
-  }
+// Allowed enum values per radio question — guards PATCH from writing
+// arbitrary values into the columns we treat as enums client-side
+const ALLOWED = {
+  q2_quality:    ['excellent', 'high', 'fair', 'not_everything', 'disappointing'],
+  q3_creativity: ['groundbreaking', 'really_creative', 'quite_creative', 'average', 'lacking'],
+  q4_budget:     ['higher', 'on_par', 'cheaper', 'na'],
+  q6_permission: ['yes', 'no'],
+  q8_marketing:  ['yes_as_is', 'yes_adapted', 'possibly', 'no'],
+};
+const TEXT_FIELDS = [
+  'q1_project_name', 'q5_experience', 'q7_improvement',
+  'q9_referral', 'q10_trends',
+];
+const NULLABLE_TEXT_FIELDS = new Set(['q9_referral', 'q10_trends']);
 
-  // Token check
+export default async function handler(req, res) {
+  // ── Auth ──────────────────────────────────────────────────────
   const expected = process.env.DASHBOARD_TOKEN;
   if (!expected) {
     return res.status(500).json({ error: 'DASHBOARD_TOKEN env var not set on server' });
@@ -43,17 +51,90 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Supabase not configured on server' });
   }
 
-  const { data, error } = await supabase
-    .from('responses')
-    .select('*')
-    .order('submitted_at', { ascending: false });
-
-  if (error) {
-    console.error('[responses] supabase select error', error);
-    return res.status(500).json({ error: error.message });
+  // ── GET: list all ────────────────────────────────────────────
+  if (req.method === 'GET') {
+    const { data, error } = await supabase
+      .from('responses')
+      .select('*')
+      .order('submitted_at', { ascending: false });
+    if (error) {
+      console.error('[responses GET] supabase error', error);
+      return res.status(500).json({ error: error.message });
+    }
+    res.setHeader('Cache-Control', 'no-store');
+    return res.status(200).json(data);
   }
 
-  // Cache-control: no-store so the dashboard always sees fresh data
-  res.setHeader('Cache-Control', 'no-store');
-  return res.status(200).json(data);
+  // ── PATCH: update a single response (whitelisted fields) ─────
+  if (req.method === 'PATCH') {
+    const id = req.query?.id;
+    if (!id) return res.status(400).json({ error: 'id query param required' });
+
+    const body = req.body && typeof req.body === 'object' ? req.body : null;
+    if (!body) return res.status(400).json({ error: 'invalid body' });
+
+    const updates = {};
+
+    // Radio / enum fields — must be in the allowed list
+    for (const [field, allowed] of Object.entries(ALLOWED)) {
+      if (field in body) {
+        if (!allowed.includes(body[field])) {
+          return res.status(400).json({ error: `invalid value for ${field}` });
+        }
+        updates[field] = body[field];
+      }
+    }
+    // Text fields — trim, length-cap, nullify empties for nullable ones
+    for (const field of TEXT_FIELDS) {
+      if (field in body) {
+        const value = typeof body[field] === 'string' ? body[field].trim().slice(0, 5000) : '';
+        if (!value) {
+          if (NULLABLE_TEXT_FIELDS.has(field)) {
+            updates[field] = null;
+          } else {
+            return res.status(400).json({ error: `${field} cannot be empty` });
+          }
+        } else {
+          updates[field] = value;
+        }
+      }
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: 'no valid fields to update' });
+    }
+
+    const { data, error } = await supabase
+      .from('responses')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('[responses PATCH] supabase error', error);
+      return res.status(500).json({ error: error.message });
+    }
+    return res.status(200).json(data);
+  }
+
+  // ── DELETE: remove a single response ─────────────────────────
+  if (req.method === 'DELETE') {
+    const id = req.query?.id;
+    if (!id) return res.status(400).json({ error: 'id query param required' });
+
+    const { error } = await supabase
+      .from('responses')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('[responses DELETE] supabase error', error);
+      return res.status(500).json({ error: error.message });
+    }
+    return res.status(200).json({ ok: true, id });
+  }
+
+  res.setHeader('Allow', 'GET, PATCH, DELETE');
+  return res.status(405).json({ error: 'method not allowed' });
 }

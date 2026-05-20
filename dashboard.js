@@ -187,17 +187,21 @@ async function loadResponses() {
 // ──────────────────────────────────────────────────────────────
 // Rendering
 // ──────────────────────────────────────────────────────────────
-const responsesEl = document.getElementById('responses');
-const statsEl     = document.getElementById('stats');
-const emptyNoteEl = document.getElementById('empty-note');
-const filterSelEl = document.getElementById('filter-select');
-const searchEl    = document.getElementById('filter-search');
-const exportBtn   = document.getElementById('export-csv');
-const footerCount = document.getElementById('footer-count');
-const modeBanner  = document.getElementById('mode-banner');
-const modeClear   = document.getElementById('mode-clear');
+const responsesEl   = document.getElementById('responses');
+const statsEl       = document.getElementById('stats');
+const emptyNoteEl   = document.getElementById('empty-note');
+const filterSelEl   = document.getElementById('filter-select');
+const searchEl      = document.getElementById('filter-search');
+const exportBtn     = document.getElementById('export-csv');
+const footerCount   = document.getElementById('footer-count');
+const confirmOverlay= document.getElementById('confirm-overlay');
+const confirmProject= document.getElementById('confirm-project');
+const confirmCancel = document.getElementById('confirm-cancel');
+const confirmDelete = document.getElementById('confirm-delete');
 
-let allResponses = [];     // populated by loadResponses(), drives everything below
+let allResponses = [];                  // populated by loadResponses()
+const editingIds = new Set();           // ids currently in edit mode
+let pendingDeleteId = null;             // id queued for delete confirmation
 
 function pct(n, total) { return total === 0 ? 0 : Math.round((n / total) * 100); }
 function fmtDate(iso) {
@@ -227,10 +231,11 @@ function renderTags(r) {
 function renderResponse(r) {
   const qScore = QUALITY_SCORE[r.q2_quality] || 0;
   const cScore = CREATIVITY_SCORE[r.q3_creativity] || 0;
-  const optional = (v) => v && v.trim() ? `<p>${escapeHtml(v)}</p>` : '<p class="r-empty">—</p>';
+  const isEditing = editingIds.has(r.id);
 
   return `
-    <details class="response">
+    <details class="response" data-id="${escapeHtml(r.id)}" ${isEditing ? 'open' : ''}>
+      <button class="r-delete" type="button" data-delete-id="${escapeHtml(r.id)}" title="Delete this response" aria-label="Delete this response">×</button>
       <summary>
         <div>
           <div class="r-project">${escapeHtml(r.q1_project_name)}</div>
@@ -250,33 +255,103 @@ function renderResponse(r) {
         </div>
         ${renderTags(r)}
       </summary>
-      <div class="r-body">
-        <div class="r-field is-wide">
-          <h4>Experience working with GIG</h4>
-          <p>${escapeHtml(r.q5_experience)}</p>
-        </div>
-        <div class="r-field is-wide">
-          <h4>What we could do better</h4>
-          <p>${escapeHtml(r.q7_improvement)}</p>
-        </div>
-        <div class="r-field">
-          <h4>Permission to quote</h4>
-          <p>${r.q6_permission === 'yes' ? 'Yes' : 'No'}</p>
-        </div>
-        <div class="r-field">
-          <h4>Marketing use</h4>
-          <p>${MARKETING_LABEL[r.q8_marketing]}</p>
-        </div>
-        <div class="r-field">
-          <h4>Referral (optional)</h4>
-          ${optional(r.q9_referral)}
-        </div>
-        <div class="r-field">
-          <h4>Trends / challenges (optional)</h4>
-          ${optional(r.q10_trends)}
-        </div>
-      </div>
+      ${isEditing ? renderEditForm(r) : renderStaticBody(r)}
     </details>
+  `;
+}
+
+function renderStaticBody(r) {
+  const optional = (v) => v && v.trim() ? `<p>${escapeHtml(v)}</p>` : '<p class="r-empty">—</p>';
+  return `
+    <div class="r-body">
+      <div class="r-field is-wide">
+        <h4>Experience working with GIG</h4>
+        <p>${escapeHtml(r.q5_experience)}</p>
+      </div>
+      <div class="r-field is-wide">
+        <h4>What we could do better</h4>
+        <p>${escapeHtml(r.q7_improvement)}</p>
+      </div>
+      <div class="r-field">
+        <h4>Permission to quote</h4>
+        <p>${r.q6_permission === 'yes' ? 'Yes' : 'No'}</p>
+      </div>
+      <div class="r-field">
+        <h4>Marketing use</h4>
+        <p>${MARKETING_LABEL[r.q8_marketing]}</p>
+      </div>
+      <div class="r-field">
+        <h4>Referral (optional)</h4>
+        ${optional(r.q9_referral)}
+      </div>
+      <div class="r-field">
+        <h4>Trends / challenges (optional)</h4>
+        ${optional(r.q10_trends)}
+      </div>
+      <div class="r-actions">
+        <button class="r-edit-btn" type="button" data-edit-id="${escapeHtml(r.id)}">Edit</button>
+      </div>
+    </div>
+  `;
+}
+
+function selectOpts(currentValue, labelMap) {
+  return Object.entries(labelMap).map(([value, label]) =>
+    `<option value="${escapeHtml(value)}" ${value === currentValue ? 'selected' : ''}>${escapeHtml(label)}</option>`
+  ).join('');
+}
+
+function renderEditForm(r) {
+  return `
+    <form class="r-edit-form" data-edit-form-id="${escapeHtml(r.id)}">
+      <label class="r-edit-field is-wide">
+        <span>Project name (Q1)</span>
+        <input type="text" name="q1_project_name" value="${escapeHtml(r.q1_project_name)}" required />
+      </label>
+      <label class="r-edit-field">
+        <span>Quality (Q2)</span>
+        <select name="q2_quality">${selectOpts(r.q2_quality, QUALITY_LABEL)}</select>
+      </label>
+      <label class="r-edit-field">
+        <span>Creativity (Q3)</span>
+        <select name="q3_creativity">${selectOpts(r.q3_creativity, CREATIVITY_LABEL)}</select>
+      </label>
+      <label class="r-edit-field">
+        <span>Budget (Q4)</span>
+        <select name="q4_budget">${selectOpts(r.q4_budget, BUDGET_LABEL)}</select>
+      </label>
+      <label class="r-edit-field">
+        <span>Permission (Q6)</span>
+        <select name="q6_permission">
+          <option value="yes" ${r.q6_permission === 'yes' ? 'selected' : ''}>Yes</option>
+          <option value="no"  ${r.q6_permission === 'no'  ? 'selected' : ''}>No</option>
+        </select>
+      </label>
+      <label class="r-edit-field is-wide">
+        <span>Experience (Q5)</span>
+        <textarea name="q5_experience" rows="3" required>${escapeHtml(r.q5_experience)}</textarea>
+      </label>
+      <label class="r-edit-field is-wide">
+        <span>What we could do better (Q7)</span>
+        <textarea name="q7_improvement" rows="3" required>${escapeHtml(r.q7_improvement)}</textarea>
+      </label>
+      <label class="r-edit-field is-wide">
+        <span>Marketing use (Q8)</span>
+        <select name="q8_marketing">${selectOpts(r.q8_marketing, MARKETING_LABEL)}</select>
+      </label>
+      <label class="r-edit-field is-wide">
+        <span>Referral · optional (Q9)</span>
+        <textarea name="q9_referral" rows="2">${escapeHtml(r.q9_referral || '')}</textarea>
+      </label>
+      <label class="r-edit-field is-wide">
+        <span>Trends · optional (Q10)</span>
+        <textarea name="q10_trends" rows="2">${escapeHtml(r.q10_trends || '')}</textarea>
+      </label>
+      <div class="r-edit-actions">
+        <button type="button" class="r-cancel" data-cancel-id="${escapeHtml(r.id)}">Cancel</button>
+        <button type="submit" class="r-save">Save</button>
+      </div>
+    </form>
   `;
 }
 
@@ -386,10 +461,150 @@ exportBtn.addEventListener('click', () => {
   URL.revokeObjectURL(url);
 });
 
-// Reset stored token (banner action)
-modeClear?.addEventListener('click', () => {
-  localStorage.removeItem(TOKEN_KEY);
-  location.reload();
+// ──────────────────────────────────────────────────────────────
+// Event delegation — Edit / Cancel / Save / Delete on response cards
+// ──────────────────────────────────────────────────────────────
+responsesEl.addEventListener('click', async (e) => {
+  const target = e.target.closest('button, a');
+  if (!target) return;
+
+  // Delete (X) → open confirmation modal
+  const deleteId = target.dataset.deleteId;
+  if (deleteId) {
+    e.preventDefault();
+    openDeleteConfirm(deleteId);
+    return;
+  }
+
+  // Edit → re-render this row in edit mode
+  const editId = target.dataset.editId;
+  if (editId) {
+    e.preventDefault();
+    editingIds.add(editId);
+    rerenderRow(editId);
+    return;
+  }
+
+  // Cancel → re-render this row in view mode
+  const cancelId = target.dataset.cancelId;
+  if (cancelId) {
+    e.preventDefault();
+    editingIds.delete(cancelId);
+    rerenderRow(cancelId);
+    return;
+  }
+});
+
+// Save → submit PATCH
+responsesEl.addEventListener('submit', async (e) => {
+  const form = e.target.closest('form.r-edit-form');
+  if (!form) return;
+  e.preventDefault();
+  const id = form.dataset.editFormId;
+  if (!id) return;
+
+  const saveBtn = form.querySelector('.r-save');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Saving…';
+
+  const formData = new FormData(form);
+  const updates = {};
+  formData.forEach((v, k) => { updates[k] = (v || '').toString(); });
+
+  try {
+    const token = localStorage.getItem(TOKEN_KEY) || '';
+    const res = await fetch(`/api/responses?id=${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: 'Bearer ' + token } : {}),
+      },
+      body: JSON.stringify(updates),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+
+    // Update the local copy
+    const idx = allResponses.findIndex(r => r.id === id);
+    if (idx >= 0) {
+      allResponses[idx] = {
+        ...allResponses[idx],
+        ...data,
+        submittedAt: data.submitted_at || allResponses[idx].submittedAt,
+      };
+    }
+    editingIds.delete(id);
+    applyFilters();
+  } catch (err) {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Save';
+    alert('Couldn\'t save changes: ' + err.message);
+  }
+});
+
+function rerenderRow(id) {
+  const r = allResponses.find(x => x.id === id);
+  if (!r) return;
+  const row = responsesEl.querySelector(`details.response[data-id="${CSS.escape(id)}"]`);
+  if (!row) return;
+  row.outerHTML = renderResponse(r);
+  // Re-open the new details element since we just lost the open state
+  const fresh = responsesEl.querySelector(`details.response[data-id="${CSS.escape(id)}"]`);
+  if (fresh) fresh.open = true;
+}
+
+// ──────────────────────────────────────────────────────────────
+// Delete confirmation modal
+// ──────────────────────────────────────────────────────────────
+function openDeleteConfirm(id) {
+  pendingDeleteId = id;
+  const r = allResponses.find(x => x.id === id);
+  if (confirmProject) confirmProject.textContent = r?.q1_project_name || 'this project';
+  confirmOverlay.hidden = false;
+  confirmOverlay.setAttribute('aria-hidden', 'false');
+  requestAnimationFrame(() => confirmOverlay.classList.add('is-shown'));
+}
+function closeDeleteConfirm() {
+  pendingDeleteId = null;
+  confirmOverlay.classList.remove('is-shown');
+  setTimeout(() => {
+    confirmOverlay.hidden = true;
+    confirmOverlay.setAttribute('aria-hidden', 'true');
+  }, 300);
+}
+confirmCancel?.addEventListener('click', closeDeleteConfirm);
+confirmOverlay?.addEventListener('click', (e) => {
+  if (e.target === confirmOverlay) closeDeleteConfirm();   // click-outside dismiss
+});
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && confirmOverlay && !confirmOverlay.hidden) closeDeleteConfirm();
+});
+
+confirmDelete?.addEventListener('click', async () => {
+  if (!pendingDeleteId) return;
+  const id = pendingDeleteId;
+  confirmDelete.disabled = true;
+  confirmDelete.textContent = 'Deleting…';
+
+  try {
+    const token = localStorage.getItem(TOKEN_KEY) || '';
+    const res = await fetch(`/api/responses?id=${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: token ? { Authorization: 'Bearer ' + token } : {},
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+
+    allResponses = allResponses.filter(r => r.id !== id);
+    editingIds.delete(id);
+    applyFilters();
+    closeDeleteConfirm();
+  } catch (err) {
+    alert('Couldn\'t delete: ' + err.message);
+  } finally {
+    confirmDelete.disabled = false;
+    confirmDelete.textContent = 'Delete';
+  }
 });
 
 // ──────────────────────────────────────────────────────────────
@@ -404,10 +619,6 @@ modeClear?.addEventListener('click', () => {
     ...r,
     submittedAt: r.submitted_at || r.submittedAt,
   }));
-
-  if (result.mode === 'mock') {
-    modeBanner.hidden = false;
-  }
 
   applyFilters();
 })();
