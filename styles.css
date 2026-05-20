@@ -1,0 +1,609 @@
+/* ─── GIG Health palette ─────────────────────────────────────── */
+:root {
+  --flame:     #F45347;
+  --night:     #0D1A2D;
+  --paper:     #FEF6F6;
+  --dusk:      #10273E;
+  --potassium: #DEA8F4;
+  --copper:    #00AE97;
+  --sodium:    #FFBF3F;
+
+  --ink:       var(--paper);
+  --ink-soft:  rgba(254, 246, 246, 0.66);
+  --ink-faint: rgba(254, 246, 246, 0.28);
+  --ink-mute:  rgba(254, 246, 246, 0.14);
+  --rule:      rgba(254, 246, 246, 0.14);
+
+  --font: "motiva-sans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Tahoma", sans-serif;
+  --track-cap: 0.2em;
+}
+
+* { box-sizing: border-box; }
+html {
+  /* "proximity" lets the wheel scroll freely and only snaps when it
+     naturally lands near a scene edge — feels much less locked-in
+     than "mandatory" */
+  scroll-snap-type: y proximity;
+  scroll-behavior: smooth;
+  scrollbar-width: none;          /* hide native scrollbar — dots do the navigating */
+}
+html::-webkit-scrollbar { display: none; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background:
+    radial-gradient(140% 100% at 25% 25%, var(--dusk) 0%, var(--night) 60%, #060d18 100%);
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+body { min-height: 100vh; }
+
+/* ─── 3D canvas — hidden for now while we lock the layout in ──── */
+#stage { display: none; }
+
+/* ─── Scene videos — full-bleed, left-anchored, fade in/out per scene ──
+   `.is-active`  → scene is showing (visibility + base scene fade)
+   `.is-shown`   → this *specific* video in the pair is the visible one
+                   (the other one in the pair is the buffer, opacity 0).
+   The crossfade swaps `.is-shown` between A and B at each loop seam. */
+.scene-video {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  object-position: left center;
+  z-index: 1;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.1s ease, visibility 0.55s ease;
+  pointer-events: none;
+}
+.scene-video.is-active {
+  visibility: visible;
+}
+.scene-video.is-active.is-shown {
+  opacity: 1;
+}
+
+/* dark gradient overlay — only shows when a scene video is active.
+   Darkens the right side (where the form sits) and the top/bottom
+   strips (where the chrome lives) so everything stays legible. */
+.scene-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.55s ease;
+  background:
+    /* right-side wash for form copy */
+    linear-gradient(to right,
+      transparent 0%,
+      transparent 38%,
+      rgba(13, 26, 45, 0.55) 70%,
+      rgba(13, 26, 45, 0.88) 100%),
+    /* faint top/bottom strips to seat the chrome */
+    linear-gradient(to bottom,
+      rgba(13, 26, 45, 0.55) 0%,
+      transparent 14%,
+      transparent 86%,
+      rgba(13, 26, 45, 0.55) 100%);
+}
+body.has-video .scene-overlay { opacity: 1; }
+
+/* ─── Decorative brand keyline arc (Potassium → Copper → Sodium) — */
+.arc {
+  position: fixed;
+  left: -8%;
+  bottom: -20%;
+  width: 75%;
+  height: 80vh;
+  z-index: 1;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* ─── Top bar ─────────────────────────────────────────────────── */
+.topbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.4rem 2rem;
+  pointer-events: none;
+}
+
+.logo {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+.logo img {
+  height: 64px;
+  width: auto;
+  display: block;
+}
+
+.menu {
+  pointer-events: auto;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.6rem;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-right: 4.5rem; /* keep clear of the right-side progress dots */
+}
+.menu span {
+  display: block;
+  width: 26px;
+  height: 2px;
+  background: var(--ink);
+  border-radius: 2px;
+}
+.menu span:nth-child(2) { width: 18px; }
+
+/* ─── Giant section numeral (anchored to the top-left, solid white) ── */
+.numeral {
+  position: fixed;
+  left: 2vw;
+  top: 6rem;                    /* tucked just under the logo */
+  bottom: auto;
+  transform: none;
+  z-index: 3;
+  font-family: var(--font);
+  font-weight: 400;
+  font-size: clamp(7rem, 16vw, 18rem);
+  line-height: 0.82;
+  letter-spacing: -0.06em;
+  color: var(--paper);
+  opacity: 1;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* small label tucked under the giant numeral */
+.numeral-meta {
+  position: fixed;
+  left: 2.4vw;
+  top: 50%;
+  transform: translate(0, calc(54% - 1.2rem));
+  z-index: 2;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: var(--track-cap);
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7em;
+  pointer-events: none;
+}
+.numeral-meta::before {
+  content: "";
+  display: inline-block;
+  width: 1.8rem;
+  height: 1px;
+  background: var(--flame);
+}
+
+/* ─── Progress dots (far right vertical column) ───────────────── */
+.progress {
+  position: fixed;
+  right: 1.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 4;
+}
+.progress ol {
+  list-style: none;
+  margin: 0; padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+  align-items: flex-end;
+}
+.progress .dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid var(--ink-faint);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+.progress .dot:hover { border-color: var(--ink); }
+.progress .dot.done {
+  background: var(--ink-faint);
+  border-color: var(--ink-faint);
+}
+.progress .dot.active {
+  background: var(--flame);
+  border-color: var(--flame);
+  width: 10px;
+  height: 10px;
+  box-shadow: 0 0 0 6px rgba(244, 83, 71, 0.18);
+}
+/* Simple text label on hover — same style as the "QUESTION 01" kicker
+   (Flame red, ALL CAPS, letter-spaced). No box, no border. */
+.progress .dot-label {
+  position: absolute;
+  right: 22px;
+  top: 50%;
+  transform: translateY(-50%) translateX(4px);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--flame);
+  background: none;
+  border: none;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  pointer-events: none;
+}
+.progress .dot:hover .dot-label {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+/* ─── Scene (one per question, scroll-snap-aligned) ──────────── */
+.scene {
+  position: relative;
+  z-index: 3;                  /* sit above any scene video + overlay */
+  min-height: 100vh;
+  scroll-snap-align: start;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 10vh 0 14vh;       /* clear topbar + footer */
+}
+
+.scene-content {
+  width: 38vw;
+  max-width: 560px;
+  margin-right: 5rem;          /* clear right-side progress dots */
+  padding-left: 2rem;
+}
+
+/* Last scene gets a touch more bottom padding so the textarea sits comfortably above the footer */
+.scene:last-of-type { padding-bottom: 16vh; }
+
+.kicker {
+  margin: 0 0 1.8rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: var(--track-cap);
+  text-transform: uppercase;
+  color: var(--flame);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75em;
+}
+/* (line prefix removed — kicker stands on its own) */
+.kicker-sep {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.55;
+  margin: 0 0.2em;
+}
+.kicker-num   { color: var(--flame); }
+.kicker-label { color: var(--ink-soft); font-weight: 700; }
+.kicker-tag {
+  margin-left: 0.7em;
+  padding: 0.18em 0.55em;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  border: 1px solid var(--ink-faint);
+  border-radius: 999px;
+  color: var(--ink-soft);
+}
+
+.question {
+  margin: 0 0 1.6rem;
+  font-family: var(--font);
+  font-size: clamp(1.8rem, 3.4vw, 3.2rem);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.022em;
+  color: var(--ink);
+  text-wrap: balance;
+}
+.question em {
+  font-style: normal;
+  color: var(--flame);
+}
+
+.hint {
+  margin: 0 0 2.4rem;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  max-width: 38ch;
+  font-weight: 400;
+}
+
+.field {
+  position: relative;
+  margin: 0;
+}
+.answer-input {
+  font-family: var(--font);
+  font-size: clamp(1.15rem, 1.6vw, 1.5rem);
+  font-weight: 400;
+  width: 100%;
+  padding: 0.7rem 0;
+  border: none;
+  border-bottom: 1px solid var(--ink-faint);
+  background: transparent;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.25s ease;
+  caret-color: var(--flame);
+}
+.answer-input::placeholder { color: var(--ink-faint); }
+.answer-input:focus { border-bottom-color: var(--flame); }
+
+/* textarea variant — for open-ended answers */
+.answer-textarea {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--ink-faint);
+  border-radius: 4px;
+  padding: 1rem 1.1rem;
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 7rem;
+  font-family: inherit;
+}
+.answer-textarea:focus {
+  border-color: var(--flame);
+  border-bottom-color: var(--flame);
+}
+
+/* ─── Radio choices ───────────────────────────────────────────── */
+.choices {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.choices-binary {
+  flex-direction: row;
+  gap: 0.9rem;
+}
+.choices-binary .choice { flex: 1; }
+
+.choice label {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.95rem 1.1rem;
+  border: 1px solid var(--ink-mute, rgba(254,246,246,0.12));
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+  background: rgba(254, 246, 246, 0.015);
+}
+.choice label:hover {
+  border-color: var(--ink-faint);
+  background: rgba(254, 246, 246, 0.045);
+}
+
+/* Per-position hover tint — follows the brand gradient
+   (Potassium → Copper → Sodium) down each choice list. Cycles every
+   5 items so 2/4/5-option lists all read as part of the same arc. */
+.choice:nth-of-type(5n+1) label:hover {
+  border-color: color-mix(in srgb, var(--potassium) 60%, transparent);
+  background:   color-mix(in srgb, var(--potassium) 10%, transparent);
+}
+.choice:nth-of-type(5n+2) label:hover {
+  border-color: color-mix(in srgb, #6FABC6 60%, transparent);
+  background:   color-mix(in srgb, #6FABC6 10%, transparent);
+}
+.choice:nth-of-type(5n+3) label:hover {
+  border-color: color-mix(in srgb, var(--copper) 60%, transparent);
+  background:   color-mix(in srgb, var(--copper) 10%, transparent);
+}
+.choice:nth-of-type(5n+4) label:hover {
+  border-color: color-mix(in srgb, #80B66B 60%, transparent);
+  background:   color-mix(in srgb, #80B66B 10%, transparent);
+}
+.choice:nth-of-type(5n+5) label:hover {
+  border-color: color-mix(in srgb, var(--sodium) 60%, transparent);
+  background:   color-mix(in srgb, var(--sodium) 10%, transparent);
+}
+.choice input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.choice-marker {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  border: 1px solid var(--ink-faint);
+  flex-shrink: 0;
+  position: relative;
+  transition: all 0.2s ease;
+}
+.choice input:checked ~ .choice-marker {
+  border-color: var(--flame);
+  background: var(--flame);
+}
+.choice input:checked ~ .choice-marker::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: var(--paper);
+}
+.choice input:focus-visible ~ .choice-marker {
+  box-shadow: 0 0 0 3px rgba(244, 83, 71, 0.3);
+}
+.choice-text {
+  flex: 1;
+  font-size: 1rem;
+  line-height: 1.4;
+  color: var(--ink-soft);
+  transition: color 0.18s ease;
+}
+.choice label:has(input:checked) {
+  border-color: rgba(244, 83, 71, 0.55);
+  background: rgba(244, 83, 71, 0.07);
+}
+.choice label:has(input:checked) .choice-text {
+  color: var(--ink);
+}
+
+/* ─── Footer strip ────────────────────────────────────────────── */
+.footbar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 3;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 1.3rem 2rem 1.5rem;
+  pointer-events: none;
+}
+
+.foot-block { pointer-events: auto; }
+
+.foot-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.foot-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: var(--track-cap);
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.foot-link {
+  font-size: 0.85rem;
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: 500;
+}
+.foot-link:hover { color: var(--flame); }
+
+.foot-links {
+  display: flex;
+  gap: 2.5rem;
+  align-items: flex-end;
+}
+.foot-links a {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-decoration: none;
+  color: var(--ink);
+}
+.foot-links .foot-handle {
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+.foot-links a:hover .foot-handle { color: var(--flame); }
+
+/* primary CTA — mirrors the reference's SUBSCRIBE button */
+.continue {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9em;
+  font-family: var(--font);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: var(--track-cap);
+  text-transform: uppercase;
+  padding: 1.05rem 1.6rem 1.05rem 1.8rem;
+  border-radius: 0;             /* sharp rectangle like the reference */
+  border: none;
+  background: var(--flame);
+  color: var(--paper);
+  cursor: pointer;
+  transition:
+    transform 0.25s ease,
+    opacity 0.25s ease,
+    box-shadow 0.25s ease,
+    background 0.25s ease;
+  box-shadow: 0 12px 30px rgba(244, 83, 71, 0.28);
+  min-width: 200px;
+  justify-content: center;
+}
+.continue:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+  background: transparent;
+  color: var(--ink-faint);
+  border: 1px solid var(--ink-faint);
+}
+.continue:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 42px rgba(244, 83, 71, 0.42);
+}
+.continue:not(:disabled):active { transform: translateY(0); }
+.continue-arrow { transition: transform 0.25s ease; }
+.continue:not(:disabled):hover .continue-arrow { transform: translateX(4px); }
+
+/* ─── Mobile (under 880px) ────────────────────────────────────── */
+@media (max-width: 880px) {
+  .numeral {
+    font-size: clamp(7rem, 30vw, 12rem);
+    left: 5vw;
+    top: 14vh;
+    transform: none;
+    opacity: 0.10;
+  }
+  .progress {
+    right: 0.8rem;
+  }
+  .progress ol { gap: 0.55rem; }
+  .progress .dot-label { display: none; }
+
+  .scene { justify-content: flex-start; padding: 18vh 0 22vh; }
+  .scene-content {
+    width: 100%;
+    max-width: none;
+    margin-right: 0;
+    padding: 0 6vw 0 6vw;
+  }
+  .footbar {
+    padding: 1rem 1.2rem;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+  }
+  .foot-links { display: none; }      /* keep the bottom strip compact on mobile */
+  .continue { min-width: 0; padding: 0.9rem 1.4rem; }
+  .menu { margin-right: 3rem; }
+  .topbar { padding: 1rem 1.2rem; }
+  .logo img { height: 50px; }
+}

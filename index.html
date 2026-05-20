@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GIG — Tell us how we did</title>
+  <meta name="theme-color" content="#0D1A2D" />
+  <link rel="stylesheet" href="https://use.typekit.net/wek0eum.css" />
+  <link rel="stylesheet" href="./styles.css?v=20" />
+</head>
+<body>
+
+  <!-- Brand keyline arc decoration -->
+  <svg class="arc" viewBox="0 0 1200 800" preserveAspectRatio="none" aria-hidden="true">
+    <defs>
+      <linearGradient id="gigArc" x1="0" y1="0" x2="1" y2="0.4">
+        <stop offset="0%"  stop-color="#DEA8F4" stop-opacity="0.9"/>
+        <stop offset="50%" stop-color="#00AE97" stop-opacity="0.7"/>
+        <stop offset="100%" stop-color="#FFBF3F" stop-opacity="0.5"/>
+      </linearGradient>
+    </defs>
+    <path d="M -100 800 Q 400 100 1300 -100" fill="none" stroke="url(#gigArc)" stroke-width="1" />
+    <path d="M -100 900 Q 500 200 1400 100"  fill="none" stroke="url(#gigArc)" stroke-width="1" opacity="0.4" />
+  </svg>
+
+  <!-- Scene videos — pairs of two per scene for seamless-loop crossfade -->
+  <video
+    class="scene-video"
+    data-scene="1" data-role="a"
+    autoplay loop muted playsinline preload="auto"
+    aria-hidden="true">
+    <source src="./assets/videos/scene-01.webm" type="video/webm" />
+  </video>
+  <video
+    class="scene-video"
+    data-scene="1" data-role="b"
+    loop muted playsinline preload="auto"
+    aria-hidden="true">
+    <source src="./assets/videos/scene-01.webm" type="video/webm" />
+  </video>
+
+  <!-- Dark gradient overlay shown when a scene video is active -->
+  <div class="scene-overlay" aria-hidden="true"></div>
+
+  <!-- Top bar: logo + menu -->
+  <header class="topbar">
+    <a class="logo" href="https://gig.health" target="_blank" rel="noopener" aria-label="GIG Health">
+      <img src="./assets/gig-logo-primary.svg" alt="GIG Health" />
+    </a>
+    <button class="menu" type="button" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </header>
+
+  <!-- Giant section numeral, far left — updated by JS on scroll -->
+  <div class="numeral" id="numeral" aria-hidden="true">01</div>
+
+  <!-- Progress dots, far right, vertical — clickable to jump -->
+  <nav class="progress" aria-label="Survey progress">
+    <ol id="dots">
+      <li class="dot active" data-scene="1"><span class="dot-label">Project</span></li>
+      <li class="dot" data-scene="2"><span class="dot-label">Quality</span></li>
+      <li class="dot" data-scene="3"><span class="dot-label">Creativity</span></li>
+      <li class="dot" data-scene="4"><span class="dot-label">Budget</span></li>
+      <li class="dot" data-scene="5"><span class="dot-label">Experience</span></li>
+      <li class="dot" data-scene="6"><span class="dot-label">Permission</span></li>
+      <li class="dot" data-scene="7"><span class="dot-label">Improvement</span></li>
+      <li class="dot" data-scene="8"><span class="dot-label">Marketing</span></li>
+      <li class="dot" data-scene="9"><span class="dot-label">Referral</span></li>
+      <li class="dot" data-scene="10"><span class="dot-label">Trends</span></li>
+    </ol>
+  </nav>
+
+  <!-- ───── Scenes (each is a 100vh snap section) ───── -->
+
+  <!-- Q1 — Project name -->
+  <section class="scene" data-scene="1" data-key="q1_project_name" data-required="true">
+    <div class="scene-content">
+      <p class="kicker"><span class="kicker-num">Question 01</span><span class="kicker-sep" aria-hidden="true"></span><span class="kicker-label">Project</span></p>
+      <h1 class="question">What was the name of <em>this&nbsp;project?</em></h1>
+      <p class="hint">Tell us which project this feedback is for — a quick word or two is fine.</p>
+      <div class="field">
+        <input class="answer-input" type="text" autocomplete="off" placeholder="Type the project name" />
+      </div>
+    </div>
+  </section>
+
+  <!-- Q2 — Deliverable rating -->
+  <section class="scene" data-scene="2" data-key="q2_quality" data-required="true">
+    <div class="scene-content">
+      <p class="kicker"><span class="kicker-num">Question 02</span><span class="kicker-sep" aria-hidden="true"></span><span class="kicker-label">Quality</span></p>
+      <h1 class="question">How would you rate the <em>final&nbsp;deliverable(s)?</em></h1>
+      <p class="hint">Pick the option that best reflects how the work landed.</p>
+      <ul class="choices">
+        <li class="choice"><label><input type="radio" name="q2" value="excellent" /><span class="choice-marker"></span><span class="choice-text">An excellent standard</span></label></li>
+        <li class="choice"><label><input type="radio" name="q2" value="high" /><span class="choice-marker"></span><span class="choice-text">A high standard</span></label></li>
+        <li class="choice"><label><input type="radio" name="q2" value="fair" /><span class="choice-marker"></span><span class="choice-text">Fair</span></label></li>
+        <li class="choice"><label><input type="radio" name="q2" value="not_everything" /><span class="choice-marker"></span><span class="choice-text">Not everything we'd hoped for</span></label></li>
+        <li class="choice"><label><input type="radio" name="q2" value="disappointing" /><span class="choice-marker"></span><span class="choice-text">Disappointing</span></label></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Q3 — Creativity rating -->
+  <section class="scene" data-scene="3" data-key="q3_creativity" data-required="true">
+    <div class="scene-content">
+      <p class="kicker"><span class="kicker-num">Question 03</span><span class="kicker-sep" aria-hidden="true"></span><span class="kicker-label">Creativity</span></p>
+      <h1 class="question">How creative was the <em>final&nbsp;product?</em></h1>
+      <p class="hint">Honest answers help us push further next time.</p>
+      <ul class="choices">
+        <li class="choice"><label><input type="radio" name="q3" value="groundbreaking" /><span class="choice-marker"></span><span class="choice-text">Ground breaking</span></label></li>
+        <li class="choice"><label><input type="radio" name="q3" value="really_creative" /><span class="choice-marker"></span><span class="choice-text">Really creative and engaging</span></label></li>
+        <li class="choice"><label><input type="radio" name="q3" value="quite_creative" /><span class="choice-marker"></span><span class="choice-text">Quite creative, fit for purpose</span></label></li>
+        <li class="choice"><label><input type="radio" name="q3" value="average" /><span class="choice-marker"></span><span class="choice-text">Average, not very original</span></label></li>
+        <li class="choice"><label><input type="radio" name="q3" value="lacking" /><span class="choice-marker"></span><span class="choice-text">Lacking thought and creativity</span></label></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Q4 — Budget competitiveness -->
+  <section class="scene" data-scene="4" data-key="q4_budget" data-required="true">
+    <div class="scene-content">
+      <p class="kicker"><span class="kicker-num">Question 04</span><span class="kicker-sep" aria-hidden="true"></span><span class="kicker-label">Budget</span></p>
+      <h1 class="question">How competitive was our <em>cost&nbsp;/&nbsp;budget?</em></h1>
+      <p class="hint">Compared to others you've worked with.</p>
+      <ul class="choices">
+        <li class="choice"><label><input type="radio" name="q4" value="higher" /><span class="choice-marker"></span><span class="choice-text">Higher than others</span></label></li>
+        <li class="choice"><label><input type="radio" name="q4" value="on_par" /><span class="choice-marker"></span><span class="choice-text">On par with others</span></label></li>
+        <li class="choice"><label><input type="radio" name="q4" value="cheaper" /><span class="choice-marker"></span><span class="choice-text">Cheaper than others</span></label></li>
+        <li class="choice"><label><input type="radio" name="q4" value="na" /><span class="choice-marker"></span><span class="choice-text">N/A — budget was predetermined</span></label></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Q5 — Experience (open text) -->
+  <section class="scene" data-scene="5" data-key="q5_experience" data-required="true">
+    <div class="scene-content">
+      <p class="kicker"><span class="kicker-num">Question 05</span><span class="kicker-sep" aria-hidden="true"></span><span class="kicker-label">Experience</span></p>
+      <h1 class="question">Describe <em>your&nbsp;experience</em> working with GIG.</h1>
+      <p class="hint">How have you benefited from our work? A few sentences is great.</p>
+      <div class="field">
+        <textarea class="answer-input answer-textarea" rows="4" placeholder="Share your experience"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- Q6 — Permission to quote -->
+  <section class="scene" data-scene="6" data-key="q6_permission" data-required="true">
+    <div class="scene-content">
+      <p class="kicker"><span class="kicker-num">Question 06</span><span class="kicker-sep" aria-hidden="true"></span><span class="kicker-label">Permission</span></p>
+      <h1 class="question">Happy for us to share <em>your&nbsp;response</em> on our channels?</h1>
+      <p class="hint">We'd love to feature your words — only with your say-so.</p>
+      <ul class="choices choices-binary">
+        <li class="choice"><label><input type="radio" name="q6" value="yes" /><span class="choice-marker"></span><span class="choice-text">Yes</span></label></li>
+        <li class="choice"><label><input type="radio" name="q6" value="no" /><span class="choice-marker"></span><span class="choice-text">No</span></label></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Q7 — What could we do better -->
+  <section class="scene" data-scene="7" data-key="q7_improvement" data-required="true">
+    <div class="scene-content">
+      <p class="kicker"><span class="kicker-num">Question 07</span><span class="kicker-sep" aria-hidden="true"></span><span class="kicker-label">Improvement</span></p>
+      <h1 class="question">What could we <em>do&nbsp;better,</em> to work together again?</h1>
+      <p class="hint">Direct feedback welcome. We'd rather know.</p>
+      <div class="field">
+        <textarea class="answer-input answer-textarea" rows="4" placeholder="What would you change"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- Q8 — Marketing usage rights -->
+  <section class="scene" data-scene="8" data-key="q8_marketing" data-required="true">
+    <div class="scene-content">
+      <p class="kicker"><span class="kicker-num">Question 08</span><span class="kicker-sep" aria-hidden="true"></span><span class="kicker-label">Marketing</span></p>
+      <h1 class="question">Can we use this project in our <em>case&nbsp;studies?</em></h1>
+      <p class="hint">With citation, in our marketing materials.</p>
+      <ul class="choices">
+        <li class="choice"><label><input type="radio" name="q8" value="yes_as_is" /><span class="choice-marker"></span><span class="choice-text">Yes — as it is</span></label></li>
+        <li class="choice"><label><input type="radio" name="q8" value="yes_adapted" /><span class="choice-marker"></span><span class="choice-text">Yes, with adaptation (remove client/product name, abridged, etc.)</span></label></li>
+        <li class="choice"><label><input type="radio" name="q8" value="possibly" /><span class="choice-marker"></span><span class="choice-text">Possibly — need to check</span></label></li>
+        <li class="choice"><label><input type="radio" name="q8" value="no" /><span class="choice-marker"></span><span class="choice-text">No</span></label></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Q9 — Referral (optional) -->
+  <section class="scene" data-scene="9" data-key="q9_referral">
+    <div class="scene-content">
+      <p class="kicker"><span class="kicker-num">Question 09</span><span class="kicker-sep" aria-hidden="true"></span><span class="kicker-label">Referral</span><span class="kicker-tag">Optional</span></p>
+      <h1 class="question">Know anyone who could <em>benefit from GIG?</em></h1>
+      <p class="hint">We'd be delighted to work with likeminded clients. Share their name and email if you can.</p>
+      <div class="field">
+        <textarea class="answer-input answer-textarea" rows="3" placeholder="Name and email"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- Q10 — Trends / challenges (optional) -->
+  <section class="scene" data-scene="10" data-key="q10_trends">
+    <div class="scene-content">
+      <p class="kicker"><span class="kicker-num">Question 10</span><span class="kicker-sep" aria-hidden="true"></span><span class="kicker-label">Trends</span><span class="kicker-tag">Optional</span></p>
+      <h1 class="question">Any <em>trends or challenges</em> you'd like to get ahead of?</h1>
+      <p class="hint">As healthcare communications keeps evolving, anything you'd like to better understand?</p>
+      <div class="field">
+        <textarea class="answer-input answer-textarea" rows="4" placeholder="What's on your mind"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- Bottom strip: meta + nav links + primary CTA -->
+  <footer class="footbar">
+    <div class="foot-block foot-meta">
+      <span class="foot-label">More info</span>
+      <a class="foot-link" href="https://gig.health" target="_blank" rel="noopener">gig.health</a>
+    </div>
+
+    <div class="foot-block foot-links">
+      <a href="https://www.linkedin.com/company/the-good-ideas-group" target="_blank" rel="noopener">
+        <span class="foot-label">LinkedIn</span>
+        <span class="foot-handle">@the-good-ideas-group</span>
+      </a>
+      <a href="https://www.instagram.com/thegoodideasgroup/" target="_blank" rel="noopener">
+        <span class="foot-label">Instagram</span>
+        <span class="foot-handle">@thegoodideasgroup</span>
+      </a>
+      <a href="https://vimeo.com/giguk" target="_blank" rel="noopener">
+        <span class="foot-label">Vimeo</span>
+        <span class="foot-handle">/giguk</span>
+      </a>
+    </div>
+
+    <button id="continue" class="continue" type="button" disabled>
+      <span id="continue-label" class="continue-label">Continue</span>
+      <span class="continue-arrow" aria-hidden="true">→</span>
+    </button>
+  </footer>
+
+  <script type="module" src="./main.js?v=20"></script>
+</body>
+</html>

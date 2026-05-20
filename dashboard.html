@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GIG — Client Feedback · Dashboard</title>
+  <meta name="theme-color" content="#0D1A2D" />
+  <link rel="stylesheet" href="https://use.typekit.net/wek0eum.css" />
+  <link rel="stylesheet" href="./styles.css?v=20" />
+  <link rel="stylesheet" href="./dashboard.css?v=2" />
+</head>
+<body class="dashboard">
+
+  <header class="topbar">
+    <a class="logo" href="https://gig.health" target="_blank" rel="noopener" aria-label="GIG Health">
+      <img src="./assets/gig-logo-primary.svg" alt="GIG Health" />
+    </a>
+    <div class="topbar-title">
+      <p class="kicker"><span class="kicker-num">Client Feedback</span><span class="kicker-sep" aria-hidden="true"></span><span class="kicker-label">Dashboard</span></p>
+    </div>
+    <a class="topbar-link" href="./">View live survey →</a>
+  </header>
+
+  <main class="dash-main">
+
+    <!-- Live vs mock indicator (hidden when live) -->
+    <div class="mode-banner" id="mode-banner" hidden>
+      <span class="mode-dot"></span>
+      <span class="mode-text">Showing mock data — connect Supabase + Vercel env vars to see live responses (see <code>SUPABASE_SETUP.md</code>)</span>
+      <button class="mode-clear" id="mode-clear" type="button" title="Clear stored token and retry">Reset token</button>
+    </div>
+
+    <!-- Summary stats row -->
+    <section class="stats" id="stats">
+      <!-- populated by JS -->
+    </section>
+
+    <!-- Filter bar -->
+    <section class="filters">
+      <div class="filter-group">
+        <label>Filter</label>
+        <select id="filter-select">
+          <option value="all">All responses</option>
+          <option value="quotable">Quotable only (Q6 = yes)</option>
+          <option value="case_study">Case-study ok (Q8 ≠ no)</option>
+          <option value="high_quality">Rated excellent / high standard</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Search</label>
+        <input id="filter-search" type="text" placeholder="Project name or keyword…" />
+      </div>
+      <div class="filter-group right">
+        <button class="export-btn" id="export-csv">Export CSV ↓</button>
+      </div>
+    </section>
+
+    <!-- Response list -->
+    <section class="responses" id="responses">
+      <!-- populated by JS -->
+    </section>
+
+    <p class="dash-note" id="empty-note" hidden>No responses match these filters.</p>
+
+  </main>
+
+  <footer class="footbar dash-footer">
+    <div class="foot-block foot-meta">
+      <span class="foot-label">Demo data</span>
+      <span class="foot-link">Wire to Airtable / Vercel KV to go live</span>
+    </div>
+    <div class="foot-block">
+      <span class="foot-label">Sample size</span>
+      <span class="foot-link" id="footer-count">—</span>
+    </div>
+  </footer>
+
+  <script type="module" src="./dashboard.js?v=2"></script>
+</body>
+</html>

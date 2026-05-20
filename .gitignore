@@ -1,0 +1,13 @@
+.DS_Store
+node_modules/
+.vercel
+*.log
+
+# Local env files — secrets must never be committed
+.env
+.env.local
+.env.*.local
+
+# Build output (if any tooling adds it later)
+dist/
+build/
