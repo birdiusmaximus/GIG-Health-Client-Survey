@@ -171,7 +171,6 @@ function renderQuotes(quotes) {
   stage.innerHTML = quotes.map((q, i) => `
     <blockquote class="quote-card ${i === 0 ? 'is-active' : ''}" data-i="${i}">
       <p class="quote-text">${escapeHtml(q.text)}</p>
-      <footer class="quote-attribution">— ${escapeHtml(q.attribution || 'Healthcare client')}</footer>
     </blockquote>
   `).join('');
   nav.innerHTML = quotes.map((_, i) => `
