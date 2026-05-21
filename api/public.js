@@ -25,17 +25,24 @@ function stripProjectName(quote, projectName) {
   return quote.replace(new RegExp(escaped, 'gi'), 'the project').trim();
 }
 
-function curateQuotes(rows, limit = 8) {
-  const candidates = rows.filter(r =>
-    r.q6_permission === 'yes' &&
-    (r.q2_quality === 'excellent' || r.q2_quality === 'high') &&
-    r.q5_experience && r.q5_experience.trim().length >= 80
-  );
-  candidates.sort((a, b) => b.q5_experience.length - a.q5_experience.length);
-  return candidates.slice(0, limit).map(r => ({
-    text: stripProjectName(r.q5_experience.trim(), r.q1_project_name),
-    attribution: 'Healthcare client',
-  }));
+// Build the public quote list.
+// Single hard rule: the client must have answered 'yes' to Q6
+// ("Happy for us to share your response on our channels?"). No quality
+// or length filters — every permitted, non-empty Q5 answer shows up
+// in the carousel. Sorted longest-first so the lead quote is the most
+// substantive, then it auto-rotates through the rest.
+function curateQuotes(rows) {
+  return rows
+    .filter(r =>
+      r.q6_permission === 'yes' &&
+      typeof r.q5_experience === 'string' &&
+      r.q5_experience.trim().length > 0
+    )
+    .sort((a, b) => b.q5_experience.length - a.q5_experience.length)
+    .map(r => ({
+      text: stripProjectName(r.q5_experience.trim(), r.q1_project_name),
+      attribution: 'Healthcare client',
+    }));
 }
 
 // CORS — endpoint is already public-by-design, but we have to set the
