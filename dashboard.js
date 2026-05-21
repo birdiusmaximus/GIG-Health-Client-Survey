@@ -607,12 +607,14 @@ responsesEl.addEventListener('submit', async (e) => {
   formData.forEach((v, k) => { updates[k] = (v || '').toString(); });
 
   try {
-    const token = localStorage.getItem(TOKEN_KEY) || '';
+    const username = localStorage.getItem(USER_KEY) || '';
+    const password = localStorage.getItem(PASS_KEY) || '';
+    const auth = authHeaderValue(username, password);
     const res = await fetch(`/api/responses?id=${encodeURIComponent(id)}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        ...(token ? { Authorization: 'Bearer ' + token } : {}),
+        ...(auth ? { Authorization: auth } : {}),
       },
       body: JSON.stringify(updates),
     });
@@ -682,10 +684,12 @@ confirmDelete?.addEventListener('click', async () => {
   confirmDelete.textContent = 'Deleting…';
 
   try {
-    const token = localStorage.getItem(TOKEN_KEY) || '';
+    const username = localStorage.getItem(USER_KEY) || '';
+    const password = localStorage.getItem(PASS_KEY) || '';
+    const auth = authHeaderValue(username, password);
     const res = await fetch(`/api/responses?id=${encodeURIComponent(id)}`, {
       method: 'DELETE',
-      headers: token ? { Authorization: 'Bearer ' + token } : {},
+      headers: auth ? { Authorization: auth } : {},
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
