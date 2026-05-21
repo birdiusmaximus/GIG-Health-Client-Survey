@@ -10,19 +10,19 @@ const MENU_HTML = `
       <button class="menu-close" id="menu-close" type="button" aria-label="Close menu">×</button>
     </div>
     <nav class="menu-panel-nav">
-      <a class="menu-link" href="/">
+      <a class="menu-link" href="/index.html">
         <span class="menu-link-label">Take the survey</span>
         <span class="menu-link-sub">Tell us how we did</span>
         <span class="menu-link-arrow" aria-hidden="true">→</span>
       </a>
-      <a class="menu-link" href="/showcase">
+      <a class="menu-link" href="/showcase.html">
         <span class="menu-link-label">What clients say</span>
         <span class="menu-link-sub">Public showcase</span>
         <span class="menu-link-arrow" aria-hidden="true">→</span>
       </a>
-      <a class="menu-link is-admin" href="/dashboard">
+      <a class="menu-link is-admin" href="/dashboard.html">
         <span class="menu-link-label">Admin dashboard</span>
-        <span class="menu-link-sub">Internal · token required</span>
+        <span class="menu-link-sub">Internal · sign-in required</span>
         <span class="menu-link-arrow" aria-hidden="true">→</span>
       </a>
     </nav>
