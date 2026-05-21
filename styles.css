@@ -245,12 +245,16 @@ body.survey .menu { margin-right: 4.5rem; }
 }
 .menu-link:hover .menu-link-arrow { transform: translateX(4px); color: var(--flame); }
 .menu-link-label {
+  grid-column: 1;
+  grid-row: 1;
   font-size: 1.25rem;
   font-weight: 700;
   letter-spacing: -0.01em;
   color: var(--ink);
 }
 .menu-link-sub {
+  grid-column: 1;
+  grid-row: 2;
   font-size: 0.66rem;
   font-weight: 700;
   letter-spacing: 0.16em;
@@ -258,6 +262,7 @@ body.survey .menu { margin-right: 4.5rem; }
   color: var(--ink-faint);
 }
 .menu-link-arrow {
+  grid-column: 2;
   grid-row: 1 / span 2;
   align-self: center;
   font-size: 1.3rem;
