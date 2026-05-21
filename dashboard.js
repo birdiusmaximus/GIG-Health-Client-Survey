@@ -158,30 +158,47 @@ const MOCK_RESPONSES = [
 // ──────────────────────────────────────────────────────────────
 const TOKEN_KEY = 'gig_dash_token';
 
-async function loadResponses() {
-  let token = localStorage.getItem(TOKEN_KEY) || '';
-
+// One round-trip to /api/responses with a candidate token.
+// Returns one of:
+//   { ok: true,  data }                       — auth + fetch worked
+//   { ok: false, status: 401 }                — token wrong/missing
+//   { ok: false, networkError: true }         — API unreachable (dev / down)
+//   { ok: false, status, error }              — other server error
+async function tryFetch(token) {
   try {
     const headers = token ? { Authorization: 'Bearer ' + token } : {};
     const res = await fetch('/api/responses', { headers });
-
-    if (res.status === 401) {
-      const entered = prompt('Dashboard token required (set as DASHBOARD_TOKEN on Vercel):');
-      if (entered) {
-        localStorage.setItem(TOKEN_KEY, entered.trim());
-        return loadResponses();
-      }
-      return { mode: 'mock', data: MOCK_RESPONSES, reason: 'no token' };
-    }
+    if (res.status === 401) return { ok: false, status: 401 };
     if (!res.ok) {
-      throw new Error('HTTP ' + res.status);
+      const body = await res.json().catch(() => ({}));
+      return { ok: false, status: res.status, error: body.error || `HTTP ${res.status}` };
     }
     const data = await res.json();
-    return { mode: 'live', data };
+    return { ok: true, data };
   } catch (err) {
-    // Network error, 404 (no API on static dev server), or Supabase misconfigured
-    return { mode: 'mock', data: MOCK_RESPONSES, reason: err.message };
+    return { ok: false, networkError: true, error: err.message };
   }
+}
+
+async function loadResponses() {
+  const token = localStorage.getItem(TOKEN_KEY) || '';
+  const result = await tryFetch(token);
+
+  if (result.ok) {
+    return { mode: 'live', data: result.data };
+  }
+  if (result.networkError) {
+    // API unavailable (local dev or outage) — fall back to mock so the
+    // dashboard is still visible for design iteration
+    return { mode: 'mock', data: MOCK_RESPONSES };
+  }
+  if (result.status === 401) {
+    if (token) localStorage.removeItem(TOKEN_KEY);   // clear stale/wrong token
+    return { mode: 'needs-auth' };
+  }
+  // Some other 5xx — show mock with no banner; admin can debug logs
+  console.error('[dashboard] unexpected API error', result);
+  return { mode: 'mock', data: MOCK_RESPONSES };
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -668,17 +685,101 @@ confirmDelete?.addEventListener('click', async () => {
 });
 
 // ──────────────────────────────────────────────────────────────
+// Admin sign-in overlay
+// ──────────────────────────────────────────────────────────────
+const authOverlay = document.getElementById('auth-overlay');
+const authForm    = document.getElementById('auth-form');
+const authInput   = document.getElementById('auth-input');
+const authError   = document.getElementById('auth-error');
+const authBtn     = document.getElementById('auth-btn');
+
+function showAuth(errMsg) {
+  if (!authOverlay) return;
+  authOverlay.hidden = false;
+  authOverlay.setAttribute('aria-hidden', 'false');
+  requestAnimationFrame(() => authOverlay.classList.add('is-shown'));
+  if (errMsg) showAuthError(errMsg);
+  setTimeout(() => authInput?.focus(), 250);
+}
+function hideAuth() {
+  if (!authOverlay) return;
+  authOverlay.classList.remove('is-shown');
+  setTimeout(() => {
+    authOverlay.hidden = true;
+    authOverlay.setAttribute('aria-hidden', 'true');
+  }, 350);
+}
+function showAuthError(msg) {
+  if (!authError) return;
+  authError.textContent = msg;
+  authError.hidden = false;
+}
+function clearAuthError() {
+  if (!authError) return;
+  authError.hidden = true;
+  authError.textContent = '';
+}
+
+authInput?.addEventListener('input', clearAuthError);
+
+authForm?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const token = (authInput?.value || '').trim();
+  if (!token) return;
+  authBtn.disabled = true;
+  const originalLabel = authBtn.querySelector('span:first-child')?.textContent;
+  if (authBtn.querySelector('span:first-child')) {
+    authBtn.querySelector('span:first-child').textContent = 'Signing in…';
+  }
+
+  const result = await tryFetch(token);
+
+  if (result.ok) {
+    localStorage.setItem(TOKEN_KEY, token);
+    hideAuth();
+    bootDashboard(result.data);
+  } else if (result.status === 401) {
+    showAuthError('Invalid token. Check the value and try again.');
+    authBtn.disabled = false;
+    if (authBtn.querySelector('span:first-child') && originalLabel) {
+      authBtn.querySelector('span:first-child').textContent = originalLabel;
+    }
+  } else if (result.networkError) {
+    showAuthError("Couldn't reach the server. Are you offline?");
+    authBtn.disabled = false;
+    if (authBtn.querySelector('span:first-child') && originalLabel) {
+      authBtn.querySelector('span:first-child').textContent = originalLabel;
+    }
+  } else {
+    showAuthError(result.error || 'Sign-in failed.');
+    authBtn.disabled = false;
+    if (authBtn.querySelector('span:first-child') && originalLabel) {
+      authBtn.querySelector('span:first-child').textContent = originalLabel;
+    }
+  }
+});
+
+// ──────────────────────────────────────────────────────────────
 // Bootstrap
 // ──────────────────────────────────────────────────────────────
+function bootDashboard(data) {
+  // Normalise field names — Supabase returns `submitted_at`, mock uses `submittedAt`
+  allResponses = data.map(r => ({
+    ...r,
+    submittedAt: r.submitted_at || r.submittedAt,
+  }));
+  applyFilters();
+}
+
 (async () => {
   const result = await loadResponses();
   window.__dashMode = result.mode;
 
-  // Normalise field names — Supabase returns `submitted_at`, mock uses `submittedAt`
-  allResponses = result.data.map(r => ({
-    ...r,
-    submittedAt: r.submitted_at || r.submittedAt,
-  }));
+  if (result.mode === 'needs-auth') {
+    // Don't render anything underneath — auth overlay covers the full viewport
+    showAuth();
+    return;
+  }
 
-  applyFilters();
+  bootDashboard(result.data);
 })();

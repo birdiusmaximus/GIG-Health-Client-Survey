@@ -449,6 +449,134 @@ body.dashboard .progress {
   cursor: not-allowed;
 }
 
+/* ─── Branded admin sign-in overlay ───────────────────────────── */
+.auth-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(120% 80% at 30% 30%, var(--dusk) 0%, var(--night) 60%, #050a14 100%);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+.auth-overlay[hidden] { display: none; }
+.auth-overlay.is-shown { opacity: 1; pointer-events: auto; }
+
+.auth-card {
+  width: min(440px, 92vw);
+  padding: 3rem 2.6rem 2.6rem;
+  background: var(--night);
+  border: 1px solid var(--ink-mute);
+  border-radius: 10px;
+  transform: translateY(14px);
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.auth-overlay.is-shown .auth-card { transform: translateY(0); }
+
+.auth-card .kicker { margin-bottom: 1.3rem; }
+
+.auth-title {
+  margin: 0 0 0.8rem;
+  font-size: 1.9rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.auth-text {
+  margin: 0 0 1.8rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.auth-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: var(--track-cap);
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.auth-input {
+  font-family: var(--font);
+  font-size: 1rem;
+  padding: 0.85rem 1rem;
+  background: rgba(254, 246, 246, 0.04);
+  border: 1px solid var(--ink-faint);
+  border-radius: 4px;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.2s ease;
+  letter-spacing: 0.04em;       /* slight tracking helps read random tokens */
+}
+.auth-input:focus { border-color: var(--flame); }
+
+.auth-error {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--flame);
+  font-weight: 500;
+}
+
+.auth-btn {
+  margin-top: 0.6rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7em;
+  font-family: var(--font);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: var(--track-cap);
+  text-transform: uppercase;
+  padding: 1rem 1.4rem;
+  border: none;
+  border-radius: 0;
+  background: var(--flame);
+  color: var(--paper);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  box-shadow: 0 12px 30px rgba(244, 83, 71, 0.28);
+}
+.auth-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 42px rgba(244, 83, 71, 0.42);
+}
+.auth-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background: var(--night);
+  border: 1px solid var(--ink-faint);
+  box-shadow: none;
+}
+
+.auth-back {
+  margin-top: 0.8rem;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: var(--track-cap);
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.auth-back:hover { color: var(--flame); }
+
 /* ─── Branded delete confirmation overlay ─────────────────────── */
 .confirm-overlay {
   position: fixed;

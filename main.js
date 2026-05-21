@@ -303,26 +303,8 @@ function hideSubmitOverlay() {
     submitOverlay.setAttribute('aria-hidden', 'true');
   }, 500);
 }
-submitClose?.addEventListener('click', () => {
-  // try to close the tab — only works if the window was opened via
-  // script (popup). For normal tabs the user opened themselves, the
-  // browser silently blocks this for security.
-  window.close();
-  // If we're still here a tick later, the browser blocked it. Replace
-  // the close button with a "you can safely close this tab" note.
-  setTimeout(() => {
-    if (!window.closed && submitClose && submitOverlay) {
-      submitClose.style.display = 'none';
-      let note = submitOverlay.querySelector('.submit-close-note');
-      if (!note) {
-        note = document.createElement('p');
-        note.className = 'submit-close-note';
-        note.textContent = 'You can safely close this tab.';
-        submitOverlay.querySelector('.submit-card').appendChild(note);
-      }
-    }
-  }, 250);
-});
+// The submit-close button is now an <a href="/showcase"> — the browser
+// handles navigation natively, no JS handler needed.
 
 // ──────────────────────────────────────────────────────────────
 // Wheel-based scene navigation

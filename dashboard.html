@@ -6,8 +6,8 @@
   <title>GIG — Client Feedback · Dashboard</title>
   <meta name="theme-color" content="#0D1A2D" />
   <link rel="stylesheet" href="https://use.typekit.net/wek0eum.css" />
-  <link rel="stylesheet" href="./styles.css?v=24" />
-  <link rel="stylesheet" href="./dashboard.css?v=7" />
+  <link rel="stylesheet" href="./styles.css?v=25" />
+  <link rel="stylesheet" href="./dashboard.css?v=8" />
 </head>
 <body class="dashboard">
 
@@ -59,6 +59,31 @@
 
   </main>
 
+  <!-- Branded admin sign-in (shown on initial load until valid token entered) -->
+  <div class="auth-overlay" id="auth-overlay" hidden aria-hidden="true">
+    <div class="auth-card" role="dialog" aria-labelledby="auth-title">
+      <p class="kicker">
+        <span class="kicker-num">Admin</span>
+        <span class="kicker-sep" aria-hidden="true"></span>
+        <span class="kicker-label">Sign in required</span>
+      </p>
+      <h2 class="auth-title" id="auth-title">Dashboard access</h2>
+      <p class="auth-text">Enter the admin token to view client responses. The token was generated when the dashboard was set up — it lives in your password manager.</p>
+      <form class="auth-form" id="auth-form" novalidate>
+        <label class="auth-field">
+          <span class="auth-label">Dashboard token</span>
+          <input class="auth-input" id="auth-input" type="password" autocomplete="off" required spellcheck="false" />
+        </label>
+        <p class="auth-error" id="auth-error" hidden></p>
+        <button class="auth-btn" id="auth-btn" type="submit">
+          <span>Sign in</span>
+          <span aria-hidden="true">→</span>
+        </button>
+        <a class="auth-back" href="/">Back to survey</a>
+      </form>
+    </div>
+  </div>
+
   <!-- Branded delete confirmation -->
   <div class="confirm-overlay" id="confirm-overlay" hidden aria-hidden="true">
     <div class="confirm-card">
@@ -87,7 +112,7 @@
     </div>
   </footer>
 
-  <script type="module" src="./dashboard.js?v=6"></script>
+  <script type="module" src="./dashboard.js?v=7"></script>
   <script src="./menu.js?v=1"></script>
 </body>
 </html>

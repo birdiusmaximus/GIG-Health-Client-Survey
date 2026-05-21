@@ -777,33 +777,26 @@ body.survey .menu { margin-right: 4.5rem; }
   align-items: center;
   gap: 0.9em;
   font-family: var(--font);
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 700;
   letter-spacing: var(--track-cap);
   text-transform: uppercase;
-  padding: 1rem 1.6rem;
-  border: 1px solid var(--ink-faint);
+  padding: 1.1rem 1.8rem;
+  border: none;
   border-radius: 0;
-  background: transparent;
-  color: var(--ink);
+  background: var(--flame);
+  color: var(--paper);
+  text-decoration: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 12px 30px rgba(244, 83, 71, 0.28);
 }
 .submit-close:hover {
-  border-color: var(--flame);
-  color: var(--flame);
+  transform: translateY(-2px);
+  box-shadow: 0 18px 42px rgba(244, 83, 71, 0.42);
 }
-.submit-close span:last-child {
-  font-size: 1.4em;
-  line-height: 1;
-  opacity: 0.7;
-}
-
-.submit-close-note {
-  margin: 1rem 0 0;
-  font-size: 0.85rem;
-  color: var(--ink-faint);
-}
+.submit-close-arrow { transition: transform 0.25s ease; }
+.submit-close:hover .submit-close-arrow { transform: translateX(4px); }
 
 /* ─── Mobile (under 880px) ────────────────────────────────────── */
 @media (max-width: 880px) {
