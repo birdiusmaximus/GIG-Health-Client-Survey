@@ -1,0 +1,136 @@
+/* ─── Showcase-specific styles ─────────────────────────────────
+   Reuses .stats, .stat, kicker, footbar from styles.css + dashboard.css.
+   This file adds the hero, sections, placeholders, and CTA.
+*/
+
+body.showcase {
+  overflow: auto;
+  scroll-snap-type: none;
+}
+body.showcase .arc,
+body.showcase .scene-video,
+body.showcase .scene-overlay,
+body.showcase .numeral,
+body.showcase .progress {
+  display: none !important;
+}
+
+.show-main {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 8rem 2rem 6rem;
+}
+
+/* ─── Hero ─────────────────────────────────────────────────── */
+.show-hero {
+  max-width: 760px;
+  margin-bottom: 5rem;
+}
+.show-hero .kicker { margin-bottom: 1.8rem; }
+.show-hero-title {
+  margin: 0 0 1.6rem;
+  font-family: var(--font);
+  font-size: clamp(2.6rem, 6.4vw, 5.2rem);
+  font-weight: 700;
+  line-height: 1.04;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+  text-wrap: balance;
+}
+.show-hero-sub {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  max-width: 44ch;
+}
+.show-hero-count {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: var(--track-cap);
+  text-transform: uppercase;
+  color: var(--flame);
+}
+
+/* ─── Trust metrics ────────────────────────────────────────── */
+.show-stats {
+  /* extends .stats — keep same 4-col grid, slightly more breathing room */
+  margin-bottom: 5rem;
+}
+
+/* ─── Generic section header for showcase ─────────────────── */
+.show-section {
+  margin-bottom: 5rem;
+}
+.show-section .kicker { margin-bottom: 1.6rem; }
+
+/* ─── Placeholder boxes (steps 4-5 replace these) ─────────── */
+.show-quote-placeholder,
+.show-themes-placeholder {
+  padding: 3rem 2rem;
+  border: 1px dashed var(--ink-faint);
+  border-radius: 8px;
+  background: rgba(254, 246, 246, 0.015);
+  color: var(--ink-soft);
+  font-style: italic;
+  font-size: 0.95rem;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* ─── CTA ──────────────────────────────────────────────────── */
+.show-cta {
+  margin-top: 5rem;
+  padding: 4rem 0 2rem;
+  border-top: 1px solid var(--ink-mute);
+  text-align: center;
+}
+.show-cta-title {
+  margin: 0 0 0.8rem;
+  font-size: clamp(2rem, 4.6vw, 3.4rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.show-cta-sub {
+  margin: 0 0 2rem;
+  font-size: 1.05rem;
+  color: var(--ink-soft);
+}
+.show-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9em;
+  font-family: var(--font);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: var(--track-cap);
+  text-transform: uppercase;
+  padding: 1.05rem 1.8rem;
+  background: var(--flame);
+  color: var(--paper);
+  text-decoration: none;
+  border-radius: 0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 12px 30px rgba(244, 83, 71, 0.28);
+}
+.show-cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 42px rgba(244, 83, 71, 0.42);
+}
+
+/* Footer */
+.show-footer {
+  position: relative;
+  padding: 2rem;
+  border-top: 1px solid var(--ink-mute);
+  margin-top: 4rem;
+}
+
+/* Mobile */
+@media (max-width: 880px) {
+  .show-main { padding: 6rem 1rem 4rem; }
+  .show-stats { grid-template-columns: repeat(2, 1fr); }
+  .show-section { margin-bottom: 3.5rem; }
+}

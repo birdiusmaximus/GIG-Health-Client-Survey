@@ -7,7 +7,6 @@ body.dashboard {
 body.dashboard .arc,
 body.dashboard .scene-video,
 body.dashboard .scene-overlay,
-body.dashboard .menu,
 body.dashboard .numeral,
 body.dashboard .progress {
   display: none !important;
@@ -17,21 +16,8 @@ body.dashboard .progress {
   display: flex;
   align-items: center;
   pointer-events: auto;
-  margin-left: -8rem;          /* visually centre against the bar */
+  margin-left: -4rem;          /* visually centre against the bar */
 }
-
-.topbar-link {
-  pointer-events: auto;
-  font-family: var(--font);
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: var(--track-cap);
-  text-transform: uppercase;
-  color: var(--ink-soft);
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-.topbar-link:hover { color: var(--flame); }
 
 .dash-main {
   max-width: 1280px;
