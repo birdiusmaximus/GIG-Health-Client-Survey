@@ -280,17 +280,18 @@ function hideSubmitOverlay() {
 // deltaY and triggering a scene change once a threshold is crossed
 // (same UX as before — works for the un-video'd scenes 2–10).
 // ──────────────────────────────────────────────────────────────
-const SCRUB_SECS_PER_PX  = 0.0028;  // wheel deltaY → seconds of video
-const NO_VIDEO_THRESHOLD = 120;     // px of accumulated deltaY to flip scene
-const NAV_COOLDOWN_MS    = 600;     // gap between scene changes (kills inertia spam)
+const SCRUB_SECS_PER_PX  = 0.0022;  // wheel deltaY → seconds of video (softer than v1)
+const END_THRESHOLD      = 0.08;    // how close to the end counts as "at end"
+const START_THRESHOLD    = 0.05;    // how close to the start counts as "at start"
+const NO_VIDEO_THRESHOLD = 120;     // px of accumulated deltaY to flip scene without a video
+const NAV_COOLDOWN_MS    = 700;     // gap between scene changes (kills trackpad inertia)
 
 let lastNavAt = 0;
 let noVideoAccum = 0;
 let noVideoAccumResetT = 0;
 
 window.addEventListener('wheel', (e) => {
-  // Don't hijack scroll inside form fields (textareas have their own
-  // scrollbar; selects open native menus on wheel)
+  // Don't hijack scroll inside form fields
   const tgt = e.target;
   if (tgt && typeof tgt.closest === 'function'
       && tgt.closest('textarea, input, select')) return;
@@ -306,23 +307,37 @@ window.addEventListener('wheel', (e) => {
 
   if (video && video.duration && video.readyState >= 2) {
     // ── Scrub mode ────────────────────────────────────────────
-    const end = Math.max(0, video.duration - 0.05);
-    const newTime = video.currentTime + (e.deltaY * SCRUB_SECS_PER_PX);
+    // Key invariant: the video must play through to its end before
+    // the scene advances. A scroll that *would* overshoot the end
+    // just CLAMPS to end; another scroll is needed to advance.
+    const dur = video.duration;
+    const end = Math.max(0, dur - 0.02);
+    const ct  = video.currentTime;
+    const newTime = ct + (e.deltaY * SCRUB_SECS_PER_PX);
 
-    if (newTime >= end && dir > 0) {
-      // Past the end while scrolling down → advance scene
-      e.preventDefault();
-      lastNavAt = now;
-      navToScene(state.current + 1);
-    } else if (newTime <= 0 && dir < 0) {
-      // Before the start while scrolling up → previous scene
-      e.preventDefault();
-      lastNavAt = now;
-      navToScene(state.current - 1);
+    e.preventDefault();
+    try { video.pause(); } catch (err) {}
+
+    if (dir > 0) {
+      const atEnd = ct >= end - END_THRESHOLD;
+      if (atEnd && newTime > end) {
+        // Already finished + still scrolling → advance scene
+        lastNavAt = now;
+        navToScene(state.current + 1);
+      } else {
+        // Scrub forward, clamp at end so the video always reaches
+        // its final frame before any scene change
+        video.currentTime = Math.min(end, newTime);
+      }
     } else {
-      e.preventDefault();
-      try { video.pause(); } catch (err) {}
-      video.currentTime = Math.max(0, Math.min(end, newTime));
+      const atStart = ct <= START_THRESHOLD;
+      if (atStart && newTime < 0) {
+        // Already at frame 0 + still scrolling up → previous scene
+        lastNavAt = now;
+        navToScene(state.current - 1);
+      } else {
+        video.currentTime = Math.max(0, newTime);
+      }
     }
   } else {
     // ── No video on this scene → accumulator-based nav ────────
