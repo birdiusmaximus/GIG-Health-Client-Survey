@@ -12,20 +12,79 @@ const continueLabel = document.getElementById('continue-label');
 const sceneVideos   = Array.from(document.querySelectorAll('.scene-video'));
 
 // ──────────────────────────────────────────────────────────────
-// Scene videos — the source clips are static (every frame identical),
-// so we play once and let the browser hold the final frame. No loop
-// = no seam flash. Cheap.
+// Double-buffer crossfade — masks the browser's WebM loop-seam flash.
+// Two <video> elements per scene play the same clip. The "primary"
+// loops normally. About a second before its loop seam, we restart the
+// "buffer" from frame 0 and fade it in on top; once it's covering,
+// we fade the primary out. The visible seam moment is hidden under a
+// fully-opaque buffer, then roles swap and we wait for the next seam.
 // ──────────────────────────────────────────────────────────────
+const CROSSFADE_MS = 250;   // fade duration (matches CSS transition)
+const SEAM_LEAD    = 1.0;   // start the crossfade this many seconds before the seam
+
+const pairs = {};   // sceneNumber -> { primary, buffer, transitioning }
 sceneVideos.forEach(v => {
-  v.loop = false;
-  v.autoplay = true;
-  v.muted = true;
-  v.classList.add('is-shown');
-  // Some browsers need an explicit play() kick after metadata loads
-  const kick = () => { v.play().catch(() => {}); };
-  if (v.readyState >= 1) kick();
-  else v.addEventListener('loadedmetadata', kick, { once: true });
+  const n = parseInt(v.dataset.scene, 10);
+  (pairs[n] = pairs[n] || { videos: [] }).videos.push(v);
 });
+
+Object.entries(pairs).forEach(([n, p]) => {
+  const [a, b] = p.videos;
+  if (!a) return;
+  // Single-video scenes degrade gracefully — just loop with no masking
+  if (!b) {
+    a.loop = true;
+    a.classList.add('is-shown');
+    a.play().catch(() => {});
+    return;
+  }
+  a.loop = true;
+  b.loop = true;
+  a.classList.add('is-shown');
+  a.play().catch(() => {});
+  // Hold the buffer paused at frame 0 — restarts fresh on every crossfade
+  const holdBufferAtZero = () => {
+    try { b.pause(); } catch (e) {}
+    try { b.currentTime = 0; } catch (e) {}
+  };
+  if (b.readyState >= 1) holdBufferAtZero();
+  else b.addEventListener('loadedmetadata', holdBufferAtZero, { once: true });
+  b.addEventListener('play', () => {
+    if (!b.classList.contains('is-shown')) holdBufferAtZero();
+  });
+  p.primary       = a;
+  p.buffer        = b;
+  p.transitioning = false;
+});
+
+function tickCrossfade() {
+  const p = pairs[state ? state.current : 1];
+  if (p && p.buffer && !p.transitioning && p.primary.duration) {
+    const triggerAt = Math.max(0, p.primary.duration - SEAM_LEAD);
+    if (p.primary.currentTime >= triggerAt) {
+      p.transitioning = true;
+      // Restart the buffer from the start and fade it in
+      try { p.buffer.currentTime = 0; } catch (e) {}
+      p.buffer.play().catch(() => {});
+      p.buffer.classList.add('is-shown');
+      // Once buffer is fully covering, fade the primary out
+      setTimeout(() => {
+        p.primary.classList.remove('is-shown');
+        const oldPrimary = p.primary;
+        [p.primary, p.buffer] = [p.buffer, p.primary];
+        // After the fade-out completes, reset old primary so it's
+        // ready to be the next buffer
+        setTimeout(() => {
+          try { oldPrimary.pause(); } catch (e) {}
+          try { oldPrimary.currentTime = 0; } catch (e) {}
+          p.transitioning = false;
+        }, CROSSFADE_MS);
+      }, CROSSFADE_MS);
+    }
+  }
+  requestAnimationFrame(tickCrossfade);
+}
+requestAnimationFrame(tickCrossfade);
 
 const TOTAL = scenes.length;
 
@@ -66,13 +125,19 @@ function setCurrentScene(n) {
     dot.classList.toggle('active', i + 1 === n);
     dot.classList.toggle('done',   i + 1 <  n);
   });
-  // Show only the active scene's video. It autoplays once on first
-  // load then holds the final (identical) frame — nothing to resume.
+  // Mark the active scene's videos visible. Within each pair, only
+  // the one currently marked .is-shown is resumed — its buffer stays
+  // paused at frame 0 until the next crossfade tick triggers it.
   let anyActive = false;
   sceneVideos.forEach(v => {
     const matches = parseInt(v.dataset.scene, 10) === n;
     v.classList.toggle('is-active', matches);
-    if (matches) anyActive = true;
+    if (matches) {
+      anyActive = true;
+      if (v.classList.contains('is-shown')) v.play().catch(() => {});
+    } else {
+      try { v.pause(); } catch (e) {}
+    }
   });
   // body class lets the dark overlay fade in/out with the video
   document.body.classList.toggle('has-video', anyActive);

@@ -60,7 +60,7 @@ body { min-height: 100vh; }
   z-index: 1;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.1s ease, visibility 0.55s ease;
+  transition: opacity 0.25s ease, visibility 0.55s ease;
   pointer-events: none;
 }
 .scene-video.is-active {

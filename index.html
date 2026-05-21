@@ -6,7 +6,7 @@
   <title>GIG — Tell us how we did</title>
   <meta name="theme-color" content="#0D1A2D" />
   <link rel="stylesheet" href="https://use.typekit.net/wek0eum.css" />
-  <link rel="stylesheet" href="./styles.css?v=26" />
+  <link rel="stylesheet" href="./styles.css?v=27" />
 </head>
 <body class="survey">
 
@@ -23,12 +23,21 @@
     <path d="M -100 900 Q 500 200 1400 100"  fill="none" stroke="url(#gigArc)" stroke-width="1" opacity="0.4" />
   </svg>
 
-  <!-- Scene videos — the file is effectively a still frame, so no loop:
-       plays through once, then holds the final frame (no seam flash) -->
+  <!-- Scene videos — pairs of two per scene for seamless-loop crossfade
+       (browser's native loop seam is a visible flash on 4K WebM; we mask
+       it by fading a fresh second video over the top right before the
+       seam happens). -->
   <video
     class="scene-video"
-    data-scene="1"
-    autoplay muted playsinline preload="auto"
+    data-scene="1" data-role="a"
+    autoplay loop muted playsinline preload="auto"
+    aria-hidden="true">
+    <source src="./assets/videos/scene-01.webm" type="video/webm" />
+  </video>
+  <video
+    class="scene-video"
+    data-scene="1" data-role="b"
+    loop muted playsinline preload="auto"
     aria-hidden="true">
     <source src="./assets/videos/scene-01.webm" type="video/webm" />
   </video>
@@ -249,7 +258,7 @@
     </div>
   </div>
 
-  <script type="module" src="./main.js?v=31"></script>
+  <script type="module" src="./main.js?v=32"></script>
   <script src="./menu.js?v=2"></script>
   <script src="./privacy.js?v=1"></script>
 </body>
