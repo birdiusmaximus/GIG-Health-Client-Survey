@@ -18,11 +18,11 @@ body.showcase .progress {
   height: 100vh;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 5.2rem 2rem 1rem;
+  padding: 7rem 2rem 2rem;
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
+  gap: 1.4rem;
 }
 
 /* Soft brand gradient wash, far behind everything */
