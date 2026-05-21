@@ -12,56 +12,19 @@ const continueLabel = document.getElementById('continue-label');
 const sceneVideos   = Array.from(document.querySelectorAll('.scene-video'));
 
 // ──────────────────────────────────────────────────────────────
-// Scrub-on-scroll videos
-// Each scene has at most one video. Videos do NOT loop or autoplay
-// — playback is entirely driven by the user's mouse wheel. The
-// wheel handler further down scrubs video.currentTime forward /
-// backward proportional to deltaY, and when the playhead reaches
-// the end (or start) any further scroll in the same direction
-// navigates to the next (or previous) scene.
+// Scene videos — native browser loop, no scripting needed
+// Each scene has at most one video that autoplays muted on a loop.
 // ──────────────────────────────────────────────────────────────
-// Load each video as a blob URL so it's fully seekable regardless of
-// whether the server supports HTTP Range requests. Python's http.server
-// doesn't (which breaks scrub-on-scroll in local dev), and even on
-// Vercel this guarantees instant scrubbing the moment the file is in.
-async function makeVideoSeekable(v) {
-  const source = v.querySelector('source');
-  if (!source) return;
-  const url = source.getAttribute('src');
-  if (!url) return;
-  try {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const blob = await res.blob();
-    const blobUrl = URL.createObjectURL(blob);
-    // Replace the <source> with a direct src to the blob URL
-    source.remove();
-    v.src = blobUrl;
-    v.load();
-  } catch (err) {
-    console.warn('[scene-video] blob load failed, falling back to original URL', err);
-  }
-}
-
 sceneVideos.forEach(v => {
-  v.loop = false;
-  v.autoplay = false;
+  v.loop = true;
+  v.autoplay = true;
+  v.muted = true;
   v.classList.add('is-shown');
-  const initVideo = () => {
-    try { v.pause(); } catch (e) {}
-    try { v.currentTime = 0; } catch (e) {}
-  };
-  if (v.readyState >= 1) initVideo();
-  else v.addEventListener('loadedmetadata', initVideo, { once: true });
-  // Keep paused — autoplay was already off but some browsers may try once
-  v.addEventListener('play', () => { try { v.pause(); } catch (e) {} });
-  // Load as blob to guarantee seekability
-  makeVideoSeekable(v);
+  // Some browsers need an explicit play() kick after metadata loads
+  const kick = () => { v.play().catch(() => {}); };
+  if (v.readyState >= 1) kick();
+  else v.addEventListener('loadedmetadata', kick, { once: true });
 });
-
-function getCurrentSceneVideo() {
-  return document.querySelector(`.scene-video[data-scene="${state && state.current}"]`);
-}
 
 const TOTAL = scenes.length;
 
@@ -96,25 +59,22 @@ function setCurrentScene(n) {
     return;
   }
   state.current = n;
-  // New scene → drop any dwell-timer / accumulator carry-over from the last one
-  reachedEndAt = 0;
-  reachedStartAt = 0;
-  noVideoAccum = 0;
+  wheelAccum = 0;
   numeralEl.textContent = String(n).padStart(2, '0');
   dotsEls.forEach((dot, i) => {
     dot.classList.toggle('active', i + 1 === n);
     dot.classList.toggle('done',   i + 1 <  n);
   });
-  // Pause + reset every scene's video. The active scene's video
-  // becomes visible (is-active) but stays paused at frame 0 — the
-  // wheel scrub handler is the only thing that advances playback.
+  // Show only the active scene's video; let it keep playing on loop.
   let anyActive = false;
   sceneVideos.forEach(v => {
     const matches = parseInt(v.dataset.scene, 10) === n;
     v.classList.toggle('is-active', matches);
-    try { v.pause(); } catch (e) {}
-    try { v.currentTime = 0; } catch (e) {}
-    if (matches) anyActive = true;
+    if (matches) {
+      anyActive = true;
+      // Resume in case the browser paused it (e.g. tab switch)
+      v.play().catch(() => {});
+    }
   });
   // body class lets the dark overlay fade in/out with the video
   document.body.classList.toggle('has-video', anyActive);
@@ -273,111 +233,45 @@ function hideSubmitOverlay() {
 // handles navigation natively, no JS handler needed.
 
 // ──────────────────────────────────────────────────────────────
-// Wheel handler — scrub the current scene's video, then advance
-//
-// If the current scene has a video, wheel deltaY scrubs the
-// playhead forward/backward. When the playhead reaches the end and
-// the user keeps scrolling down, we navigate to the next scene.
-// At the start scrolling up, we navigate to the previous scene.
-//
-// If the current scene has no video, we fall back to accumulating
-// deltaY and triggering a scene change once a threshold is crossed
-// (same UX as before — works for the un-video'd scenes 2–10).
+// Wheel handler — small flicks accumulate, then snap decisively
+// to the next scene. Works on top of native scroll-snap.
 // ──────────────────────────────────────────────────────────────
-const SCRUB_SECS_PER_PX  = 0.0022;  // wheel deltaY → seconds of video (softer than v1)
-const NO_VIDEO_THRESHOLD = 120;     // px of accumulated deltaY to flip scene without a video
-const NAV_COOLDOWN_MS    = 700;     // gap between scene changes (kills trackpad inertia)
-const END_DWELL_MS       = 350;     // sit on final frame this long before scroll advances
+const WHEEL_TRIGGER  = 28;     // px of accumulated deltaY before snapping
+const WHEEL_COOLDOWN = 650;    // ms — minimum gap between snaps
+const WHEEL_RESET    = 140;    // ms — accumulator decays if you stop scrolling
 
-let lastNavAt = 0;
-let reachedEndAt = 0;       // timestamp when forward scrub first hit end of current video
-let reachedStartAt = 0;     // timestamp when backward scrub first hit start of current video
-let noVideoAccum = 0;
-let noVideoAccumResetT = 0;
+let wheelAccum     = 0;
+let wheelResetT    = 0;
+let lastWheelNavAt = 0;
 
 window.addEventListener('wheel', (e) => {
-  // Don't hijack scroll inside form fields
   const tgt = e.target;
   if (tgt && typeof tgt.closest === 'function'
       && tgt.closest('textarea, input, select')) return;
 
   const now = performance.now();
-  if (now - lastNavAt < NAV_COOLDOWN_MS) {
+  if (now - lastWheelNavAt < WHEEL_COOLDOWN) {
     e.preventDefault();
     return;
   }
 
-  const video = getCurrentSceneVideo();
-  const dir = e.deltaY > 0 ? 1 : -1;
+  wheelAccum += e.deltaY;
+  clearTimeout(wheelResetT);
+  wheelResetT = setTimeout(() => { wheelAccum = 0; }, WHEEL_RESET);
 
-  if (video && video.duration && video.readyState >= 2) {
-    // ── Scrub mode ────────────────────────────────────────────
-    // Key invariant: the video must play through to its actual end
-    // before the scene advances. The very first scroll that *would*
-    // overshoot just CLAMPS the playhead to the final frame and
-    // starts a dwell timer. The user has to keep scrolling after
-    // END_DWELL_MS for the scene change to fire.
-    const dur = video.duration;
-    const end = Math.max(0, dur - 0.02);
-    const ct  = video.currentTime;
-    const newTime = ct + (e.deltaY * SCRUB_SECS_PER_PX);
+  if (Math.abs(wheelAccum) < WHEEL_TRIGGER) return;
 
-    e.preventDefault();
-    try { video.pause(); } catch (err) {}
-
-    if (dir > 0) {
-      if (newTime > end) {
-        // Would overshoot the end
-        if (reachedEndAt > 0 && now - reachedEndAt >= END_DWELL_MS) {
-          // Already sat on the final frame long enough → advance
-          reachedEndAt = 0;
-          lastNavAt = now;
-          navToScene(state.current + 1);
-        } else {
-          // First overshoot OR still in dwell → pin at end, arm timer
-          video.currentTime = end;
-          if (reachedEndAt === 0) reachedEndAt = now;
-        }
-      } else {
-        // Normal forward scrub
-        reachedEndAt = 0;
-        video.currentTime = newTime;
-      }
-    } else {
-      if (newTime < 0) {
-        if (reachedStartAt > 0 && now - reachedStartAt >= END_DWELL_MS) {
-          reachedStartAt = 0;
-          lastNavAt = now;
-          navToScene(state.current - 1);
-        } else {
-          video.currentTime = 0;
-          if (reachedStartAt === 0) reachedStartAt = now;
-        }
-      } else {
-        reachedStartAt = 0;
-        video.currentTime = newTime;
-      }
-    }
-  } else {
-    // ── No video on this scene → accumulator-based nav ────────
-    noVideoAccum += e.deltaY;
-    clearTimeout(noVideoAccumResetT);
-    noVideoAccumResetT = setTimeout(() => { noVideoAccum = 0; }, 200);
-
-    if (Math.abs(noVideoAccum) >= NO_VIDEO_THRESHOLD) {
-      const moveDir = noVideoAccum > 0 ? 1 : -1;
-      noVideoAccum = 0;
-      e.preventDefault();
-      lastNavAt = now;
-      navToScene(state.current + moveDir);
-    }
-  }
+  const dir = wheelAccum > 0 ? 1 : -1;
+  wheelAccum = 0;
+  e.preventDefault();
+  lastWheelNavAt = now;
+  navToScene(state.current + dir);
 }, { passive: false });
 
 function navToScene(targetSceneNum) {
   const target = Math.max(1, Math.min(TOTAL, targetSceneNum));
   if (target === state.current) return;
-  noVideoAccum = 0;
+  wheelAccum = 0;
   scenes[target - 1].scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -397,15 +291,16 @@ window.addEventListener('keydown', (e) => {
 });
 
 // ──────────────────────────────────────────────────────────────
-// Initial state — activate the video for whatever scene we land on
+// Initial state — show the video for whatever scene we land on
 // ──────────────────────────────────────────────────────────────
 updateContinueButton();
 let anyInitialActive = false;
 sceneVideos.forEach(v => {
   const matches = parseInt(v.dataset.scene, 10) === state.current;
   v.classList.toggle('is-active', matches);
-  try { v.pause(); } catch (e) {}
-  try { v.currentTime = 0; } catch (e) {}
-  if (matches) anyInitialActive = true;
+  if (matches) {
+    anyInitialActive = true;
+    v.play().catch(() => {});
+  }
 });
 document.body.classList.toggle('has-video', anyInitialActive);
