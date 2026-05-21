@@ -71,8 +71,9 @@ body { min-height: 100vh; }
 }
 
 /* dark gradient overlay — only shows when a scene video is active.
-   Darkens the right side (where the form sits) and the top/bottom
-   strips (where the chrome lives) so everything stays legible. */
+   The video's right side is already dark navy where the form sits,
+   so no right-side wash is needed; we just keep very faint top/bottom
+   strips so the topbar + footer chrome stays seated. */
 .scene-overlay {
   position: fixed;
   inset: 0;
@@ -81,13 +82,6 @@ body { min-height: 100vh; }
   opacity: 0;
   transition: opacity 0.55s ease;
   background:
-    /* right-side wash for form copy */
-    linear-gradient(to right,
-      transparent 0%,
-      transparent 38%,
-      rgba(13, 26, 45, 0.55) 70%,
-      rgba(13, 26, 45, 0.88) 100%),
-    /* faint top/bottom strips to seat the chrome */
     linear-gradient(to bottom,
       rgba(13, 26, 45, 0.55) 0%,
       transparent 14%,
