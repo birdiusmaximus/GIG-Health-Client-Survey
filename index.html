@@ -23,18 +23,11 @@
     <path d="M -100 900 Q 500 200 1400 100"  fill="none" stroke="url(#gigArc)" stroke-width="1" opacity="0.4" />
   </svg>
 
-  <!-- Scene videos — pairs of two per scene for seamless-loop crossfade -->
+  <!-- Scene videos — one per scene, scrubbed by mouse wheel (no autoplay, no loop) -->
   <video
     class="scene-video"
-    data-scene="1" data-role="a"
-    autoplay loop muted playsinline preload="auto"
-    aria-hidden="true">
-    <source src="./assets/videos/scene-01.webm" type="video/webm" />
-  </video>
-  <video
-    class="scene-video"
-    data-scene="1" data-role="b"
-    loop muted playsinline preload="auto"
+    data-scene="1"
+    muted playsinline preload="auto"
     aria-hidden="true">
     <source src="./assets/videos/scene-01.webm" type="video/webm" />
   </video>
@@ -255,7 +248,7 @@
     </div>
   </div>
 
-  <script type="module" src="./main.js?v=23"></script>
+  <script type="module" src="./main.js?v=24"></script>
   <script src="./menu.js?v=2"></script>
   <script src="./privacy.js?v=1"></script>
 </body>

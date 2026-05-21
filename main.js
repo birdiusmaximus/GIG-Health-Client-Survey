@@ -12,88 +12,31 @@ const continueLabel = document.getElementById('continue-label');
 const sceneVideos   = Array.from(document.querySelectorAll('.scene-video'));
 
 // ──────────────────────────────────────────────────────────────
-// Double-buffer crossfade — hides the loop seam.
-// Two videos per scene play continuously. The buffer is offset by
-// half the duration, so when one nears its seam the other is mid-
-// loop. Just before the seam we fade the buffer IN (becomes opaque
-// while the old one is still visible), wait until it's fully on
-// screen, then fade the old one OUT. The seam moment is covered by
-// the fully-visible buffer the entire time.
+// Scrub-on-scroll videos
+// Each scene has at most one video. Videos do NOT loop or autoplay
+// — playback is entirely driven by the user's mouse wheel. The
+// wheel handler further down scrubs video.currentTime forward /
+// backward proportional to deltaY, and when the playhead reaches
+// the end (or start) any further scroll in the same direction
+// navigates to the next (or previous) scene.
 // ──────────────────────────────────────────────────────────────
-// Fire the crossfade once the primary hits the 4.0s mark (the safe
-// cut-point before the flash frames near the end of the 5.04s clip).
-// The buffer (already mid-loop) fades up to full opacity over 500ms;
-// the primary keeps playing underneath until the buffer is fully on
-// screen, then fades out behind it.
-const CROSSFADE_MS    = 100;
-const SEAM_TRIGGER    = 1.04;
-
-const pairs = {};                // sceneNumber -> { primary, buffer, transitioning }
 sceneVideos.forEach(v => {
-  const n = parseInt(v.dataset.scene, 10);
-  (pairs[n] = pairs[n] || { videos: [] }).videos.push(v);
-});
-
-Object.entries(pairs).forEach(([n, p]) => {
-  const [a, b] = p.videos;
-  if (!a) return;
-  // Single-video scenes degrade gracefully — no crossfade, just always shown
-  if (!b) {
-    a.loop = true;
-    a.classList.add('is-shown');
-    return;
-  }
-  a.loop = true;
-  b.loop = true;
-  a.classList.add('is-shown');     // primary visible + playing from the start
-  // hold the buffer paused at frame 0 — it'll start fresh every fade-in
-  const holdBufferAtZero = () => {
-    b.pause();
-    try { b.currentTime = 0; } catch (e) {}
+  v.loop = false;
+  v.autoplay = false;
+  v.classList.add('is-shown');
+  const initVideo = () => {
+    try { v.pause(); } catch (e) {}
+    try { v.currentTime = 0; } catch (e) {}
   };
-  if (b.readyState >= 1) holdBufferAtZero();
-  else b.addEventListener('loadedmetadata', holdBufferAtZero, { once: true });
-  // re-pause if the browser tries to auto-play it for any reason
-  b.addEventListener('play', () => {
-    if (!b.classList.contains('is-shown')) holdBufferAtZero();
-  });
-  p.primary       = a;
-  p.buffer        = b;
-  p.transitioning = false;
+  if (v.readyState >= 1) initVideo();
+  else v.addEventListener('loadedmetadata', initVideo, { once: true });
+  // Keep paused — autoplay was already off but some browsers may try once
+  v.addEventListener('play', () => { try { v.pause(); } catch (e) {} });
 });
 
-function tickCrossfade() {
-  const p = pairs[state.current];
-  if (p && p.buffer && !p.transitioning && p.primary.duration) {
-    if (p.primary.currentTime >= 4.0) {
-      p.transitioning = true;
-
-      // Step 1 — restart the buffer from the very beginning + play it
-      try { p.buffer.currentTime = 0; } catch (e) {}
-      p.buffer.play().catch(() => {});
-      // Step 2 — fade the buffer IN (CSS transition 500ms). Primary
-      // keeps playing underneath at full opacity.
-      p.buffer.classList.add('is-shown');
-
-      // Step 3 — once the buffer is fully visible, fade the primary out
-      setTimeout(() => {
-        p.primary.classList.remove('is-shown');
-        // Swap roles so future ticks watch the new active video
-        const oldPrimary = p.primary;
-        [p.primary, p.buffer] = [p.buffer, p.primary];
-        // After the fade-out completes, pause + reset the old primary
-        // so it's ready to start fresh from frame 0 next cycle
-        setTimeout(() => {
-          oldPrimary.pause();
-          try { oldPrimary.currentTime = 0; } catch (e) {}
-          p.transitioning = false;
-        }, CROSSFADE_MS);
-      }, CROSSFADE_MS);
-    }
-  }
-  requestAnimationFrame(tickCrossfade);
+function getCurrentSceneVideo() {
+  return document.querySelector(`.scene-video[data-scene="${state && state.current}"]`);
 }
-requestAnimationFrame(tickCrossfade);
 
 const TOTAL = scenes.length;
 
@@ -133,22 +76,16 @@ function setCurrentScene(n) {
     dot.classList.toggle('active', i + 1 === n);
     dot.classList.toggle('done',   i + 1 <  n);
   });
-  // swap the active scene video — non-matching ones pause + fade out.
-  // For pair-based scenes, only the video currently marked `is-shown`
-  // is resumed; its buffer stays paused at frame 0 until the next
-  // crossfade triggers it.
+  // Pause + reset every scene's video. The active scene's video
+  // becomes visible (is-active) but stays paused at frame 0 — the
+  // wheel scrub handler is the only thing that advances playback.
   let anyActive = false;
   sceneVideos.forEach(v => {
     const matches = parseInt(v.dataset.scene, 10) === n;
     v.classList.toggle('is-active', matches);
-    if (matches) {
-      anyActive = true;
-      if (v.classList.contains('is-shown')) {
-        v.play().catch(() => {});
-      }
-    } else {
-      try { v.pause(); } catch (e) {}
-    }
+    try { v.pause(); } catch (e) {}
+    try { v.currentTime = 0; } catch (e) {}
+    if (matches) anyActive = true;
   });
   // body class lets the dark overlay fade in/out with the video
   document.body.classList.toggle('has-video', anyActive);
@@ -307,50 +244,83 @@ function hideSubmitOverlay() {
 // handles navigation natively, no JS handler needed.
 
 // ──────────────────────────────────────────────────────────────
-// Wheel-based scene navigation
-// Native scroll-snap is "proximity" (gentle). We add a wheel
-// handler on top: small flicks accumulate and feel free, but once
-// the accumulator crosses a threshold the page snaps decisively to
-// the next scene. Cooldown prevents skipping multiple scenes per
-// gesture (and tames trackpad inertia).
+// Wheel handler — scrub the current scene's video, then advance
+//
+// If the current scene has a video, wheel deltaY scrubs the
+// playhead forward/backward. When the playhead reaches the end and
+// the user keeps scrolling down, we navigate to the next scene.
+// At the start scrolling up, we navigate to the previous scene.
+//
+// If the current scene has no video, we fall back to accumulating
+// deltaY and triggering a scene change once a threshold is crossed
+// (same UX as before — works for the un-video'd scenes 2–10).
 // ──────────────────────────────────────────────────────────────
-const WHEEL_TRIGGER  = 28;     // px of accumulated deltaY to trigger a snap
-const WHEEL_COOLDOWN = 650;    // ms — minimum time between snaps
-const WHEEL_RESET    = 140;    // ms — accumulator decays if you stop scrolling
+const SCRUB_SECS_PER_PX  = 0.0028;  // wheel deltaY → seconds of video
+const NO_VIDEO_THRESHOLD = 120;     // px of accumulated deltaY to flip scene
+const NAV_COOLDOWN_MS    = 600;     // gap between scene changes (kills inertia spam)
 
-let wheelAccum     = 0;
-let wheelResetT    = 0;
-let lastWheelNavAt = 0;
+let lastNavAt = 0;
+let noVideoAccum = 0;
+let noVideoAccumResetT = 0;
 
 window.addEventListener('wheel', (e) => {
-  // don't hijack scroll inside textareas (they have their own scroll)
+  // Don't hijack scroll inside form fields (textareas have their own
+  // scrollbar; selects open native menus on wheel)
   const tgt = e.target;
-  if (tgt && typeof tgt.closest === 'function' && tgt.closest('textarea')) return;
+  if (tgt && typeof tgt.closest === 'function'
+      && tgt.closest('textarea, input, select')) return;
 
   const now = performance.now();
-
-  // still cooling down from the last snap — eat the event
-  if (now - lastWheelNavAt < WHEEL_COOLDOWN) {
+  if (now - lastNavAt < NAV_COOLDOWN_MS) {
     e.preventDefault();
     return;
   }
 
-  wheelAccum += e.deltaY;
-  clearTimeout(wheelResetT);
-  wheelResetT = setTimeout(() => { wheelAccum = 0; }, WHEEL_RESET);
+  const video = getCurrentSceneVideo();
+  const dir = e.deltaY > 0 ? 1 : -1;
 
-  if (Math.abs(wheelAccum) < WHEEL_TRIGGER) return;
+  if (video && video.duration && video.readyState >= 2) {
+    // ── Scrub mode ────────────────────────────────────────────
+    const end = Math.max(0, video.duration - 0.05);
+    const newTime = video.currentTime + (e.deltaY * SCRUB_SECS_PER_PX);
 
-  const dir = wheelAccum > 0 ? 1 : -1;
-  const target = Math.max(1, Math.min(TOTAL, state.current + dir));
-  wheelAccum = 0;
+    if (newTime >= end && dir > 0) {
+      // Past the end while scrolling down → advance scene
+      e.preventDefault();
+      lastNavAt = now;
+      navToScene(state.current + 1);
+    } else if (newTime <= 0 && dir < 0) {
+      // Before the start while scrolling up → previous scene
+      e.preventDefault();
+      lastNavAt = now;
+      navToScene(state.current - 1);
+    } else {
+      e.preventDefault();
+      try { video.pause(); } catch (err) {}
+      video.currentTime = Math.max(0, Math.min(end, newTime));
+    }
+  } else {
+    // ── No video on this scene → accumulator-based nav ────────
+    noVideoAccum += e.deltaY;
+    clearTimeout(noVideoAccumResetT);
+    noVideoAccumResetT = setTimeout(() => { noVideoAccum = 0; }, 200);
 
-  if (target === state.current) return;       // already at edge — let native overscroll happen
-
-  e.preventDefault();
-  lastWheelNavAt = now;
-  scenes[target - 1].scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (Math.abs(noVideoAccum) >= NO_VIDEO_THRESHOLD) {
+      const moveDir = noVideoAccum > 0 ? 1 : -1;
+      noVideoAccum = 0;
+      e.preventDefault();
+      lastNavAt = now;
+      navToScene(state.current + moveDir);
+    }
+  }
 }, { passive: false });
+
+function navToScene(targetSceneNum) {
+  const target = Math.max(1, Math.min(TOTAL, targetSceneNum));
+  if (target === state.current) return;
+  noVideoAccum = 0;
+  scenes[target - 1].scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
 // keyboard nav as a bonus — ↑/↓, PageUp/Down, Home/End
 window.addEventListener('keydown', (e) => {
@@ -375,11 +345,8 @@ let anyInitialActive = false;
 sceneVideos.forEach(v => {
   const matches = parseInt(v.dataset.scene, 10) === state.current;
   v.classList.toggle('is-active', matches);
-  if (matches) {
-    anyInitialActive = true;
-    if (v.classList.contains('is-shown')) {
-      v.play().catch(() => {});
-    }
-  }
+  try { v.pause(); } catch (e) {}
+  try { v.currentTime = 0; } catch (e) {}
+  if (matches) anyInitialActive = true;
 });
 document.body.classList.toggle('has-video', anyInitialActive);
