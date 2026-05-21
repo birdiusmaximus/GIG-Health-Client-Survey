@@ -12,11 +12,12 @@ const continueLabel = document.getElementById('continue-label');
 const sceneVideos   = Array.from(document.querySelectorAll('.scene-video'));
 
 // ──────────────────────────────────────────────────────────────
-// Scene videos — native browser loop, no scripting needed
-// Each scene has at most one video that autoplays muted on a loop.
+// Scene videos — the source clips are static (every frame identical),
+// so we play once and let the browser hold the final frame. No loop
+// = no seam flash. Cheap.
 // ──────────────────────────────────────────────────────────────
 sceneVideos.forEach(v => {
-  v.loop = true;
+  v.loop = false;
   v.autoplay = true;
   v.muted = true;
   v.classList.add('is-shown');
@@ -65,16 +66,13 @@ function setCurrentScene(n) {
     dot.classList.toggle('active', i + 1 === n);
     dot.classList.toggle('done',   i + 1 <  n);
   });
-  // Show only the active scene's video; let it keep playing on loop.
+  // Show only the active scene's video. It autoplays once on first
+  // load then holds the final (identical) frame — nothing to resume.
   let anyActive = false;
   sceneVideos.forEach(v => {
     const matches = parseInt(v.dataset.scene, 10) === n;
     v.classList.toggle('is-active', matches);
-    if (matches) {
-      anyActive = true;
-      // Resume in case the browser paused it (e.g. tab switch)
-      v.play().catch(() => {});
-    }
+    if (matches) anyActive = true;
   });
   // body class lets the dark overlay fade in/out with the video
   document.body.classList.toggle('has-video', anyActive);
@@ -298,9 +296,6 @@ let anyInitialActive = false;
 sceneVideos.forEach(v => {
   const matches = parseInt(v.dataset.scene, 10) === state.current;
   v.classList.toggle('is-active', matches);
-  if (matches) {
-    anyInitialActive = true;
-    v.play().catch(() => {});
-  }
+  if (matches) anyInitialActive = true;
 });
 document.body.classList.toggle('has-video', anyInitialActive);
