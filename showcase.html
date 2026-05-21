@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="https://use.typekit.net/wek0eum.css" />
   <link rel="stylesheet" href="./styles.css?v=24" />
   <link rel="stylesheet" href="./dashboard.css?v=7" />
-  <link rel="stylesheet" href="./showcase.css?v=3" />
+  <link rel="stylesheet" href="./showcase.css?v=4" />
 </head>
 <body class="showcase">
 
@@ -38,17 +38,17 @@
       <p class="show-hero-sub">
         Honest feedback from healthcare partners across pharma, biotech, and life sciences — collected anonymously, summarised here in aggregate.
       </p>
-      <p class="show-hero-count" id="show-count">— responses across the last 12 months</p>
+      <p class="show-hero-count" id="show-count">Loading…</p>
     </section>
 
-    <!-- Bento grid -->
+    <!-- Bento -->
     <section class="bento">
 
-      <!-- 1. Quality — hero donut, dark, spans 2 rows -->
-      <article class="bento-card bento-quality" id="bento-quality">
+      <!-- 1. Quality — hero card with donut + breakdown -->
+      <article class="bento-card bento-quality">
         <header class="bento-head">
-          <span class="bento-tag bento-tag-on-dark">Quality</span>
-          <span class="bento-meta">Across all responses</span>
+          <span class="bento-kicker">Quality</span>
+          <span class="bento-meta">All responses</span>
         </header>
         <div class="bento-quality-body">
           <div class="bento-donut" id="quality-donut"></div>
@@ -56,28 +56,33 @@
         </div>
       </article>
 
-      <!-- 2. Responses — small bright stat card -->
+      <!-- 2. Responses -->
       <article class="bento-card bento-responses">
-        <span class="bento-tag bento-tag-on-light">Responses</span>
+        <header class="bento-head">
+          <span class="bento-kicker">Responses</span>
+        </header>
         <p class="bento-big-num" id="responses-num">—</p>
-        <p class="bento-sub">Recent feedback submissions</p>
+        <p class="bento-sub">Recent feedback submissions from healthcare partners</p>
       </article>
 
-      <!-- 3. Creativity — bars + big % -->
+      <!-- 3. Creativity — % + bars -->
       <article class="bento-card bento-creativity">
         <header class="bento-head">
-          <span class="bento-tag bento-tag-on-light">Creativity</span>
-          <span class="bento-meta-light" id="creativity-meta">— rated creative</span>
+          <span class="bento-kicker">Creativity</span>
         </header>
-        <p class="bento-big-num bento-big-num-flush" id="creativity-num">—%</p>
+        <p class="bento-big-num" id="creativity-num">—<small>%</small></p>
         <div class="bento-bar-chart" id="creativity-bars"></div>
+        <div class="bento-bar-axis">
+          <span>Best</span>
+          <span>Worst</span>
+        </div>
       </article>
 
       <!-- 4. Budget position — wide scale -->
       <article class="bento-card bento-budget">
         <header class="bento-head">
-          <span class="bento-tag bento-tag-on-dark">Budget position</span>
-          <span class="bento-meta" id="budget-meta">Weighted average across responses</span>
+          <span class="bento-kicker">Budget position</span>
+          <span class="bento-meta" id="budget-meta">Weighted average</span>
         </header>
         <div class="bento-budget-scale">
           <div class="budget-scale" role="img" aria-label="Budget position">
@@ -87,18 +92,18 @@
             <span class="budget-marker" id="budget-marker" style="left:50%"></span>
           </div>
           <div class="budget-axis">
-            <span>Higher than market</span>
+            <span>Higher</span>
             <span>On par</span>
             <span>More competitive</span>
           </div>
         </div>
       </article>
 
-      <!-- 5. Quote carousel — light card, wide -->
+      <!-- 5. Quote carousel — wide, editorial -->
       <article class="bento-card bento-quote">
         <header class="bento-head">
-          <span class="bento-tag bento-tag-on-light">In their words</span>
-          <span class="bento-meta-light">Anonymised &amp; consented</span>
+          <span class="bento-kicker">In their words</span>
+          <span class="bento-meta">Anonymised &amp; consented</span>
         </header>
         <div class="quote-carousel">
           <div class="quote-stage" id="quote-stage">
@@ -108,7 +113,7 @@
         </div>
       </article>
 
-      <!-- 6. CTA — Flame red, prominent -->
+      <!-- 6. CTA — the one Flame card -->
       <article class="bento-card bento-cta">
         <p class="bento-cta-kicker">Got a project?</p>
         <h2 class="bento-cta-title">Let's turn your science into a story.</h2>
@@ -132,7 +137,7 @@
     </div>
   </footer>
 
-  <script type="module" src="./showcase.js?v=3"></script>
+  <script type="module" src="./showcase.js?v=4"></script>
   <script src="./menu.js?v=1"></script>
 </body>
 </html>

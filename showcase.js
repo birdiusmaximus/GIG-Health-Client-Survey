@@ -143,17 +143,15 @@ function renderResponses(total) {
 function renderCreativity(creativity) {
   const numEl  = document.getElementById('creativity-num');
   const barsEl = document.getElementById('creativity-bars');
-  const metaEl = document.getElementById('creativity-meta');
   if (!numEl || !barsEl) return;
 
-  numEl.textContent = `${creativity.pct}%`;
-  if (metaEl) metaEl.textContent = 'Groundbreaking or really creative';
+  numEl.innerHTML = `${creativity.pct}<small>%</small>`;
 
   const entries = Object.entries(creativity.breakdown);
   const max = Math.max(...entries.map(([, c]) => c), 1);
 
   barsEl.innerHTML = entries.map(([key, count]) => {
-    const h = Math.max(8, (count / max) * 100);
+    const h = Math.max(10, (count / max) * 100);
     return `<div class="bento-bar" style="--h:${h}%; --c:${CREATIVITY_COLORS[key]}"
       title="${CREATIVITY_LABELS[key]}: ${count}"></div>`;
   }).join('');
