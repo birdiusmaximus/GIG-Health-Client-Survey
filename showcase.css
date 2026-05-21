@@ -18,7 +18,7 @@ body.showcase .progress {
   height: 100vh;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 7rem 2rem 2rem;
+  padding: 6rem 2rem 4.5rem;        /* roomier bottom so the CTA isn't crammed against the footer */
   position: relative;
   display: flex;
   flex-direction: column;
@@ -64,7 +64,7 @@ body.showcase .progress {
   flex: 1;
   display: grid;
   grid-template-columns: 5fr 4fr 3fr;
-  grid-template-rows: 1.4fr 0.85fr;     /* quote dominates; stats row tighter so the CTA can breathe */
+  grid-template-rows: 1fr 1.05fr;       /* quote box reduced — gives more breathing room below */
   gap: 14px;
   min-height: 0;
 }
@@ -139,8 +139,8 @@ body.showcase .progress {
 .budget-vertical {
   flex: 1;
   display: grid;
-  grid-template-columns: 1fr auto;     /* labels on the left, track on the right */
-  gap: 1.4rem;
+  grid-template-columns: 1fr auto;     /* labels on the left (right-aligned, close to track) */
+  gap: 0.7rem;                          /* tighter — labels hug the bar */
   align-items: stretch;
   margin-top: 0.8rem;
   padding: 0.3rem 0;
@@ -149,16 +149,17 @@ body.showcase .progress {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: flex-end;               /* right-align so labels sit close to the bar */
   font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--ink-faint);
 }
-.budget-axis-v span {
-  line-height: 1;
-}
+.budget-axis-v span { line-height: 1; }
+/* Colour-coded by position on the scale */
+.budget-axis-v span:nth-child(1) { color: var(--flame); }     /* Higher (top) */
+.budget-axis-v span:nth-child(2) { color: var(--sodium); }    /* On par (middle) */
+.budget-axis-v span:nth-child(3) { color: var(--copper); }    /* Competitive (bottom) */
 .budget-track {
   position: relative;
   width: 3px;
