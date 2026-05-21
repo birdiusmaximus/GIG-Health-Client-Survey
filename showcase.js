@@ -1,40 +1,59 @@
-// Showcase page — loads sanitized data from /api/public, renders:
-//   - hero count
-//   - 4-card trust metric strip (Quality / Creativity / Budget scale)
-//   - auto-advancing quote carousel
-//   - theme keyword cloud
-//   - scroll-reveal entrance animations
-// Falls back to a small sample if /api/public is unreachable (local dev).
+// Showcase page — bento layout. Loads data from /api/public, renders:
+//   - 6 bento cards (Quality donut, Responses, Creativity bars,
+//     Budget scale, Quote carousel, CTA)
+//   - scroll-reveal entrance per card
 
-const statsEl     = document.getElementById('show-stats');
-const countEl     = document.getElementById('show-count');
-const quoteStage  = document.getElementById('quote-stage');
-const quoteNav    = document.getElementById('quote-nav');
-const themeCloud  = document.getElementById('theme-cloud');
+const countEl  = document.getElementById('show-count');
+
+const QUALITY_LABELS = {
+  excellent:      'Excellent',
+  high:           'High standard',
+  fair:           'Fair',
+  not_everything: "Didn't fully land",
+  disappointing:  'Disappointing',
+};
+const CREATIVITY_LABELS = {
+  groundbreaking:   'Groundbreaking',
+  really_creative:  'Really creative',
+  quite_creative:   'Quite creative',
+  average:          'Average',
+  lacking:          'Lacking',
+};
+// Best → worst, in GIG brand colours
+const QUALITY_COLORS = {
+  excellent:      'var(--copper)',
+  high:           '#7BC8B6',                  // lighter Copper
+  fair:           'var(--sodium)',
+  not_everything: '#F58A7E',                  // lighter Flame
+  disappointing:  'var(--flame)',
+};
+const CREATIVITY_COLORS = {
+  groundbreaking:  'var(--copper)',
+  really_creative: '#7BC8B6',
+  quite_creative:  'var(--sodium)',
+  average:         '#F58A7E',
+  lacking:         'var(--flame)',
+};
 
 const QUOTE_INTERVAL_MS = 6000;
 
-// ─── Fallback sample for dev / network failure ────────────────
+// ─── Fallback for dev / API failure ─────────────────────────
 const FALLBACK = {
   total: 8,
-  quality:    { pct: 88 },
-  creativity: { pct: 75 },
+  quality: {
+    pct: 88,
+    breakdown: { excellent: 4, high: 3, fair: 1, not_everything: 0, disappointing: 0 },
+  },
+  creativity: {
+    pct: 75,
+    breakdown: { groundbreaking: 1, really_creative: 5, quite_creative: 2, average: 0, lacking: 0 },
+  },
   budget: { higher: 2, on_par: 4, cheaper: 1, markerPos: 42.86, total: 7 },
   quotes: [
     { text: 'GIG turned a dense Phase 3 dataset into a story that resonated with our HCP audience. The team\'s creative instinct sharpened our positioning in a crowded oncology space.', attribution: 'Healthcare client' },
     { text: 'Honestly the best agency work we\'ve commissioned this decade. The repositioning gave the brand five more years of life — internal stakeholders bought in faster than I\'ve ever seen.', attribution: 'Healthcare client' },
     { text: 'GIG handled a complex multi-stakeholder approval process with patience and clarity. The final assets landed approved on first submission across two markets — almost unheard of for us.', attribution: 'Healthcare client' },
     { text: 'Strong on the science, strong on the design. The interactive eDetail performed above benchmark on time-on-page and HCP recall in our follow-up survey.', attribution: 'Healthcare client' },
-  ],
-  themes: [
-    { word: 'creative', count: 6 }, { word: 'strategy', count: 5 },
-    { word: 'audience', count: 4 }, { word: 'design',   count: 4 },
-    { word: 'engaging', count: 4 }, { word: 'approval', count: 3 },
-    { word: 'stakeholders', count: 3 }, { word: 'patient', count: 3 },
-    { word: 'science', count: 3 }, { word: 'narrative', count: 2 },
-    { word: 'responsive', count: 2 }, { word: 'timeline', count: 2 },
-    { word: 'oncology', count: 2 }, { word: 'positioning', count: 2 },
-    { word: 'pitch', count: 2 },
   ],
 };
 
@@ -49,140 +68,159 @@ async function loadPublic() {
   }
 }
 
-// ─── Hero count ──────────────────────────────────────────────
-function renderHeroCount(total) {
-  if (!countEl) return;
-  if (!total) { countEl.textContent = 'Honest feedback, collected as projects wrap.'; return; }
-  countEl.textContent = `${total} response${total === 1 ? '' : 's'} across recent projects`;
-}
-
-// ─── Trust metric strip ─────────────────────────────────────
-function scoreColorClass(p) {
-  if (p == null) return '';
-  if (p >= 75) return 'is-good';
-  if (p >= 50) return 'is-warn';
-  return 'is-bad';
-}
-
-function renderStats(s) {
-  statsEl.innerHTML = `
-    <div class="stat is-accent">
-      <span class="stat-value">${s.total}</span>
-      <span class="stat-label">Responses</span>
-    </div>
-    <div class="stat">
-      <span class="stat-value ${scoreColorClass(s.quality.pct)}">${s.quality.pct}<span class="stat-unit">%</span></span>
-      <span class="stat-label">High quality</span>
-    </div>
-    <div class="stat">
-      <span class="stat-value ${scoreColorClass(s.creativity.pct)}">${s.creativity.pct}<span class="stat-unit">%</span></span>
-      <span class="stat-label">Creative</span>
-    </div>
-    <div class="stat is-budget">
-      <div class="budget-display">
-        <div class="budget-scale" role="img" aria-label="Budget position scale">
-          <span class="budget-zone is-higher"  title="Higher than others: ${s.budget.higher}"></span>
-          <span class="budget-zone is-on-par"  title="On par: ${s.budget.on_par}"></span>
-          <span class="budget-zone is-cheaper" title="Cheaper than others: ${s.budget.cheaper}"></span>
-          <span class="budget-marker ${s.budget.total === 0 ? 'is-empty' : ''}" style="left:${s.budget.markerPos}%" title="Average of ${s.budget.total} responses"></span>
-        </div>
-        <div class="budget-axis">
-          <span>Higher</span>
-          <span>On par</span>
-          <span>Cheaper</span>
-        </div>
-      </div>
-      <span class="stat-label">Budget position</span>
-    </div>
-  `;
-}
-
-// ─── Quote carousel ─────────────────────────────────────────
-function renderQuotes(quotes) {
-  if (!quoteStage || !quoteNav) return;
-
-  if (!quotes.length) {
-    quoteStage.innerHTML = '<p class="show-empty">Quotes will appear here once a few clients have submitted feedback with permission to share.</p>';
-    quoteNav.innerHTML = '';
-    return;
-  }
-
-  quoteStage.innerHTML = quotes.map((q, i) => `
-    <blockquote class="quote-card ${i === 0 ? 'is-active' : ''}" data-i="${i}">
-      <p class="quote-text">${escapeHtml(q.text)}</p>
-      <footer class="quote-attribution">— ${escapeHtml(q.attribution || 'Healthcare client')}</footer>
-    </blockquote>
-  `).join('');
-
-  quoteNav.innerHTML = quotes.map((_, i) => `
-    <button class="quote-dot ${i === 0 ? 'is-active' : ''}" type="button" data-i="${i}" aria-label="Quote ${i + 1}"></button>
-  `).join('');
-
-  let current = 0;
-  let timerId = null;
-
-  function show(n) {
-    current = (n + quotes.length) % quotes.length;
-    quoteStage.querySelectorAll('.quote-card').forEach((el, i) => {
-      el.classList.toggle('is-active', i === current);
-    });
-    quoteNav.querySelectorAll('.quote-dot').forEach((el, i) => {
-      el.classList.toggle('is-active', i === current);
-    });
-  }
-  function autoAdvance() {
-    timerId = setInterval(() => show(current + 1), QUOTE_INTERVAL_MS);
-  }
-  function restartTimer() {
-    if (timerId) { clearInterval(timerId); timerId = null; }
-    autoAdvance();
-  }
-
-  quoteNav.addEventListener('click', (e) => {
-    const dot = e.target.closest('.quote-dot');
-    if (!dot) return;
-    const i = parseInt(dot.dataset.i, 10);
-    if (Number.isFinite(i)) { show(i); restartTimer(); }
-  });
-
-  // pause on hover so people can read long quotes
-  const wrap = quoteStage.closest('.quote-carousel');
-  wrap?.addEventListener('mouseenter', () => { if (timerId) { clearInterval(timerId); timerId = null; } });
-  wrap?.addEventListener('mouseleave', () => { if (!timerId) autoAdvance(); });
-
-  autoAdvance();
-}
-
-// ─── Theme cloud ────────────────────────────────────────────
-function renderThemes(themes) {
-  if (!themeCloud) return;
-  if (!themes.length) {
-    themeCloud.innerHTML = '<p class="show-empty">Themes will appear here once enough feedback is in.</p>';
-    return;
-  }
-
-  const maxCount = Math.max(...themes.map(t => t.count));
-  // Size ranges from 0.85rem (lowest freq) to 1.7rem (highest)
-  const minSize = 0.85;
-  const maxSize = 1.7;
-
-  themeCloud.innerHTML = themes.map((t, i) => {
-    const ratio = maxCount > 1 ? (t.count - 1) / (maxCount - 1) : 0;
-    const size = (minSize + ratio * (maxSize - minSize)).toFixed(2);
-    const isTop = i < 3;       // top three get the Flame highlight
-    return `<span class="theme-chip ${isTop ? 'is-top' : ''}" style="--size:${size}rem" title="${t.count} mention${t.count === 1 ? '' : 's'}">${escapeHtml(t.word)}</span>`;
-  }).join('');
-}
-
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   }[c]));
 }
 
-// ─── Scroll-reveal entrance animations ──────────────────────
+// ─── Hero count ─────────────────────────────────────────────
+function renderHeroCount(total) {
+  if (!countEl) return;
+  if (!total) { countEl.textContent = 'Honest feedback, collected as projects wrap.'; return; }
+  countEl.textContent = `${total} response${total === 1 ? '' : 's'} across recent projects`;
+}
+
+// ─── Quality donut + legend ─────────────────────────────────
+function renderQualityDonut(quality) {
+  const donutEl  = document.getElementById('quality-donut');
+  const legendEl = document.getElementById('quality-legend');
+  if (!donutEl || !legendEl) return;
+
+  const entries = Object.entries(quality.breakdown);
+  const total = entries.reduce((s, [, c]) => s + c, 0);
+  const R = 40;
+  const C = 2 * Math.PI * R; // 251.33
+
+  let svg = `<svg viewBox="0 0 100 100" aria-hidden="true">`;
+  // Background ring
+  svg += `<circle r="${R}" cx="50" cy="50" fill="none" stroke="rgba(254,246,246,0.08)" stroke-width="14" />`;
+
+  if (total > 0) {
+    let offset = 0;
+    for (const [key, count] of entries) {
+      if (!count) continue;
+      const pct = count / total;
+      const dashLen = pct * C;
+      const dashGap = C - dashLen;
+      svg += `<circle r="${R}" cx="50" cy="50" fill="none"
+        stroke="${QUALITY_COLORS[key]}" stroke-width="14"
+        stroke-dasharray="${dashLen.toFixed(2)} ${dashGap.toFixed(2)}"
+        stroke-dashoffset="${(-offset * C).toFixed(2)}"
+        transform="rotate(-90 50 50)"
+        stroke-linecap="butt" />`;
+      offset += pct;
+    }
+  }
+  svg += `</svg>`;
+  svg += `
+    <div class="bento-donut-center">
+      <div class="bento-donut-num">${quality.pct}<small>%</small></div>
+      <div class="bento-donut-label">High quality</div>
+    </div>
+  `;
+  donutEl.innerHTML = svg;
+
+  // Legend (only show rows with at least one response)
+  legendEl.innerHTML = entries
+    .filter(([, count]) => count > 0)
+    .map(([key, count]) => `
+      <div class="bento-legend-row">
+        <span class="bento-legend-dot" style="--c:${QUALITY_COLORS[key]}"></span>
+        <span class="bento-legend-label">${QUALITY_LABELS[key]}</span>
+        <span class="bento-legend-count">${count}</span>
+      </div>
+    `).join('');
+}
+
+// ─── Responses count ────────────────────────────────────────
+function renderResponses(total) {
+  const el = document.getElementById('responses-num');
+  if (el) el.textContent = total > 0 ? `+${total}` : '0';
+}
+
+// ─── Creativity bars ────────────────────────────────────────
+function renderCreativity(creativity) {
+  const numEl  = document.getElementById('creativity-num');
+  const barsEl = document.getElementById('creativity-bars');
+  const metaEl = document.getElementById('creativity-meta');
+  if (!numEl || !barsEl) return;
+
+  numEl.textContent = `${creativity.pct}%`;
+  if (metaEl) metaEl.textContent = 'Groundbreaking or really creative';
+
+  const entries = Object.entries(creativity.breakdown);
+  const max = Math.max(...entries.map(([, c]) => c), 1);
+
+  barsEl.innerHTML = entries.map(([key, count]) => {
+    const h = Math.max(8, (count / max) * 100);
+    return `<div class="bento-bar" style="--h:${h}%; --c:${CREATIVITY_COLORS[key]}"
+      title="${CREATIVITY_LABELS[key]}: ${count}"></div>`;
+  }).join('');
+}
+
+// ─── Budget scale marker ───────────────────────────────────
+function renderBudget(budget) {
+  const marker = document.getElementById('budget-marker');
+  const meta   = document.getElementById('budget-meta');
+  if (marker) {
+    marker.style.left = `${budget.markerPos}%`;
+    if (budget.total === 0) marker.classList.add('is-empty');
+  }
+  if (meta && budget.total > 0) {
+    meta.textContent = `Weighted across ${budget.total} response${budget.total === 1 ? '' : 's'}`;
+  }
+}
+
+// ─── Quote carousel ────────────────────────────────────────
+function renderQuotes(quotes) {
+  const stage = document.getElementById('quote-stage');
+  const nav   = document.getElementById('quote-nav');
+  if (!stage || !nav) return;
+
+  if (!quotes.length) {
+    stage.innerHTML = '<p class="show-empty">Quotes will appear here once a few clients have submitted feedback with permission to share.</p>';
+    nav.innerHTML = '';
+    return;
+  }
+
+  stage.innerHTML = quotes.map((q, i) => `
+    <blockquote class="quote-card ${i === 0 ? 'is-active' : ''}" data-i="${i}">
+      <p class="quote-text">${escapeHtml(q.text)}</p>
+      <footer class="quote-attribution">— ${escapeHtml(q.attribution || 'Healthcare client')}</footer>
+    </blockquote>
+  `).join('');
+  nav.innerHTML = quotes.map((_, i) => `
+    <button class="quote-dot ${i === 0 ? 'is-active' : ''}" type="button" data-i="${i}" aria-label="Quote ${i + 1}"></button>
+  `).join('');
+
+  let current = 0;
+  let timerId = null;
+  function show(n) {
+    current = (n + quotes.length) % quotes.length;
+    stage.querySelectorAll('.quote-card').forEach((el, i) => el.classList.toggle('is-active', i === current));
+    nav.querySelectorAll('.quote-dot').forEach((el, i) => el.classList.toggle('is-active', i === current));
+  }
+  const start = () => { timerId = setInterval(() => show(current + 1), QUOTE_INTERVAL_MS); };
+  const stop  = () => { if (timerId) { clearInterval(timerId); timerId = null; } };
+  const reset = () => { stop(); start(); };
+
+  nav.addEventListener('click', (e) => {
+    const dot = e.target.closest('.quote-dot');
+    if (!dot) return;
+    const i = parseInt(dot.dataset.i, 10);
+    if (Number.isFinite(i)) { show(i); reset(); }
+  });
+  const wrap = stage.closest('.bento-quote');
+  wrap?.addEventListener('mouseenter', stop);
+  wrap?.addEventListener('mouseleave', () => { if (!timerId) start(); });
+
+  start();
+}
+
+// ─── Scroll-reveal ─────────────────────────────────────────
 function setupScrollReveal() {
-  const targets = document.querySelectorAll('.show-section, .show-stats, .show-cta');
+  const targets = document.querySelectorAll('.bento-card');
   if (!('IntersectionObserver' in window)) {
     targets.forEach(el => el.classList.add('is-revealed'));
     return;
@@ -198,12 +236,14 @@ function setupScrollReveal() {
   targets.forEach(el => io.observe(el));
 }
 
-// ─── Bootstrap ──────────────────────────────────────────────
+// ─── Bootstrap ─────────────────────────────────────────────
 (async () => {
   const data = await loadPublic();
   renderHeroCount(data.total);
-  renderStats(data);
+  renderQualityDonut(data.quality);
+  renderResponses(data.total);
+  renderCreativity(data.creativity);
+  renderBudget(data.budget);
   renderQuotes(data.quotes || []);
-  renderThemes(data.themes || []);
   setupScrollReveal();
 })();

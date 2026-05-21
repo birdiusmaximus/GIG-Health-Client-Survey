@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="https://use.typekit.net/wek0eum.css" />
   <link rel="stylesheet" href="./styles.css?v=24" />
   <link rel="stylesheet" href="./dashboard.css?v=7" />
-  <link rel="stylesheet" href="./showcase.css?v=2" />
+  <link rel="stylesheet" href="./showcase.css?v=3" />
 </head>
 <body class="showcase">
 
@@ -41,46 +41,84 @@
       <p class="show-hero-count" id="show-count">— responses across the last 12 months</p>
     </section>
 
-    <!-- Trust metrics -->
-    <section class="stats show-stats" id="show-stats">
-      <!-- populated by showcase.js -->
-    </section>
+    <!-- Bento grid -->
+    <section class="bento">
 
-    <!-- Quotes carousel -->
-    <section class="show-section show-quotes" id="show-quotes-section">
-      <p class="kicker">
-        <span class="kicker-num">In their words</span>
-        <span class="kicker-sep" aria-hidden="true"></span>
-        <span class="kicker-label">Anonymised &amp; consented</span>
-      </p>
-      <div class="quote-carousel">
-        <div class="quote-stage" id="quote-stage">
-          <p class="show-empty">Loading quotes…</p>
+      <!-- 1. Quality — hero donut, dark, spans 2 rows -->
+      <article class="bento-card bento-quality" id="bento-quality">
+        <header class="bento-head">
+          <span class="bento-tag bento-tag-on-dark">Quality</span>
+          <span class="bento-meta">Across all responses</span>
+        </header>
+        <div class="bento-quality-body">
+          <div class="bento-donut" id="quality-donut"></div>
+          <div class="bento-quality-legend" id="quality-legend"></div>
         </div>
-        <div class="quote-nav" id="quote-nav" aria-label="Quote navigation"></div>
-      </div>
-    </section>
+      </article>
 
-    <!-- Theme chips -->
-    <section class="show-section show-themes" id="show-themes-section">
-      <p class="kicker">
-        <span class="kicker-num">Common themes</span>
-        <span class="kicker-sep" aria-hidden="true"></span>
-        <span class="kicker-label">Recurring in feedback</span>
-      </p>
-      <div class="theme-cloud" id="theme-cloud"></div>
-    </section>
+      <!-- 2. Responses — small bright stat card -->
+      <article class="bento-card bento-responses">
+        <span class="bento-tag bento-tag-on-light">Responses</span>
+        <p class="bento-big-num" id="responses-num">—</p>
+        <p class="bento-sub">Recent feedback submissions</p>
+      </article>
 
-    <!-- Soft CTA -->
-    <section class="show-cta">
-      <h2 class="show-cta-title">Got a project?</h2>
-      <p class="show-cta-sub">Drop us a line — we'd love to hear what you're working on.</p>
-      <a class="show-cta-btn" href="https://gig.health" target="_blank" rel="noopener">
-        <span>Visit gig.health</span>
-        <span aria-hidden="true">→</span>
-      </a>
-    </section>
+      <!-- 3. Creativity — bars + big % -->
+      <article class="bento-card bento-creativity">
+        <header class="bento-head">
+          <span class="bento-tag bento-tag-on-light">Creativity</span>
+          <span class="bento-meta-light" id="creativity-meta">— rated creative</span>
+        </header>
+        <p class="bento-big-num bento-big-num-flush" id="creativity-num">—%</p>
+        <div class="bento-bar-chart" id="creativity-bars"></div>
+      </article>
 
+      <!-- 4. Budget position — wide scale -->
+      <article class="bento-card bento-budget">
+        <header class="bento-head">
+          <span class="bento-tag bento-tag-on-dark">Budget position</span>
+          <span class="bento-meta" id="budget-meta">Weighted average across responses</span>
+        </header>
+        <div class="bento-budget-scale">
+          <div class="budget-scale" role="img" aria-label="Budget position">
+            <span class="budget-zone is-higher"></span>
+            <span class="budget-zone is-on-par"></span>
+            <span class="budget-zone is-cheaper"></span>
+            <span class="budget-marker" id="budget-marker" style="left:50%"></span>
+          </div>
+          <div class="budget-axis">
+            <span>Higher than market</span>
+            <span>On par</span>
+            <span>More competitive</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- 5. Quote carousel — light card, wide -->
+      <article class="bento-card bento-quote">
+        <header class="bento-head">
+          <span class="bento-tag bento-tag-on-light">In their words</span>
+          <span class="bento-meta-light">Anonymised &amp; consented</span>
+        </header>
+        <div class="quote-carousel">
+          <div class="quote-stage" id="quote-stage">
+            <p class="show-empty">Loading…</p>
+          </div>
+          <div class="quote-nav" id="quote-nav" aria-label="Quote navigation"></div>
+        </div>
+      </article>
+
+      <!-- 6. CTA — Flame red, prominent -->
+      <article class="bento-card bento-cta">
+        <p class="bento-cta-kicker">Got a project?</p>
+        <h2 class="bento-cta-title">Let's turn your science into a story.</h2>
+        <a class="bento-cta-btn" href="https://gig.health" target="_blank" rel="noopener">
+          <span>Visit gig.health</span>
+          <span aria-hidden="true">→</span>
+        </a>
+      </article>
+
+    </section>
   </main>
 
   <footer class="footbar show-footer">
@@ -94,7 +132,7 @@
     </div>
   </footer>
 
-  <script type="module" src="./showcase.js?v=2"></script>
+  <script type="module" src="./showcase.js?v=3"></script>
   <script src="./menu.js?v=1"></script>
 </body>
 </html>

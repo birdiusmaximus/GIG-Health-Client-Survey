@@ -1,7 +1,4 @@
-/* ─── Showcase-specific styles ─────────────────────────────────
-   Reuses .stats, .stat, kicker, footbar from styles.css + dashboard.css.
-   This file adds the hero, sections, placeholders, and CTA.
-*/
+/* ─── Showcase — bento-style public proof-of-concept ──────────── */
 
 body.showcase {
   overflow: auto;
@@ -16,21 +13,21 @@ body.showcase .progress {
 }
 
 .show-main {
-  max-width: 1180px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 8rem 2rem 6rem;
+  padding: 7rem 1.6rem 5rem;
 }
 
-/* ─── Hero ─────────────────────────────────────────────────── */
+/* ─── Hero ───────────────────────────────────────────────────── */
 .show-hero {
   max-width: 760px;
-  margin-bottom: 5rem;
+  margin-bottom: 3.5rem;
 }
-.show-hero .kicker { margin-bottom: 1.8rem; }
+.show-hero .kicker { margin-bottom: 1.6rem; }
 .show-hero-title {
-  margin: 0 0 1.6rem;
+  margin: 0 0 1.4rem;
   font-family: var(--font);
-  font-size: clamp(2.6rem, 6.4vw, 5.2rem);
+  font-size: clamp(2.4rem, 5.8vw, 4.6rem);
   font-weight: 700;
   line-height: 1.04;
   letter-spacing: -0.025em;
@@ -39,7 +36,7 @@ body.showcase .progress {
 }
 .show-hero-sub {
   margin: 0 0 1rem;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   line-height: 1.55;
   color: var(--ink-soft);
   max-width: 44ch;
@@ -53,30 +50,269 @@ body.showcase .progress {
   color: var(--flame);
 }
 
-/* ─── Trust metrics ────────────────────────────────────────── */
-.show-stats {
-  /* extends .stats — keep same 4-col grid, slightly more breathing room */
-  margin-bottom: 5rem;
+/* ─── Bento grid ─────────────────────────────────────────────── */
+.bento {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-rows: auto auto auto;
+  gap: 16px;
 }
 
-/* ─── Generic section header for showcase ─────────────────── */
-.show-section {
-  margin-bottom: 5rem;
-}
-.show-section .kicker { margin-bottom: 1.6rem; }
+/* Card placements */
+.bento-quality    { grid-column: 1 / span 6;  grid-row: 1 / span 2; }
+.bento-responses  { grid-column: 7 / span 3;  grid-row: 1; }
+.bento-creativity { grid-column: 10 / span 3; grid-row: 1; }
+.bento-budget     { grid-column: 7 / span 6;  grid-row: 2; }
+.bento-quote      { grid-column: 1 / span 8;  grid-row: 3; }
+.bento-cta        { grid-column: 9 / span 4;  grid-row: 3; }
 
-/* ─── Quote carousel ──────────────────────────────────────── */
-.quote-carousel {
-  padding: 3.5rem 2.5rem 2.5rem;
+/* ─── Base card ─────────────────────────────────────────────── */
+.bento-card {
+  position: relative;
+  padding: 1.6rem 1.7rem;
+  border-radius: 18px;
+  background: var(--dusk);
+  display: flex;
+  flex-direction: column;
+  color: var(--ink);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.bento-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+
+/* Tags on cards (Pill, sits in the head) */
+.bento-tag {
+  display: inline-block;
+  padding: 0.4em 0.9em;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: var(--track-cap);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.bento-tag-on-dark  { background: rgba(254, 246, 246, 0.10); color: var(--ink); }
+.bento-tag-on-light { background: rgba(13, 26, 45, 0.10); color: var(--night); }
+
+.bento-meta {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: var(--track-cap);
+  text-transform: uppercase;
+  color: rgba(254, 246, 246, 0.55);
+  text-align: right;
+}
+.bento-meta-light {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: var(--track-cap);
+  text-transform: uppercase;
+  color: rgba(13, 26, 45, 0.5);
+  text-align: right;
+}
+
+.bento-big-num {
+  margin: 0;
+  font-size: clamp(3.2rem, 6vw, 5rem);
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+}
+.bento-big-num-flush { margin-top: 0.5rem; }
+.bento-sub {
+  margin: auto 0 0;
+  font-size: 0.95rem;
+  color: rgba(13, 26, 45, 0.65);
+  line-height: 1.4;
+}
+
+/* ─── 1. Quality card (Night dark, big donut) ───────────────── */
+.bento-quality {
+  background: var(--night);
+  color: var(--ink);
   border: 1px solid var(--ink-mute);
-  border-radius: 12px;
-  background:
-    radial-gradient(120% 80% at 80% 20%, color-mix(in srgb, var(--flame) 5%, transparent) 0%, transparent 60%),
-    rgba(254, 246, 246, 0.015);
+}
+.bento-quality-body {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1.6rem;
+  align-items: center;
+  flex: 1;
+  margin-top: 0.6rem;
+}
+.bento-donut {
+  position: relative;
+  width: 100%;
+  max-width: 260px;
+  aspect-ratio: 1;
+  margin: 0 auto;
+}
+.bento-donut svg { width: 100%; height: 100%; display: block; }
+.bento-donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.bento-donut-num {
+  font-size: clamp(2.6rem, 4.4vw, 3.6rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--ink);
+}
+.bento-donut-num small {
+  font-size: 0.5em;
+  font-weight: 700;
+  color: rgba(254, 246, 246, 0.6);
+  margin-left: 0.1em;
+}
+.bento-donut-label {
+  margin-top: 0.4rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: var(--track-cap);
+  text-transform: uppercase;
+  color: rgba(254, 246, 246, 0.55);
+}
+.bento-quality-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-width: 0;
+}
+.bento-legend-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: 0.85rem;
+}
+.bento-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--c);
+  flex-shrink: 0;
+}
+.bento-legend-label {
+  color: rgba(254, 246, 246, 0.8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bento-legend-count {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* ─── 2. Responses card (Sodium yellow, big number) ─────────── */
+.bento-responses {
+  background: var(--sodium);
+  color: var(--night);
+}
+.bento-responses .bento-big-num {
+  color: var(--night);
+  margin: 0.5rem 0 auto;
+}
+.bento-responses::before {
+  content: "↑";
+  position: absolute;
+  top: 1.5rem;
+  right: 1.6rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--night);
+  color: var(--sodium);
+  border-radius: 50%;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+/* ─── 3. Creativity card (Potassium lavender, bars) ─────────── */
+.bento-creativity {
+  background: var(--potassium);
+  color: var(--night);
+}
+.bento-creativity .bento-big-num { color: var(--night); }
+.bento-bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 60px;
+  margin-top: auto;
+}
+.bento-bar {
+  flex: 1;
+  height: var(--h, 10%);
+  min-height: 6px;
+  background: var(--c, var(--night));
+  border-radius: 4px 4px 0 0;
+  transition: height 0.5s ease;
+}
+
+/* ─── 4. Budget card (Copper teal, wide scale) ──────────────── */
+.bento-budget {
+  background: var(--copper);
+  color: var(--paper);
+}
+.bento-budget .bento-tag-on-dark { background: rgba(13, 26, 45, 0.20); color: var(--paper); }
+.bento-budget .bento-meta { color: rgba(254, 246, 246, 0.7); }
+.bento-budget-scale {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.7rem;
+  margin-top: 0.8rem;
+}
+.bento-budget .budget-scale {
+  background: rgba(13, 26, 45, 0.18);
+  height: 14px;
+}
+.bento-budget .budget-zone.is-higher  { background: rgba(13, 26, 45, 0.35); }
+.bento-budget .budget-zone.is-on-par  { background: rgba(254, 246, 246, 0.45); }
+.bento-budget .budget-zone.is-cheaper { background: var(--night); }
+.bento-budget .budget-marker {
+  background: var(--paper);
+  box-shadow: 0 0 0 2px var(--night), 0 0 16px rgba(254, 246, 246, 0.55);
+  height: 22px;
+  top: -4px;
+  bottom: -4px;
+}
+.bento-budget .budget-axis {
+  color: rgba(254, 246, 246, 0.7);
+}
+
+/* ─── 5. Quote card (Paper light, wide carousel) ────────────── */
+.bento-quote {
+  background: var(--paper);
+  color: var(--night);
+  --on-light-soft: rgba(13, 26, 45, 0.65);
+}
+.quote-carousel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-top: 1rem;
 }
 .quote-stage {
   position: relative;
-  min-height: 240px;
+  min-height: 180px;
 }
 .quote-card {
   position: absolute;
@@ -92,56 +328,52 @@ body.showcase .progress {
   transform: translateY(0);
   pointer-events: auto;
 }
-
 .quote-text {
-  margin: 0 0 1.6rem;
-  font-family: var(--font);
-  font-size: clamp(1.3rem, 2.4vw, 1.85rem);
-  font-weight: 400;
+  margin: 0 0 1.4rem;
+  font-size: clamp(1.2rem, 2.1vw, 1.6rem);
   font-style: italic;
+  font-weight: 400;
   line-height: 1.45;
-  color: var(--ink);
-  text-wrap: pretty;
-  max-width: 60ch;
+  color: var(--night);
+  padding-left: 2rem;
   position: relative;
-  padding-left: 2.2rem;
+  max-width: 60ch;
 }
 .quote-text::before {
   content: "\201C";
   position: absolute;
   left: 0;
-  top: -0.3em;
-  font-size: 3em;
+  top: -0.35em;
+  font-size: 2.8em;
   font-style: normal;
   line-height: 1;
   color: var(--flame);
-  opacity: 0.8;
+  opacity: 0.85;
 }
 .quote-attribution {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: var(--track-cap);
   text-transform: uppercase;
   color: var(--flame);
 }
-
 .quote-nav {
   display: flex;
   gap: 0.55rem;
-  justify-content: center;
-  margin-top: 2rem;
+  justify-content: flex-start;
+  margin-top: 1.5rem;
 }
 .quote-dot {
   width: 8px;
   height: 8px;
   padding: 0;
-  border: 1px solid var(--ink-faint);
+  border: 1px solid rgba(13, 26, 45, 0.3);
   border-radius: 50%;
   background: transparent;
   cursor: pointer;
   transition: all 0.2s ease;
 }
-.quote-dot:hover { border-color: var(--ink); }
+.quote-dot:hover { border-color: var(--night); }
 .quote-dot.is-active {
   background: var(--flame);
   border-color: var(--flame);
@@ -149,113 +381,59 @@ body.showcase .progress {
   border-radius: 999px;
 }
 
-/* ─── Theme cloud — varied-size chips in a flowing layout ─── */
-.theme-cloud {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem 0.8rem;
-  align-items: baseline;
-  justify-content: center;
-  padding: 2rem 1.5rem;
-  border: 1px solid var(--ink-mute);
-  border-radius: 12px;
-  background: rgba(254, 246, 246, 0.015);
-  min-height: 8rem;
+/* ─── 6. CTA card (Flame red, prominent) ────────────────────── */
+.bento-cta {
+  background: var(--flame);
+  color: var(--paper);
+  justify-content: space-between;
 }
-.theme-chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.4em 0.95em;
-  border-radius: 999px;
-  border: 1px solid var(--ink-faint);
-  font-family: var(--font);
+.bento-cta-kicker {
+  margin: 0 0 0.5rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: -0.005em;
-  color: var(--ink);
-  background: rgba(254, 246, 246, 0.02);
-  /* size + tint set inline based on frequency rank */
-  font-size: var(--size, 0.9rem);
-  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  letter-spacing: var(--track-cap);
+  text-transform: uppercase;
+  color: rgba(254, 246, 246, 0.75);
 }
-.theme-chip:hover {
-  transform: translateY(-2px);
-  border-color: var(--flame);
-  background: color-mix(in srgb, var(--flame) 8%, transparent);
-}
-.theme-chip.is-top {
-  border-color: color-mix(in srgb, var(--flame) 50%, transparent);
-  background: color-mix(in srgb, var(--flame) 10%, transparent);
-  color: var(--ink);
-}
-
-/* Empty state inside the carousel/cloud */
-.show-empty {
+.bento-cta-title {
   margin: 0;
-  font-size: 0.95rem;
-  color: var(--ink-faint);
-  font-style: italic;
-  text-align: center;
-}
-
-/* ─── Scroll-reveal animation (entrance-fade on showcase sections) ─ */
-.show-section,
-.show-stats,
-.show-cta {
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.7s ease, transform 0.7s ease;
-}
-.show-section.is-revealed,
-.show-stats.is-revealed,
-.show-cta.is-revealed {
-  opacity: 1;
-  transform: translateY(0);
-}
-@media (prefers-reduced-motion: reduce) {
-  .show-section, .show-stats, .show-cta {
-    opacity: 1; transform: none; transition: none;
-  }
-}
-
-/* ─── CTA ──────────────────────────────────────────────────── */
-.show-cta {
-  margin-top: 5rem;
-  padding: 4rem 0 2rem;
-  border-top: 1px solid var(--ink-mute);
-  text-align: center;
-}
-.show-cta-title {
-  margin: 0 0 0.8rem;
-  font-size: clamp(2rem, 4.6vw, 3.4rem);
+  font-size: clamp(1.4rem, 2.4vw, 1.95rem);
   font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--ink);
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  color: var(--paper);
+  text-wrap: balance;
 }
-.show-cta-sub {
-  margin: 0 0 2rem;
-  font-size: 1.05rem;
-  color: var(--ink-soft);
-}
-.show-cta-btn {
+.bento-cta-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.9em;
+  gap: 0.8em;
+  margin-top: 1.5rem;
+  align-self: flex-start;
   font-family: var(--font);
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: var(--track-cap);
   text-transform: uppercase;
-  padding: 1.05rem 1.8rem;
-  background: var(--flame);
+  padding: 0.95rem 1.3rem;
+  background: var(--night);
   color: var(--paper);
   text-decoration: none;
-  border-radius: 0;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 12px 30px rgba(244, 83, 71, 0.28);
+  border-radius: 999px;
+  transition: transform 0.2s ease, background 0.2s ease;
 }
-.show-cta-btn:hover {
+.bento-cta-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 18px 42px rgba(244, 83, 71, 0.42);
+  background: var(--paper);
+  color: var(--flame);
+}
+
+/* Empty state */
+.show-empty {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--ink-faint);
+  font-style: italic;
 }
 
 /* Footer */
@@ -266,9 +444,38 @@ body.showcase .progress {
   margin-top: 4rem;
 }
 
-/* Mobile */
-@media (max-width: 880px) {
+/* ─── Scroll-reveal entrance animations ─────────────────────── */
+.bento-card {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.bento-card.is-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .bento-card { opacity: 1; transform: none; transition: none; }
+}
+
+/* ─── Mobile / Tablet ───────────────────────────────────────── */
+@media (max-width: 980px) {
   .show-main { padding: 6rem 1rem 4rem; }
-  .show-stats { grid-template-columns: repeat(2, 1fr); }
-  .show-section { margin-bottom: 3.5rem; }
+  .bento {
+    grid-template-columns: repeat(6, 1fr);
+  }
+  .bento-quality    { grid-column: 1 / -1; grid-row: auto; }
+  .bento-responses  { grid-column: 1 / span 3; grid-row: auto; }
+  .bento-creativity { grid-column: 4 / span 3; grid-row: auto; }
+  .bento-budget     { grid-column: 1 / -1; grid-row: auto; }
+  .bento-quote      { grid-column: 1 / -1; grid-row: auto; }
+  .bento-cta        { grid-column: 1 / -1; grid-row: auto; }
+}
+@media (max-width: 560px) {
+  .bento { grid-template-columns: 1fr; }
+  .bento-quality, .bento-responses, .bento-creativity,
+  .bento-budget, .bento-quote, .bento-cta {
+    grid-column: 1; grid-row: auto;
+  }
+  .bento-quality-body { grid-template-columns: 1fr; }
 }
