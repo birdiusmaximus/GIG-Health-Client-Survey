@@ -50,9 +50,10 @@ body.showcase .progress {
   margin: 0;
   font-family: var(--font);
   font-size: clamp(1.8rem, 2.8vw, 2.4rem);
-  font-weight: 700;
+  /* Black (900) — matches gig.health's heading weight; their kit ships
+     this. Falls back to 700 if the network/kit isn't reachable. */
+  font-weight: 900;
   line-height: 1.1;
-  /* Caps + wider tracking to echo gig.health's sectional kickers */
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--ink);
@@ -303,9 +304,9 @@ body.showcase .progress {
 .show-cta-title {
   margin: 0;
   font-size: clamp(1.4rem, 2.2vw, 1.9rem);
-  font-weight: 700;
+  /* Black (900) to match the hero title */
+  font-weight: 900;
   line-height: 1.2;
-  /* Same caps treatment as the hero title — keeps the page rhyming */
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--ink);
