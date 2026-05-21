@@ -40,28 +40,21 @@ body.showcase .progress {
 
 .show-main > * { position: relative; z-index: 1; }
 
-/* ─── Hero ─────────────────────────────────────────────────── */
+/* ─── Hero — compact + self-contained ────────────────────────── */
 .show-hero {
   max-width: 760px;
-  margin-bottom: 7rem;
+  margin-bottom: 4rem;
 }
-.show-hero .kicker { margin-bottom: 1.6rem; }
+.show-hero .kicker { margin-bottom: 1rem; }
 .show-hero-title {
-  margin: 0 0 1.4rem;
+  margin: 0 0 0.9rem;
   font-family: var(--font);
-  font-size: clamp(2.6rem, 6vw, 5rem);
+  font-size: clamp(2rem, 3.4vw, 2.8rem);
   font-weight: 700;
-  line-height: 1.02;
-  letter-spacing: -0.028em;
+  line-height: 1.05;
+  letter-spacing: -0.022em;
   color: var(--ink);
   text-wrap: balance;
-}
-.show-hero-sub {
-  margin: 0 0 1.4rem;
-  font-size: 1.05rem;
-  line-height: 1.6;
-  color: var(--ink-soft);
-  max-width: 50ch;
 }
 .show-hero-count {
   margin: 0;
@@ -69,17 +62,7 @@ body.showcase .progress {
   font-weight: 700;
   letter-spacing: var(--track-cap);
   text-transform: uppercase;
-  color: var(--flame);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.7em;
-}
-.show-hero-count::before {
-  content: "";
-  display: inline-block;
-  width: 1.6rem;
-  height: 1px;
-  background: var(--flame);
+  color: var(--ink-soft);
 }
 
 /* ─── Data section ─────────────────────────────────────────────
@@ -110,6 +93,7 @@ body.showcase .progress {
 .data-responses  { grid-column: 2; grid-row: 1; }
 .data-creativity { grid-column: 3; grid-row: 1; padding-right: 0; }
 .data-budget     { grid-column: 2 / span 2; grid-row: 2; border-top: 1px solid var(--ink-mute); border-right: none; padding-right: 0; }
+.data-quote      { grid-column: 1 / -1; grid-row: 3; padding: 3rem 0 2.4rem; border-top: 1px solid var(--ink-mute); border-right: none; }
 
 /* Cell label (small kicker) */
 .cell-label {
@@ -250,16 +234,12 @@ body.showcase .progress {
   font-size: 0.62rem;
 }
 
-/* ─── Quote (its own moment, large editorial italic) ──────── */
-.show-quote {
-  margin-bottom: 6rem;
-  padding-top: 1rem;
-}
-.show-quote .cell-label { margin-bottom: 2.5rem; }
+/* ─── Quote (inside the grid as a full-width row) ─────────── */
+.data-quote .cell-label { margin-bottom: 1.8rem; }
 .quote-stage {
   position: relative;
-  min-height: 240px;
-  max-width: 950px;
+  min-height: 180px;
+  max-width: 880px;
 }
 .quote-card {
   position: absolute;
@@ -276,13 +256,13 @@ body.showcase .progress {
   pointer-events: auto;
 }
 .quote-text {
-  margin: 0 0 1.8rem;
-  font-size: clamp(1.4rem, 3vw, 2.4rem);
+  margin: 0 0 1.6rem;
+  font-size: clamp(1.25rem, 2.4vw, 1.85rem);
   font-style: italic;
   font-weight: 400;
-  line-height: 1.4;
+  line-height: 1.45;
   color: var(--ink);
-  padding-left: 3rem;
+  padding-left: 2.6rem;
   position: relative;
   max-width: 56ch;
   text-wrap: pretty;
@@ -291,8 +271,8 @@ body.showcase .progress {
   content: "\201C";
   position: absolute;
   left: 0;
-  top: -0.25em;
-  font-size: 3.5em;
+  top: -0.3em;
+  font-size: 3em;
   font-style: normal;
   line-height: 1;
   color: var(--flame);
@@ -304,14 +284,14 @@ body.showcase .progress {
   letter-spacing: var(--track-cap);
   text-transform: uppercase;
   color: var(--flame);
-  padding-left: 3rem;
+  padding-left: 2.6rem;
 }
 .quote-nav {
   display: flex;
   gap: 0.45rem;
   justify-content: flex-start;
-  margin-top: 2rem;
-  padding-left: 3rem;
+  margin-top: 1.6rem;
+  padding-left: 2.6rem;
 }
 .quote-dot {
   width: 6px;
@@ -331,20 +311,35 @@ body.showcase .progress {
   border-radius: 999px;
 }
 
-/* ─── CTA — minimal link, no card, just a confident text-CTA ─ */
+/* ─── CTA — prominent closing moment ────────────────────────── */
 .show-cta {
-  padding-top: 4rem;
-  padding-bottom: 2rem;
-  border-top: 1px solid var(--ink-mute);
+  margin-top: 6rem;
+  padding: 6rem 2.5rem;
+  text-align: center;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 1rem;
-  max-width: 760px;
+  align-items: center;
+  gap: 1.6rem;
+  position: relative;
 }
+/* Hairline emphasis above + below the CTA section to mark it as a moment */
+.show-cta::before,
+.show-cta::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  max-width: 700px;
+  height: 1px;
+  background: var(--ink-mute);
+}
+.show-cta::before { top: 0; }
+.show-cta::after  { bottom: 0; }
+
 .show-cta-kicker {
   margin: 0;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: var(--track-cap);
   text-transform: uppercase;
@@ -356,37 +351,47 @@ body.showcase .progress {
 .show-cta-kicker::before {
   content: "";
   display: inline-block;
-  width: 1.4rem;
+  width: 1.6rem;
   height: 1px;
   background: var(--flame);
 }
 .show-cta-title {
   margin: 0;
-  font-size: clamp(2rem, 4vw, 3rem);
+  font-size: clamp(2.6rem, 5.4vw, 4.2rem);
   font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: -0.025em;
+  line-height: 1.04;
+  letter-spacing: -0.028em;
   color: var(--ink);
   text-wrap: balance;
+  max-width: 18ch;
 }
-.show-cta-link {
-  margin-top: 0.4rem;
-  font-family: var(--font);
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--flame);
-  text-decoration: none;
+.show-cta-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.5em;
-  padding-bottom: 0.2em;
-  border-bottom: 1px solid var(--flame);
-  transition: gap 0.2s ease, opacity 0.2s ease;
-}
-.show-cta-link:hover {
   gap: 0.9em;
-  opacity: 0.85;
+  margin-top: 1.4rem;
+  font-family: var(--font);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: var(--track-cap);
+  text-transform: uppercase;
+  padding: 1.2rem 2.2rem;
+  background: var(--flame);
+  color: var(--paper);
+  text-decoration: none;
+  border-radius: 0;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+  box-shadow: 0 14px 36px rgba(244, 83, 71, 0.32);
 }
+.show-cta-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 22px 50px rgba(244, 83, 71, 0.45);
+}
+.show-cta-btn-arrow {
+  font-size: 1.1em;
+  transition: transform 0.25s ease;
+}
+.show-cta-btn:hover .show-cta-btn-arrow { transform: translateX(4px); }
 
 /* Empty state */
 .show-empty {
@@ -406,19 +411,18 @@ body.showcase .progress {
 }
 
 /* ─── Scroll-reveal ─────────────────────────────────────────── */
-.data-cell, .show-quote, .show-cta {
+.data-cell, .show-cta {
   opacity: 0;
   transform: translateY(20px);
   transition: opacity 0.6s ease, transform 0.6s ease;
 }
 .data-cell.is-revealed,
-.show-quote.is-revealed,
 .show-cta.is-revealed {
   opacity: 1;
   transform: translateY(0);
 }
 @media (prefers-reduced-motion: reduce) {
-  .data-cell, .show-quote, .show-cta {
+  .data-cell, .show-cta {
     opacity: 1; transform: none; transition: none;
   }
 }
@@ -426,10 +430,10 @@ body.showcase .progress {
 /* ─── Mobile ────────────────────────────────────────────────── */
 @media (max-width: 880px) {
   .show-main { padding: 6rem 1.5rem 4rem; }
-  .show-hero { margin-bottom: 4rem; }
+  .show-hero { margin-bottom: 3rem; }
   .show-data {
     grid-template-columns: 1fr 1fr;
-    margin-bottom: 4rem;
+    margin-bottom: 0;
   }
   .data-cell {
     padding: 2rem 1.4rem;
@@ -438,12 +442,15 @@ body.showcase .progress {
   .data-responses  { grid-column: 1; grid-row: auto; padding-left: 0; }
   .data-creativity { grid-column: 2; grid-row: auto; border-right: none; padding-right: 0; }
   .data-budget     { grid-column: 1 / -1; grid-row: auto; padding-left: 0; padding-right: 0; }
+  .data-quote      { grid-column: 1 / -1; grid-row: auto; padding-left: 0; padding-right: 0; }
   .data-quality .quality-stack { grid-template-columns: 100px 1fr; gap: 1.4rem; }
+  .show-cta { padding: 4rem 1rem; }
 }
 @media (max-width: 520px) {
   .show-data { grid-template-columns: 1fr; }
-  .data-responses, .data-creativity, .data-budget {
+  .data-responses, .data-creativity, .data-budget, .data-quote {
     grid-column: 1; border-right: none;
   }
   .data-quality .quality-stack { grid-template-columns: 1fr; }
+  .show-cta-btn { width: 100%; justify-content: center; }
 }

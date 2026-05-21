@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="https://use.typekit.net/wek0eum.css" />
   <link rel="stylesheet" href="./styles.css?v=24" />
   <link rel="stylesheet" href="./dashboard.css?v=7" />
-  <link rel="stylesheet" href="./showcase.css?v=5" />
+  <link rel="stylesheet" href="./showcase.css?v=6" />
 </head>
 <body class="showcase">
 
@@ -24,24 +24,18 @@
 
   <main class="show-main">
 
-    <!-- Hero -->
+    <!-- Hero — compact + self-contained -->
     <section class="show-hero">
       <p class="kicker">
         <span class="kicker-num">Client feedback</span>
         <span class="kicker-sep" aria-hidden="true"></span>
         <span class="kicker-label">Public showcase</span>
       </p>
-      <h1 class="show-hero-title">
-        What our clients say<br />
-        about working with us.
-      </h1>
-      <p class="show-hero-sub">
-        Honest feedback from healthcare partners across pharma, biotech, and life sciences — collected anonymously, summarised here in aggregate.
-      </p>
+      <h1 class="show-hero-title">What our clients say.</h1>
       <p class="show-hero-count" id="show-count">Loading…</p>
     </section>
 
-    <!-- Data — no card containers, hairline grid only -->
+    <!-- Data — hairline grid, quote included as a cell -->
     <section class="show-data">
 
       <div class="data-cell data-quality">
@@ -84,23 +78,24 @@
         </div>
       </div>
 
-    </section>
-
-    <!-- Quote — own section, large editorial type -->
-    <section class="show-quote">
-      <p class="cell-label">In their words</p>
-      <div class="quote-stage" id="quote-stage">
-        <p class="show-empty">Loading…</p>
+      <!-- Quote — sits IN the grid, full width of bottom row -->
+      <div class="data-cell data-quote">
+        <p class="cell-label">In their words</p>
+        <div class="quote-stage" id="quote-stage">
+          <p class="show-empty">Loading…</p>
+        </div>
+        <div class="quote-nav" id="quote-nav" aria-label="Quote navigation"></div>
       </div>
-      <div class="quote-nav" id="quote-nav" aria-label="Quote navigation"></div>
+
     </section>
 
-    <!-- CTA — minimal text link, no card -->
+    <!-- CTA — prominent, the page's closing moment -->
     <section class="show-cta">
       <p class="show-cta-kicker">Got a project?</p>
-      <h2 class="show-cta-title">Let's turn your science into a story.</h2>
-      <a class="show-cta-link" href="https://gig.health" target="_blank" rel="noopener">
-        Visit gig.health <span aria-hidden="true">→</span>
+      <h2 class="show-cta-title">Let's turn your<br/>science into a story.</h2>
+      <a class="show-cta-btn" href="https://gig.health" target="_blank" rel="noopener">
+        <span>Visit gig.health</span>
+        <span class="show-cta-btn-arrow" aria-hidden="true">→</span>
       </a>
     </section>
 
@@ -117,7 +112,7 @@
     </div>
   </footer>
 
-  <script type="module" src="./showcase.js?v=5"></script>
+  <script type="module" src="./showcase.js?v=6"></script>
   <script src="./menu.js?v=1"></script>
 </body>
 </html>

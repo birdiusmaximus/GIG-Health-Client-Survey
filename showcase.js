@@ -195,7 +195,7 @@ function renderQuotes(quotes) {
     const i = parseInt(dot.dataset.i, 10);
     if (Number.isFinite(i)) { show(i); reset(); }
   });
-  const wrap = stage.closest('.show-quote');
+  const wrap = stage.closest('.data-quote');
   wrap?.addEventListener('mouseenter', stop);
   wrap?.addEventListener('mouseleave', () => { if (!timerId) start(); });
 
@@ -204,7 +204,7 @@ function renderQuotes(quotes) {
 
 // ─── Scroll-reveal ─────────────────────────────────────────
 function setupScrollReveal() {
-  const targets = document.querySelectorAll('.data-cell, .show-quote, .show-cta');
+  const targets = document.querySelectorAll('.data-cell, .show-cta');
   if (!('IntersectionObserver' in window)) {
     targets.forEach(el => el.classList.add('is-revealed'));
     return;
