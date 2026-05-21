@@ -54,9 +54,17 @@ const FALLBACK = {
   ],
 };
 
+// Local-dev convenience: hit the deployed /api/public from localhost
+// (Python's http.server doesn't run our serverless functions), so the
+// local showcase shows the same live aggregates production users see.
+const HOSTNAME = (typeof location !== 'undefined' && location.hostname) || '';
+const IS_LOCAL = HOSTNAME === 'localhost' || HOSTNAME === '127.0.0.1' || HOSTNAME === '';
+const LIVE_API_BASE = 'https://gig-health-client-survey.vercel.app';
+const PUBLIC_URL = IS_LOCAL ? `${LIVE_API_BASE}/api/public` : '/api/public';
+
 async function loadPublic() {
   try {
-    const res = await fetch('/api/public');
+    const res = await fetch(PUBLIC_URL);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     return await res.json();
   } catch (err) {

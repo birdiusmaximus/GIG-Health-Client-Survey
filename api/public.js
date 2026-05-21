@@ -38,13 +38,42 @@ function curateQuotes(rows, limit = 8) {
   }));
 }
 
+// CORS — endpoint is already public-by-design, but we have to set the
+// header explicitly so localhost dev pages can fetch it cross-origin.
+// Allow our deployed origin + any localhost/127.0.0.1 port; everything
+// else gets no CORS header → browser blocks it cleanly.
+const ALLOWED_ORIGINS = new Set([
+  'https://gig-health-client-survey.vercel.app',
+]);
+function isAllowedOrigin(origin) {
+  if (!origin) return false;
+  if (ALLOWED_ORIGINS.has(origin)) return true;
+  try {
+    const u = new URL(origin);
+    if (u.hostname === 'localhost' || u.hostname === '127.0.0.1') return true;
+  } catch {}
+  return false;
+}
+function applyCors(req, res) {
+  const origin = req.headers.origin;
+  if (isAllowedOrigin(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Max-Age', '600');
+  }
+}
+
 export default async function handler(req, res) {
+  applyCors(req, res);
+  if (req.method === 'OPTIONS') return res.status(204).end();
+
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
     return res.status(405).json({ error: 'method not allowed' });
   }
   if (!supabase) {
-    return res.status(500).json({ error: 'Supabase not configured on server' });
+    return res.status(500).json({ error: 'server not configured' });
   }
 
   // q1_project_name only used server-side for stripProjectName(); never leaves
