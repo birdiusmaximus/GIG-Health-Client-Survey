@@ -82,5 +82,82 @@ export default async function handler(req, res) {
   }
 
   console.log('[submit] saved response id:', data.id);
+
+  // Fire-and-forget notification email — never blocks the response,
+  // never fails the submission. Skipped if RESEND_API_KEY isn't set.
+  sendNotification(data).catch(err => console.error('[submit] notify failed', err));
+
   return res.status(200).json({ ok: true, persisted: true, id: data.id });
+}
+
+// ──────────────────────────────────────────────────────────────
+// Email notification (optional — requires Resend env vars)
+// ──────────────────────────────────────────────────────────────
+const QUALITY_LABEL = {
+  excellent: 'Excellent', high: 'High standard', fair: 'Fair',
+  not_everything: "Didn't fully land", disappointing: 'Disappointing',
+};
+const CREATIVITY_LABEL = {
+  groundbreaking: 'Groundbreaking', really_creative: 'Really creative',
+  quite_creative: 'Quite creative', average: 'Average', lacking: 'Lacking',
+};
+const BUDGET_LABEL = {
+  higher: 'Higher than others', on_par: 'On par',
+  cheaper: 'Cheaper than others', na: 'N/A — predetermined',
+};
+const MARKETING_LABEL = {
+  yes_as_is: 'Yes, as is', yes_adapted: 'Yes, with adaptation',
+  possibly: 'Possibly — check', no: 'No',
+};
+
+async function sendNotification(record) {
+  const apiKey  = process.env.RESEND_API_KEY;
+  const toRaw   = process.env.NOTIFY_EMAIL;
+  const from    = process.env.NOTIFY_FROM || 'GIG Surveys <onboarding@resend.dev>';
+  const siteUrl = process.env.SITE_URL || 'https://gig-health-client-survey.vercel.app';
+
+  if (!apiKey || !toRaw) return;                      // not configured → skip
+  const to = toRaw.split(',').map(s => s.trim()).filter(Boolean);
+
+  const subject = `New survey response · ${record.q1_project_name}`;
+  const html = `
+    <div style="font-family:-apple-system,Helvetica,Arial,sans-serif;color:#0d1a2d;max-width:560px;line-height:1.5">
+      <p style="font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#F45347;margin:0 0 8px">— New response</p>
+      <h1 style="font-size:24px;margin:0 0 16px">${escape(record.q1_project_name)}</h1>
+      <table style="border-collapse:collapse;width:100%;font-size:14px;margin-bottom:24px">
+        <tr><td style="padding:6px 0;color:#6b7a8c;width:140px">Quality</td><td style="padding:6px 0;font-weight:600">${QUALITY_LABEL[record.q2_quality] || record.q2_quality}</td></tr>
+        <tr><td style="padding:6px 0;color:#6b7a8c">Creativity</td><td style="padding:6px 0;font-weight:600">${CREATIVITY_LABEL[record.q3_creativity] || record.q3_creativity}</td></tr>
+        <tr><td style="padding:6px 0;color:#6b7a8c">Budget</td><td style="padding:6px 0;font-weight:600">${BUDGET_LABEL[record.q4_budget] || record.q4_budget}</td></tr>
+        <tr><td style="padding:6px 0;color:#6b7a8c">Quotable?</td><td style="padding:6px 0;font-weight:600">${record.q6_permission === 'yes' ? 'Yes ✓' : 'No'}</td></tr>
+        <tr><td style="padding:6px 0;color:#6b7a8c">Marketing use</td><td style="padding:6px 0;font-weight:600">${MARKETING_LABEL[record.q8_marketing] || record.q8_marketing}</td></tr>
+      </table>
+      <h3 style="font-size:13px;letter-spacing:0.14em;text-transform:uppercase;color:#F45347;margin:0 0 6px">Experience working with GIG</h3>
+      <p style="margin:0 0 18px;font-size:15px">${escape(record.q5_experience)}</p>
+      <h3 style="font-size:13px;letter-spacing:0.14em;text-transform:uppercase;color:#F45347;margin:0 0 6px">What we could do better</h3>
+      <p style="margin:0 0 18px;font-size:15px">${escape(record.q7_improvement)}</p>
+      ${record.q9_referral  ? `<h3 style="font-size:13px;letter-spacing:0.14em;text-transform:uppercase;color:#F45347;margin:0 0 6px">Referral</h3><p style="margin:0 0 18px;font-size:15px">${escape(record.q9_referral)}</p>` : ''}
+      ${record.q10_trends   ? `<h3 style="font-size:13px;letter-spacing:0.14em;text-transform:uppercase;color:#F45347;margin:0 0 6px">Trends / challenges</h3><p style="margin:0 0 18px;font-size:15px">${escape(record.q10_trends)}</p>` : ''}
+      <p style="margin:24px 0 0;font-size:13px"><a href="${siteUrl}/dashboard.html" style="color:#F45347;text-decoration:none;font-weight:600">Open in admin dashboard →</a></p>
+    </div>
+  `;
+
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type':  'application/json',
+    },
+    body: JSON.stringify({ from, to, subject, html }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    console.error('[submit] resend error', res.status, body);
+  }
+}
+
+function escape(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
 }

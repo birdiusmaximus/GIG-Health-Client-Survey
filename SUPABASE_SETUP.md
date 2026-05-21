@@ -84,6 +84,74 @@ Anyone you share the credentials with. Send them via Signal / 1Password / your p
 
 If you want proper auth later (e.g. Google sign-in restricted to `@gig.health` emails), Supabase Auth handles that for free — happy to wire it up.
 
+---
+
+## Optional · Email notifications on each response
+
+When a client submits the survey, send a formatted email to the GIG team (or an inbox shared in Slack). Free via **Resend** — 100 emails/day on the free tier, more than enough for a feedback survey.
+
+### 1. Sign up for Resend
+
+1. Go to https://resend.com and sign in with GitHub or email.
+2. **API Keys** → **Create API Key** → name it "GIG Survey", scope "Sending access". Copy the `re_…` key — you only see it once.
+3. (Optional but recommended) **Domains** → **Add Domain** → add `gig.health`. Resend shows DNS records to add. Once verified, emails can be sent from `surveys@gig.health` instead of the default `onboarding@resend.dev`. Without this, emails work but come from the Resend domain.
+
+### 2. Add env vars to Vercel
+
+In **Settings → Environment Variables**, add:
+
+```
+RESEND_API_KEY  = re_xxxxxxxxxxxx
+NOTIFY_EMAIL    = tim@gig.health,aidan@gig.health    # comma-separated for multiple recipients
+NOTIFY_FROM     = GIG Surveys <surveys@gig.health>    # OPTIONAL — needs a verified Resend domain
+SITE_URL        = https://survey.gig.health           # OPTIONAL — used for the "Open in dashboard" link in the email
+```
+
+`RESEND_API_KEY` and `NOTIFY_EMAIL` are the only required ones. If they're not set, submissions still save to Supabase — the email step is silently skipped.
+
+### 3. Redeploy and submit a test
+
+Trigger a redeploy in Vercel, fill out the survey, and the recipient inbox should get a branded email with the answers + a link back to the admin dashboard. Submissions never fail because of email errors — the email send is fire-and-forget after the Supabase write succeeds.
+
+---
+
+## Optional · Custom domain (e.g. survey.gig.health)
+
+Pointing the site at a `gig.health` subdomain takes about five minutes. No code change required.
+
+### 1. Add the domain in Vercel
+
+1. Vercel project → **Settings → Domains**.
+2. Type `survey.gig.health` (or whatever subdomain you want) → **Add**.
+3. Vercel shows one DNS record you need to add at your registrar:
+   - **Type**: `CNAME`
+   - **Name**: `survey` (or whatever subdomain)
+   - **Value**: `cname.vercel-dns.com`
+
+### 2. Add the DNS record at the GIG registrar
+
+Wherever `gig.health`'s DNS is managed (likely Cloudflare, Namecheap, Squarespace, etc.):
+
+1. Open the DNS settings for `gig.health`.
+2. Add a new CNAME record matching what Vercel showed.
+3. Save. Propagation usually takes 1–10 minutes.
+
+### 3. Verify
+
+Back in Vercel's Domains page, the domain should flip from "Pending" to a green checkmark. Vercel automatically provisions a free SSL certificate. The site is now available at https://survey.gig.health as well as the old `…vercel.app` URL.
+
+### 4. Update `SITE_URL` env var
+
+If you set `SITE_URL` for email notifications, update it to the new domain:
+
+```
+SITE_URL = https://survey.gig.health
+```
+
+Then redeploy so the email "Open in dashboard" link uses the new domain.
+
+---
+
 ## Local development
 
 Locally (running `python3 -m http.server 8000`), `/api/*` isn't available, so the dashboard auto-falls-back to mock data with a yellow banner. To test the real API locally, install Vercel CLI:
