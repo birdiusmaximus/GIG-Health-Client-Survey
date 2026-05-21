@@ -1,12 +1,6 @@
-/* ─── Showcase — sleek editorial bento, brand-consistent ────────
-   Design rules:
-   - All cards on Night/Dusk backgrounds. NO yellow/lavender/teal card BGs.
-   - Flame is the ONE accent per card, used sparingly.
-   - Brand secondaries (Potassium/Copper/Sodium) ONLY appear inside data
-     visualisations (donut, bars), never as card surfaces.
-   - Big editorial numerals (like the survey's "01").
-   - Generous padding + whitespace, thin borders, no shadows.
-   - Decorative gradient arc as a subtle background element.
+/* ─── Showcase — minimal editorial, no card chrome ─────────────
+   Stripped back from boxed bento → typographic flow with subtle
+   grid positioning. Whitespace and type do the work, not boxes.
 */
 
 body.showcase {
@@ -22,42 +16,40 @@ body.showcase .progress {
 }
 
 .show-main {
-  max-width: 1240px;
+  max-width: 1180px;
   margin: 0 auto;
-  padding: 8rem 2rem 6rem;
+  padding: 9rem 2.5rem 6rem;
   position: relative;
 }
 
-/* Subtle brand gradient arc behind the whole page — pulled from survey */
+/* Soft brand gradient wash, far behind everything */
 .show-main::before {
   content: "";
   position: fixed;
-  inset: auto 0 -10% 0;
-  height: 60vh;
+  inset: auto 0 -20% 0;
+  height: 80vh;
   z-index: 0;
   pointer-events: none;
   background-image:
-    radial-gradient(60% 60% at 20% 100%,
-      color-mix(in srgb, var(--potassium) 18%, transparent) 0%,
-      transparent 70%),
-    radial-gradient(50% 50% at 75% 90%,
-      color-mix(in srgb, var(--copper) 12%, transparent) 0%,
-      transparent 70%);
-  opacity: 0.45;
+    radial-gradient(50% 50% at 15% 100%,
+      color-mix(in srgb, var(--potassium) 14%, transparent) 0%, transparent 70%),
+    radial-gradient(40% 40% at 85% 100%,
+      color-mix(in srgb, var(--copper) 10%, transparent) 0%, transparent 70%);
+  opacity: 0.5;
 }
 
-/* ─── Hero ───────────────────────────────────────────────────── */
+.show-main > * { position: relative; z-index: 1; }
+
+/* ─── Hero ─────────────────────────────────────────────────── */
 .show-hero {
-  position: relative;
-  z-index: 1;
   max-width: 760px;
-  margin-bottom: 4.5rem;
+  margin-bottom: 7rem;
 }
-.show-hero .kicker { margin-bottom: 1.8rem; }
+.show-hero .kicker { margin-bottom: 1.6rem; }
 .show-hero-title {
   margin: 0 0 1.4rem;
   font-family: var(--font);
-  font-size: clamp(2.6rem, 6vw, 5.2rem);
+  font-size: clamp(2.6rem, 6vw, 5rem);
   font-weight: 700;
   line-height: 1.02;
   letter-spacing: -0.028em;
@@ -65,7 +57,7 @@ body.showcase .progress {
   text-wrap: balance;
 }
 .show-hero-sub {
-  margin: 0 0 1.2rem;
+  margin: 0 0 1.4rem;
   font-size: 1.05rem;
   line-height: 1.6;
   color: var(--ink-soft);
@@ -73,7 +65,7 @@ body.showcase .progress {
 }
 .show-hero-count {
   margin: 0;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: var(--track-cap);
   text-transform: uppercase;
@@ -90,264 +82,184 @@ body.showcase .progress {
   background: var(--flame);
 }
 
-/* ─── Bento grid ─────────────────────────────────────────────── */
-.bento {
-  position: relative;
-  z-index: 1;
+/* ─── Data section ─────────────────────────────────────────────
+   Asymmetric grid without card containers. Subtle hairlines
+   separate cells. Type sets the rhythm.
+*/
+.show-data {
   display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  grid-template-rows: auto auto auto;
-  gap: 20px;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 0;
+  margin-bottom: 7rem;
+  border-top: 1px solid var(--ink-mute);
+  border-bottom: 1px solid var(--ink-mute);
 }
 
-/* Card placements */
-.bento-quality    { grid-column: 1 / span 6;  grid-row: 1 / span 2; }
-.bento-responses  { grid-column: 7 / span 3;  grid-row: 1; }
-.bento-creativity { grid-column: 10 / span 3; grid-row: 1 / span 2; }
-.bento-budget     { grid-column: 7 / span 3;  grid-row: 2; }
-.bento-quote      { grid-column: 1 / span 8;  grid-row: 3; }
-.bento-cta        { grid-column: 9 / span 4;  grid-row: 3; }
-
-/* ─── Base card ─────────────────────────────────────────────── */
-.bento-card {
-  position: relative;
-  padding: 1.9rem 2rem;
-  border: 1px solid var(--ink-mute);
-  border-radius: 16px;
-  background: var(--night);
+.data-cell {
+  padding: 2.8rem 2.4rem;
+  border-right: 1px solid var(--ink-mute);
   display: flex;
   flex-direction: column;
-  color: var(--ink);
   min-height: 0;
-  overflow: hidden;
-  transition: border-color 0.3s ease;
 }
-.bento-card:hover { border-color: var(--ink-faint); }
+.data-cell:last-child { border-right: none; }
 
-/* Card head — small kicker label + optional meta */
-.bento-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-  margin-bottom: 1.4rem;
-}
-.bento-kicker {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: var(--track-cap);
-  text-transform: uppercase;
-  color: var(--flame);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.7em;
-}
-.bento-kicker::before {
-  content: "";
-  display: inline-block;
-  width: 1.4rem;
-  height: 1px;
-  background: var(--flame);
-}
-.bento-meta {
+/* Cell positions */
+.data-quality    { grid-column: 1; grid-row: 1 / span 2; padding-left: 0; }
+.data-responses  { grid-column: 2; grid-row: 1; }
+.data-creativity { grid-column: 3; grid-row: 1; padding-right: 0; }
+.data-budget     { grid-column: 2 / span 2; grid-row: 2; border-top: 1px solid var(--ink-mute); border-right: none; padding-right: 0; }
+
+/* Cell label (small kicker) */
+.cell-label {
+  margin: 0 0 1.4rem;
   font-size: 0.66rem;
   font-weight: 700;
   letter-spacing: var(--track-cap);
   text-transform: uppercase;
   color: var(--ink-faint);
-  text-align: right;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7em;
+}
+.cell-label::before {
+  content: "";
+  display: inline-block;
+  width: 1.2rem;
+  height: 1px;
+  background: var(--flame);
 }
 
-/* Editorial display numerals — Flame, huge, like the survey's "01" */
-.bento-big-num {
+/* Editorial display numeral */
+.cell-num {
   margin: 0;
   font-family: var(--font);
   font-weight: 700;
-  font-size: clamp(3.6rem, 6vw, 5.2rem);
-  line-height: 0.95;
+  font-size: clamp(4rem, 8vw, 6.5rem);
+  line-height: 0.9;
   letter-spacing: -0.04em;
-  color: var(--flame);
+  color: var(--ink);
 }
-.bento-big-num small {
-  font-size: 0.45em;
+.cell-num small {
+  font-size: 0.36em;
   font-weight: 700;
-  color: var(--ink-soft);
+  color: var(--flame);
   margin-left: 0.1em;
+  vertical-align: top;
+  position: relative;
+  top: 0.4em;
 }
-.bento-sub {
-  margin: auto 0 0;
-  font-size: 0.9rem;
+.cell-sub {
+  margin: 1rem 0 0;
+  font-size: 0.88rem;
   color: var(--ink-soft);
-  line-height: 1.45;
-  max-width: 28ch;
+  line-height: 1.5;
+  max-width: 24ch;
 }
 
-/* ─── 1. QUALITY — hero card, donut + breakdown ─────────────── */
-.bento-quality-body {
+/* ─── Quality cell — number on top, mini donut + legend below ─ */
+.data-quality .quality-stack {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(120px, 160px) 1fr;
   gap: 2rem;
   align-items: center;
+  margin-top: 2rem;
   flex: 1;
 }
-.bento-donut {
+.quality-donut {
   position: relative;
   width: 100%;
-  max-width: 280px;
   aspect-ratio: 1;
-  margin: 0 auto;
 }
-.bento-donut svg { width: 100%; height: 100%; display: block; }
-.bento-donut-center {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-.bento-donut-num {
-  font-size: clamp(2.8rem, 5vw, 4rem);
-  font-weight: 700;
-  letter-spacing: -0.04em;
-  line-height: 1;
-  color: var(--flame);
-}
-.bento-donut-num small {
-  font-size: 0.45em;
-  font-weight: 700;
-  color: var(--ink-soft);
-  margin-left: 0.1em;
-}
-.bento-donut-label {
-  margin-top: 0.5rem;
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: var(--track-cap);
-  text-transform: uppercase;
-  color: var(--ink-faint);
-}
-.bento-quality-legend {
+.quality-donut svg { width: 100%; height: 100%; display: block; }
+.quality-legend {
   display: flex;
   flex-direction: column;
   gap: 0.7rem;
-  min-width: 0;
 }
-.bento-legend-row {
+.legend-row {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 0.8rem;
-  font-size: 0.9rem;
-  padding: 0.5rem 0;
+  gap: 0.7rem;
+  font-size: 0.82rem;
+  padding-bottom: 0.6rem;
   border-bottom: 1px solid var(--ink-mute);
 }
-.bento-legend-row:last-child { border-bottom: none; }
-.bento-legend-dot {
-  width: 8px;
-  height: 8px;
+.legend-row:last-child { border-bottom: none; padding-bottom: 0; }
+.legend-dot {
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: var(--c);
   flex-shrink: 0;
 }
-.bento-legend-label {
+.legend-label {
   color: var(--ink-soft);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.bento-legend-count {
+.legend-count {
   font-weight: 700;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
 }
 
-/* ─── 2. RESPONSES — small stat card ────────────────────────── */
-.bento-responses {
-  background: var(--dusk);
-}
-.bento-responses .bento-big-num { margin: 0.5rem 0 auto; }
-
-/* ─── 3. CREATIVITY — big % + bars ──────────────────────────── */
-.bento-creativity .bento-big-num {
-  margin: 0.4rem 0 1.2rem;
-}
-.bento-bar-chart {
+/* ─── Creativity bars (mini, sat below the number) ─────────── */
+.creativity-bars {
   display: flex;
   align-items: flex-end;
-  gap: 6px;
-  height: 70px;
-  margin-top: auto;
+  gap: 4px;
+  height: 36px;
+  margin-top: 1.2rem;
 }
-.bento-bar {
+.creativity-bar {
   flex: 1;
   height: var(--h, 10%);
-  min-height: 6px;
+  min-height: 4px;
   background: var(--c, var(--ink-faint));
-  border-radius: 3px 3px 0 0;
-  transition: height 0.5s ease;
-}
-.bento-bar-axis {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 0.5rem;
-  font-size: 0.58rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
+  border-radius: 2px 2px 0 0;
 }
 
-/* ─── 4. BUDGET — wide scale ────────────────────────────────── */
-.bento-budget { background: var(--dusk); }
-.bento-budget-scale {
-  flex: 1;
+/* ─── Budget scale (full width of bottom row) ──────────────── */
+.budget-display {
+  margin-top: 1.4rem;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   gap: 0.7rem;
 }
-.bento-budget .budget-scale {
-  background: rgba(254, 246, 246, 0.06);
-  height: 10px;
+.data-budget .budget-scale {
+  background: rgba(254, 246, 246, 0.05);
+  height: 4px;
 }
-.bento-budget .budget-marker {
+.data-budget .budget-zone {
+  background: transparent !important;
+}
+.data-budget .budget-marker {
   background: var(--flame);
-  box-shadow: 0 0 0 2px var(--night), 0 0 14px rgba(244, 83, 71, 0.5);
+  box-shadow: 0 0 0 3px var(--night), 0 0 16px rgba(244, 83, 71, 0.5);
+  width: 2px;
+  top: -8px;
+  bottom: -8px;
 }
-.bento-budget .budget-axis {
+.data-budget .budget-axis {
   color: var(--ink-faint);
+  font-size: 0.62rem;
 }
 
-/* ─── 5. QUOTE — wide editorial card, decorative arc ────────── */
-.bento-quote {
-  padding: 2.4rem 2.4rem 2rem;
-  position: relative;
+/* ─── Quote (its own moment, large editorial italic) ──────── */
+.show-quote {
+  margin-bottom: 6rem;
+  padding-top: 1rem;
 }
-/* Subtle brand-gradient arc baked into the card top-right */
-.bento-quote::before {
-  content: "";
-  position: absolute;
-  top: -50%;
-  right: -10%;
-  width: 50%;
-  height: 200%;
-  background:
-    radial-gradient(50% 50% at 100% 50%,
-      color-mix(in srgb, var(--potassium) 10%, transparent) 0%,
-      transparent 70%);
-  pointer-events: none;
-}
-.quote-carousel {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
+.show-quote .cell-label { margin-bottom: 2.5rem; }
 .quote-stage {
   position: relative;
-  min-height: 180px;
+  min-height: 240px;
+  max-width: 950px;
 }
 .quote-card {
   position: absolute;
@@ -364,22 +276,23 @@ body.showcase .progress {
   pointer-events: auto;
 }
 .quote-text {
-  margin: 0 0 1.5rem;
-  font-size: clamp(1.2rem, 2vw, 1.55rem);
+  margin: 0 0 1.8rem;
+  font-size: clamp(1.4rem, 3vw, 2.4rem);
   font-style: italic;
   font-weight: 400;
-  line-height: 1.5;
+  line-height: 1.4;
   color: var(--ink);
-  padding-left: 2.2rem;
+  padding-left: 3rem;
   position: relative;
-  max-width: 60ch;
+  max-width: 56ch;
+  text-wrap: pretty;
 }
 .quote-text::before {
   content: "\201C";
   position: absolute;
   left: 0;
-  top: -0.35em;
-  font-size: 3em;
+  top: -0.25em;
+  font-size: 3.5em;
   font-style: normal;
   line-height: 1;
   color: var(--flame);
@@ -391,18 +304,18 @@ body.showcase .progress {
   letter-spacing: var(--track-cap);
   text-transform: uppercase;
   color: var(--flame);
-  padding-left: 2.2rem;
+  padding-left: 3rem;
 }
 .quote-nav {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.45rem;
   justify-content: flex-start;
-  margin-top: 1.5rem;
-  padding-left: 2.2rem;
+  margin-top: 2rem;
+  padding-left: 3rem;
 }
 .quote-dot {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   padding: 0;
   border: 1px solid var(--ink-faint);
   border-radius: 50%;
@@ -414,67 +327,65 @@ body.showcase .progress {
 .quote-dot.is-active {
   background: var(--flame);
   border-color: var(--flame);
-  width: 22px;
+  width: 20px;
   border-radius: 999px;
 }
 
-/* ─── 6. CTA — the one Flame card, visual punctuation ───────── */
-.bento-cta {
-  background: var(--flame);
-  border-color: var(--flame);
-  color: var(--paper);
-  justify-content: space-between;
-  padding: 2rem;
+/* ─── CTA — minimal link, no card, just a confident text-CTA ─ */
+.show-cta {
+  padding-top: 4rem;
+  padding-bottom: 2rem;
+  border-top: 1px solid var(--ink-mute);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+  max-width: 760px;
 }
-.bento-cta-kicker {
-  margin: 0 0 0.7rem;
+.show-cta-kicker {
+  margin: 0;
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: var(--track-cap);
   text-transform: uppercase;
-  color: rgba(254, 246, 246, 0.7);
+  color: var(--flame);
   display: inline-flex;
   align-items: center;
   gap: 0.7em;
 }
-.bento-cta-kicker::before {
+.show-cta-kicker::before {
   content: "";
   display: inline-block;
   width: 1.4rem;
   height: 1px;
-  background: rgba(254, 246, 246, 0.5);
+  background: var(--flame);
 }
-.bento-cta-title {
+.show-cta-title {
   margin: 0;
-  font-size: clamp(1.4rem, 2.4vw, 1.95rem);
+  font-size: clamp(2rem, 4vw, 3rem);
   font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
-  color: var(--paper);
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  color: var(--ink);
   text-wrap: balance;
 }
-.bento-cta-btn {
+.show-cta-link {
+  margin-top: 0.4rem;
+  font-family: var(--font);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--flame);
+  text-decoration: none;
   display: inline-flex;
   align-items: center;
-  gap: 0.8em;
-  margin-top: 1.5rem;
-  align-self: flex-start;
-  font-family: var(--font);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: var(--track-cap);
-  text-transform: uppercase;
-  padding: 0.9rem 1.4rem;
-  background: var(--night);
-  color: var(--paper);
-  text-decoration: none;
-  border-radius: 999px;
-  transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+  gap: 0.5em;
+  padding-bottom: 0.2em;
+  border-bottom: 1px solid var(--flame);
+  transition: gap 0.2s ease, opacity 0.2s ease;
 }
-.bento-cta-btn:hover {
-  transform: translateY(-2px);
-  background: var(--paper);
-  color: var(--flame);
+.show-cta-link:hover {
+  gap: 0.9em;
+  opacity: 0.85;
 }
 
 /* Empty state */
@@ -495,37 +406,44 @@ body.showcase .progress {
 }
 
 /* ─── Scroll-reveal ─────────────────────────────────────────── */
-.bento-card {
+.data-cell, .show-quote, .show-cta {
   opacity: 0;
   transform: translateY(20px);
-  transition: opacity 0.6s ease, transform 0.6s ease, border-color 0.3s ease;
+  transition: opacity 0.6s ease, transform 0.6s ease;
 }
-.bento-card.is-revealed {
+.data-cell.is-revealed,
+.show-quote.is-revealed,
+.show-cta.is-revealed {
   opacity: 1;
   transform: translateY(0);
 }
 @media (prefers-reduced-motion: reduce) {
-  .bento-card { opacity: 1; transform: none; transition: border-color 0.3s ease; }
+  .data-cell, .show-quote, .show-cta {
+    opacity: 1; transform: none; transition: none;
+  }
 }
 
-/* ─── Mobile / Tablet ───────────────────────────────────────── */
-@media (max-width: 980px) {
-  .show-main { padding: 6rem 1rem 4rem; }
-  .bento {
-    grid-template-columns: repeat(6, 1fr);
+/* ─── Mobile ────────────────────────────────────────────────── */
+@media (max-width: 880px) {
+  .show-main { padding: 6rem 1.5rem 4rem; }
+  .show-hero { margin-bottom: 4rem; }
+  .show-data {
+    grid-template-columns: 1fr 1fr;
+    margin-bottom: 4rem;
   }
-  .bento-quality    { grid-column: 1 / -1; grid-row: auto; }
-  .bento-responses  { grid-column: 1 / span 3; grid-row: auto; }
-  .bento-creativity { grid-column: 4 / span 3; grid-row: auto; }
-  .bento-budget     { grid-column: 1 / -1; grid-row: auto; }
-  .bento-quote      { grid-column: 1 / -1; grid-row: auto; }
-  .bento-cta        { grid-column: 1 / -1; grid-row: auto; }
+  .data-cell {
+    padding: 2rem 1.4rem;
+  }
+  .data-quality    { grid-column: 1 / -1; grid-row: auto; border-right: none; padding-left: 0; border-bottom: 1px solid var(--ink-mute); }
+  .data-responses  { grid-column: 1; grid-row: auto; padding-left: 0; }
+  .data-creativity { grid-column: 2; grid-row: auto; border-right: none; padding-right: 0; }
+  .data-budget     { grid-column: 1 / -1; grid-row: auto; padding-left: 0; padding-right: 0; }
+  .data-quality .quality-stack { grid-template-columns: 100px 1fr; gap: 1.4rem; }
 }
-@media (max-width: 560px) {
-  .bento { grid-template-columns: 1fr; }
-  .bento-quality, .bento-responses, .bento-creativity,
-  .bento-budget, .bento-quote, .bento-cta {
-    grid-column: 1; grid-row: auto;
+@media (max-width: 520px) {
+  .show-data { grid-template-columns: 1fr; }
+  .data-responses, .data-creativity, .data-budget {
+    grid-column: 1; border-right: none;
   }
-  .bento-quality-body { grid-template-columns: 1fr; }
+  .data-quality .quality-stack { grid-template-columns: 1fr; }
 }

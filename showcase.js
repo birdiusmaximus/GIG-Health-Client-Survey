@@ -1,30 +1,28 @@
-// Showcase page — bento layout. Loads data from /api/public, renders:
-//   - 6 bento cards (Quality donut, Responses, Creativity bars,
-//     Budget scale, Quote carousel, CTA)
-//   - scroll-reveal entrance per card
+// Showcase page — minimal editorial layout. Loads from /api/public.
+// Falls back to a small sample if the API is unreachable.
 
-const countEl  = document.getElementById('show-count');
+const countEl    = document.getElementById('show-count');
 
 const QUALITY_LABELS = {
-  excellent:      'Excellent',
-  high:           'High standard',
-  fair:           'Fair',
+  excellent: 'Excellent',
+  high: 'High standard',
+  fair: 'Fair',
   not_everything: "Didn't fully land",
-  disappointing:  'Disappointing',
+  disappointing: 'Disappointing',
 };
 const CREATIVITY_LABELS = {
-  groundbreaking:   'Groundbreaking',
-  really_creative:  'Really creative',
-  quite_creative:   'Quite creative',
-  average:          'Average',
-  lacking:          'Lacking',
+  groundbreaking: 'Groundbreaking',
+  really_creative: 'Really creative',
+  quite_creative: 'Quite creative',
+  average: 'Average',
+  lacking: 'Lacking',
 };
-// Best → worst, in GIG brand colours
+// Restrained mapping — Copper/Sodium/Flame variants only (no Potassium card chrome)
 const QUALITY_COLORS = {
   excellent:      'var(--copper)',
-  high:           '#7BC8B6',                  // lighter Copper
+  high:           '#7BC8B6',
   fair:           'var(--sodium)',
-  not_everything: '#F58A7E',                  // lighter Flame
+  not_everything: '#F58A7E',
   disappointing:  'var(--flame)',
 };
 const CREATIVITY_COLORS = {
@@ -37,7 +35,6 @@ const CREATIVITY_COLORS = {
 
 const QUOTE_INTERVAL_MS = 6000;
 
-// ─── Fallback for dev / API failure ─────────────────────────
 const FALLBACK = {
   total: 8,
   quality: {
@@ -81,92 +78,81 @@ function renderHeroCount(total) {
   countEl.textContent = `${total} response${total === 1 ? '' : 's'} across recent projects`;
 }
 
-// ─── Quality donut + legend ─────────────────────────────────
-function renderQualityDonut(quality) {
-  const donutEl  = document.getElementById('quality-donut');
-  const legendEl = document.getElementById('quality-legend');
-  if (!donutEl || !legendEl) return;
+// ─── Quality cell ───────────────────────────────────────────
+function renderQuality(quality) {
+  const numEl     = document.getElementById('quality-num');
+  const donutEl   = document.getElementById('quality-donut');
+  const legendEl  = document.getElementById('quality-legend');
+  if (numEl) numEl.textContent = quality.pct;
 
   const entries = Object.entries(quality.breakdown);
   const total = entries.reduce((s, [, c]) => s + c, 0);
   const R = 40;
-  const C = 2 * Math.PI * R; // 251.33
+  const C = 2 * Math.PI * R;
 
-  let svg = `<svg viewBox="0 0 100 100" aria-hidden="true">`;
-  // Background ring
-  svg += `<circle r="${R}" cx="50" cy="50" fill="none" stroke="rgba(254,246,246,0.08)" stroke-width="14" />`;
-
-  if (total > 0) {
-    let offset = 0;
-    for (const [key, count] of entries) {
-      if (!count) continue;
-      const pct = count / total;
-      const dashLen = pct * C;
-      const dashGap = C - dashLen;
-      svg += `<circle r="${R}" cx="50" cy="50" fill="none"
-        stroke="${QUALITY_COLORS[key]}" stroke-width="14"
-        stroke-dasharray="${dashLen.toFixed(2)} ${dashGap.toFixed(2)}"
-        stroke-dashoffset="${(-offset * C).toFixed(2)}"
-        transform="rotate(-90 50 50)"
-        stroke-linecap="butt" />`;
-      offset += pct;
+  if (donutEl) {
+    let svg = `<svg viewBox="0 0 100 100" aria-hidden="true">`;
+    svg += `<circle r="${R}" cx="50" cy="50" fill="none" stroke="rgba(254,246,246,0.06)" stroke-width="10" />`;
+    if (total > 0) {
+      let offset = 0;
+      for (const [key, count] of entries) {
+        if (!count) continue;
+        const pct = count / total;
+        const dashLen = pct * C;
+        const dashGap = C - dashLen;
+        svg += `<circle r="${R}" cx="50" cy="50" fill="none"
+          stroke="${QUALITY_COLORS[key]}" stroke-width="10"
+          stroke-dasharray="${dashLen.toFixed(2)} ${dashGap.toFixed(2)}"
+          stroke-dashoffset="${(-offset * C).toFixed(2)}"
+          transform="rotate(-90 50 50)" stroke-linecap="butt" />`;
+        offset += pct;
+      }
     }
+    svg += `</svg>`;
+    donutEl.innerHTML = svg;
   }
-  svg += `</svg>`;
-  svg += `
-    <div class="bento-donut-center">
-      <div class="bento-donut-num">${quality.pct}<small>%</small></div>
-      <div class="bento-donut-label">High quality</div>
-    </div>
-  `;
-  donutEl.innerHTML = svg;
 
-  // Legend (only show rows with at least one response)
-  legendEl.innerHTML = entries
-    .filter(([, count]) => count > 0)
-    .map(([key, count]) => `
-      <div class="bento-legend-row">
-        <span class="bento-legend-dot" style="--c:${QUALITY_COLORS[key]}"></span>
-        <span class="bento-legend-label">${QUALITY_LABELS[key]}</span>
-        <span class="bento-legend-count">${count}</span>
-      </div>
-    `).join('');
+  if (legendEl) {
+    legendEl.innerHTML = entries
+      .filter(([, count]) => count > 0)
+      .map(([key, count]) => `
+        <div class="legend-row">
+          <span class="legend-dot" style="--c:${QUALITY_COLORS[key]}"></span>
+          <span class="legend-label">${QUALITY_LABELS[key]}</span>
+          <span class="legend-count">${count}</span>
+        </div>
+      `).join('');
+  }
 }
 
-// ─── Responses count ────────────────────────────────────────
+// ─── Responses cell ─────────────────────────────────────────
 function renderResponses(total) {
   const el = document.getElementById('responses-num');
   if (el) el.textContent = total > 0 ? `+${total}` : '0';
 }
 
-// ─── Creativity bars ────────────────────────────────────────
+// ─── Creativity cell + bars ────────────────────────────────
 function renderCreativity(creativity) {
   const numEl  = document.getElementById('creativity-num');
   const barsEl = document.getElementById('creativity-bars');
-  if (!numEl || !barsEl) return;
+  if (numEl) numEl.textContent = creativity.pct;
 
-  numEl.innerHTML = `${creativity.pct}<small>%</small>`;
-
+  if (!barsEl) return;
   const entries = Object.entries(creativity.breakdown);
   const max = Math.max(...entries.map(([, c]) => c), 1);
-
   barsEl.innerHTML = entries.map(([key, count]) => {
     const h = Math.max(10, (count / max) * 100);
-    return `<div class="bento-bar" style="--h:${h}%; --c:${CREATIVITY_COLORS[key]}"
+    return `<div class="creativity-bar" style="--h:${h}%; --c:${CREATIVITY_COLORS[key]}"
       title="${CREATIVITY_LABELS[key]}: ${count}"></div>`;
   }).join('');
 }
 
-// ─── Budget scale marker ───────────────────────────────────
+// ─── Budget marker ─────────────────────────────────────────
 function renderBudget(budget) {
   const marker = document.getElementById('budget-marker');
-  const meta   = document.getElementById('budget-meta');
   if (marker) {
     marker.style.left = `${budget.markerPos}%`;
     if (budget.total === 0) marker.classList.add('is-empty');
-  }
-  if (meta && budget.total > 0) {
-    meta.textContent = `Weighted across ${budget.total} response${budget.total === 1 ? '' : 's'}`;
   }
 }
 
@@ -209,7 +195,7 @@ function renderQuotes(quotes) {
     const i = parseInt(dot.dataset.i, 10);
     if (Number.isFinite(i)) { show(i); reset(); }
   });
-  const wrap = stage.closest('.bento-quote');
+  const wrap = stage.closest('.show-quote');
   wrap?.addEventListener('mouseenter', stop);
   wrap?.addEventListener('mouseleave', () => { if (!timerId) start(); });
 
@@ -218,7 +204,7 @@ function renderQuotes(quotes) {
 
 // ─── Scroll-reveal ─────────────────────────────────────────
 function setupScrollReveal() {
-  const targets = document.querySelectorAll('.bento-card');
+  const targets = document.querySelectorAll('.data-cell, .show-quote, .show-cta');
   if (!('IntersectionObserver' in window)) {
     targets.forEach(el => el.classList.add('is-revealed'));
     return;
@@ -230,7 +216,7 @@ function setupScrollReveal() {
         io.unobserve(e.target);
       }
     }
-  }, { threshold: 0.15 });
+  }, { threshold: 0.1 });
   targets.forEach(el => io.observe(el));
 }
 
@@ -238,7 +224,7 @@ function setupScrollReveal() {
 (async () => {
   const data = await loadPublic();
   renderHeroCount(data.total);
-  renderQualityDonut(data.quality);
+  renderQuality(data.quality);
   renderResponses(data.total);
   renderCreativity(data.creativity);
   renderBudget(data.budget);
