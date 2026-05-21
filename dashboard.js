@@ -174,21 +174,21 @@ const LEGACY_TOKEN_KEY = 'gig_dash_token';
   }
 })();
 
-// Mock data is fine for the static dev server (no Vercel functions),
-// but in production a transient API blip should NOT silently fall
-// back to demo data — admins can't tell the difference. Only allow
-// mock fallback on localhost / 127.0.0.1.
+// Both local and production dashboards hit the deployed API now — the
+// local-dev version of /api/responses on Python's http.server doesn't
+// exist, and admins testing the UI locally would rather see real
+// Supabase rows than the mock fixtures.
 const HOSTNAME = (typeof location !== 'undefined' && location.hostname) || '';
 const IS_LOCAL = HOSTNAME === 'localhost' || HOSTNAME === '127.0.0.1' || HOSTNAME === '';
-
-// Local-dev convenience: hit the deployed API instead of `/api/responses`
-// (which doesn't exist on Python's http.server). The production endpoint
-// allows CORS from localhost and demands the same Basic credentials, so
-// local dashboards show real live data instead of mock.
 const LIVE_API_BASE = 'https://gig-health-client-survey.vercel.app';
 function apiUrl(path) {
   return IS_LOCAL ? `${LIVE_API_BASE}${path}` : path;
 }
+
+// Explicit opt-in for mock data — `?mock` on the URL — for working on
+// the layout without burning real API hits or when Supabase is down.
+const FORCE_MOCK = typeof location !== 'undefined'
+  && new URLSearchParams(location.search).has('mock');
 
 function authHeaderValue(username, password) {
   if (!password) return null;
@@ -221,15 +221,14 @@ async function tryFetch(username, password) {
 }
 
 async function loadResponses() {
+  // ?mock on the URL forces fixtures, useful when working on layout
+  if (FORCE_MOCK) return { mode: 'mock', data: MOCK_RESPONSES };
+
   const username = safeStorage.get(USER_KEY) || '';
   const password = safeStorage.get(PASS_KEY) || '';
   const result = await tryFetch(username, password);
 
   if (result.ok) return { mode: 'live', data: result.data };
-  if (result.networkError) {
-    if (ALLOW_MOCK) return { mode: 'mock', data: MOCK_RESPONSES };
-    return { mode: 'error', error: 'Network error reaching /api/responses.' };
-  }
   if (result.status === 401) {
     if (password) {
       safeStorage.remove(USER_KEY);
@@ -237,8 +236,10 @@ async function loadResponses() {
     }
     return { mode: 'needs-auth' };
   }
+  if (result.networkError) {
+    return { mode: 'error', error: 'Network error reaching the live API. Check your connection or append ?mock to view sample data.' };
+  }
   console.error('[dashboard] unexpected API error', result);
-  if (ALLOW_MOCK) return { mode: 'mock', data: MOCK_RESPONSES };
   return { mode: 'error', error: result.error || 'Unexpected API error.' };
 }
 
