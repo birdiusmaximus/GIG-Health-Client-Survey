@@ -179,7 +179,16 @@ const LEGACY_TOKEN_KEY = 'gig_dash_token';
 // back to demo data — admins can't tell the difference. Only allow
 // mock fallback on localhost / 127.0.0.1.
 const HOSTNAME = (typeof location !== 'undefined' && location.hostname) || '';
-const ALLOW_MOCK = HOSTNAME === 'localhost' || HOSTNAME === '127.0.0.1' || HOSTNAME === '';
+const IS_LOCAL = HOSTNAME === 'localhost' || HOSTNAME === '127.0.0.1' || HOSTNAME === '';
+
+// Local-dev convenience: hit the deployed API instead of `/api/responses`
+// (which doesn't exist on Python's http.server). The production endpoint
+// allows CORS from localhost and demands the same Basic credentials, so
+// local dashboards show real live data instead of mock.
+const LIVE_API_BASE = 'https://gig-health-client-survey.vercel.app';
+function apiUrl(path) {
+  return IS_LOCAL ? `${LIVE_API_BASE}${path}` : path;
+}
 
 function authHeaderValue(username, password) {
   if (!password) return null;
@@ -198,7 +207,7 @@ async function tryFetch(username, password) {
     const headers = {};
     const auth = authHeaderValue(username, password);
     if (auth) headers['Authorization'] = auth;
-    const res = await fetch('/api/responses', { headers });
+    const res = await fetch(apiUrl('/api/responses'), { headers, credentials: 'include' });
     if (res.status === 401) return { ok: false, status: 401 };
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
@@ -619,8 +628,9 @@ responsesEl.addEventListener('submit', async (e) => {
     const username = safeStorage.get(USER_KEY) || '';
     const password = safeStorage.get(PASS_KEY) || '';
     const auth = authHeaderValue(username, password);
-    const res = await fetch(`/api/responses?id=${encodeURIComponent(id)}`, {
+    const res = await fetch(apiUrl(`/api/responses?id=${encodeURIComponent(id)}`), {
       method: 'PATCH',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         ...(auth ? { Authorization: auth } : {}),
@@ -726,8 +736,9 @@ confirmDelete?.addEventListener('click', async () => {
     const username = safeStorage.get(USER_KEY) || '';
     const password = safeStorage.get(PASS_KEY) || '';
     const auth = authHeaderValue(username, password);
-    const res = await fetch(`/api/responses?id=${encodeURIComponent(id)}`, {
+    const res = await fetch(apiUrl(`/api/responses?id=${encodeURIComponent(id)}`), {
       method: 'DELETE',
+      credentials: 'include',
       headers: auth ? { Authorization: auth } : {},
     });
     const data = await res.json().catch(() => ({}));

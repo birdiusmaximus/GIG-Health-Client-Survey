@@ -55,7 +55,42 @@ function unauthorised(res, message) {
   return res.status(401).json({ error: message || 'unauthorised' });
 }
 
+// CORS — admins do local-dev work against the live API by entering
+// their dashboard credentials. We allow our deployed origin plus any
+// localhost / 127.0.0.1 (any port) so `python -m http.server` and Vite
+// alike just work. Other origins get no CORS header → browser blocks.
+const ALLOWED_ORIGINS = new Set([
+  'https://gig-health-client-survey.vercel.app',
+]);
+function isAllowedOrigin(origin) {
+  if (!origin) return false;
+  if (ALLOWED_ORIGINS.has(origin)) return true;
+  try {
+    const u = new URL(origin);
+    if (u.hostname === 'localhost' || u.hostname === '127.0.0.1') return true;
+  } catch {}
+  return false;
+}
+function applyCors(req, res) {
+  const origin = req.headers.origin;
+  if (isAllowedOrigin(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, PATCH, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Max-Age', '600');
+  }
+}
+
 export default async function handler(req, res) {
+  applyCors(req, res);
+  // Pre-flight: respond before doing auth so the browser can check
+  // CORS without sending credentials yet.
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+
   // ── Auth (HTTP Basic, constant-time comparison) ──────────────
   // Required env vars (no defaults, no fail-open):
   //   DASHBOARD_USERNAME — required

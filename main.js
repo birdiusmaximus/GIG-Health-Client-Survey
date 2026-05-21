@@ -9,7 +9,7 @@ import { safeStorage, showToast } from './util.js?v=1';
 const SESSION_ANSWERS_KEY = 'gig_survey_draft';
 
 const scenes        = Array.from(document.querySelectorAll('.scene'));
-const numeralEl     = document.getElementById('numeral');
+const numeralEl     = document.getElementById('numeral');   // optional — removed by the design refresh, kept null-safe
 const dotsEls       = Array.from(document.querySelectorAll('#dots .dot'));
 const continueBtn   = document.getElementById('continue');
 const continueLabel = document.getElementById('continue-label');
@@ -128,7 +128,7 @@ function setCurrentScene(n) {
   }
   state.current = n;
   wheelAccum = 0;
-  numeralEl.textContent = String(n).padStart(2, '0');
+  if (numeralEl) numeralEl.textContent = String(n).padStart(2, '0');
   dotsEls.forEach((dot, i) => {
     dot.classList.toggle('active', i + 1 === n);
     dot.classList.toggle('done',   i + 1 <  n);
