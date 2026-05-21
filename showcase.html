@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="https://use.typekit.net/wek0eum.css" />
   <link rel="stylesheet" href="./styles.css?v=24" />
   <link rel="stylesheet" href="./dashboard.css?v=7" />
-  <link rel="stylesheet" href="./showcase.css?v=1" />
+  <link rel="stylesheet" href="./showcase.css?v=2" />
 </head>
 <body class="showcase">
 
@@ -46,28 +46,29 @@
       <!-- populated by showcase.js -->
     </section>
 
-    <!-- Quotes carousel (placeholder for step 4) -->
-    <section class="show-section show-quotes">
+    <!-- Quotes carousel -->
+    <section class="show-section show-quotes" id="show-quotes-section">
       <p class="kicker">
         <span class="kicker-num">In their words</span>
         <span class="kicker-sep" aria-hidden="true"></span>
-        <span class="kicker-label">Curated</span>
+        <span class="kicker-label">Anonymised &amp; consented</span>
       </p>
-      <div class="show-quote-placeholder">
-        Quote carousel coming next — auto-advancing, anonymous, from rows where the client granted permission to share.
+      <div class="quote-carousel">
+        <div class="quote-stage" id="quote-stage">
+          <p class="show-empty">Loading quotes…</p>
+        </div>
+        <div class="quote-nav" id="quote-nav" aria-label="Quote navigation"></div>
       </div>
     </section>
 
-    <!-- Theme chips (placeholder for step 5) -->
-    <section class="show-section show-themes">
+    <!-- Theme chips -->
+    <section class="show-section show-themes" id="show-themes-section">
       <p class="kicker">
         <span class="kicker-num">Common themes</span>
         <span class="kicker-sep" aria-hidden="true"></span>
-        <span class="kicker-label">Themes from feedback</span>
+        <span class="kicker-label">Recurring in feedback</span>
       </p>
-      <div class="show-themes-placeholder">
-        Keyword chips coming next — sized by how often each theme comes up in feedback.
-      </div>
+      <div class="theme-cloud" id="theme-cloud"></div>
     </section>
 
     <!-- Soft CTA -->
@@ -93,7 +94,7 @@
     </div>
   </footer>
 
-  <script type="module" src="./showcase.js?v=1"></script>
+  <script type="module" src="./showcase.js?v=2"></script>
   <script src="./menu.js?v=1"></script>
 </body>
 </html>

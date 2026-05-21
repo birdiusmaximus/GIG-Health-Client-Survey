@@ -65,18 +65,156 @@ body.showcase .progress {
 }
 .show-section .kicker { margin-bottom: 1.6rem; }
 
-/* ─── Placeholder boxes (steps 4-5 replace these) ─────────── */
-.show-quote-placeholder,
-.show-themes-placeholder {
-  padding: 3rem 2rem;
-  border: 1px dashed var(--ink-faint);
-  border-radius: 8px;
-  background: rgba(254, 246, 246, 0.015);
-  color: var(--ink-soft);
+/* ─── Quote carousel ──────────────────────────────────────── */
+.quote-carousel {
+  padding: 3.5rem 2.5rem 2.5rem;
+  border: 1px solid var(--ink-mute);
+  border-radius: 12px;
+  background:
+    radial-gradient(120% 80% at 80% 20%, color-mix(in srgb, var(--flame) 5%, transparent) 0%, transparent 60%),
+    rgba(254, 246, 246, 0.015);
+}
+.quote-stage {
+  position: relative;
+  min-height: 240px;
+}
+.quote-card {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+  pointer-events: none;
+}
+.quote-card.is-active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.quote-text {
+  margin: 0 0 1.6rem;
+  font-family: var(--font);
+  font-size: clamp(1.3rem, 2.4vw, 1.85rem);
+  font-weight: 400;
   font-style: italic;
+  line-height: 1.45;
+  color: var(--ink);
+  text-wrap: pretty;
+  max-width: 60ch;
+  position: relative;
+  padding-left: 2.2rem;
+}
+.quote-text::before {
+  content: "\201C";
+  position: absolute;
+  left: 0;
+  top: -0.3em;
+  font-size: 3em;
+  font-style: normal;
+  line-height: 1;
+  color: var(--flame);
+  opacity: 0.8;
+}
+.quote-attribution {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: var(--track-cap);
+  text-transform: uppercase;
+  color: var(--flame);
+}
+
+.quote-nav {
+  display: flex;
+  gap: 0.55rem;
+  justify-content: center;
+  margin-top: 2rem;
+}
+.quote-dot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 1px solid var(--ink-faint);
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.quote-dot:hover { border-color: var(--ink); }
+.quote-dot.is-active {
+  background: var(--flame);
+  border-color: var(--flame);
+  width: 22px;
+  border-radius: 999px;
+}
+
+/* ─── Theme cloud — varied-size chips in a flowing layout ─── */
+.theme-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 0.8rem;
+  align-items: baseline;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  border: 1px solid var(--ink-mute);
+  border-radius: 12px;
+  background: rgba(254, 246, 246, 0.015);
+  min-height: 8rem;
+}
+.theme-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4em 0.95em;
+  border-radius: 999px;
+  border: 1px solid var(--ink-faint);
+  font-family: var(--font);
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+  background: rgba(254, 246, 246, 0.02);
+  /* size + tint set inline based on frequency rank */
+  font-size: var(--size, 0.9rem);
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+.theme-chip:hover {
+  transform: translateY(-2px);
+  border-color: var(--flame);
+  background: color-mix(in srgb, var(--flame) 8%, transparent);
+}
+.theme-chip.is-top {
+  border-color: color-mix(in srgb, var(--flame) 50%, transparent);
+  background: color-mix(in srgb, var(--flame) 10%, transparent);
+  color: var(--ink);
+}
+
+/* Empty state inside the carousel/cloud */
+.show-empty {
+  margin: 0;
   font-size: 0.95rem;
+  color: var(--ink-faint);
+  font-style: italic;
   text-align: center;
-  line-height: 1.5;
+}
+
+/* ─── Scroll-reveal animation (entrance-fade on showcase sections) ─ */
+.show-section,
+.show-stats,
+.show-cta {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.show-section.is-revealed,
+.show-stats.is-revealed,
+.show-cta.is-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .show-section, .show-stats, .show-cta {
+    opacity: 1; transform: none; transition: none;
+  }
 }
 
 /* ─── CTA ──────────────────────────────────────────────────── */
