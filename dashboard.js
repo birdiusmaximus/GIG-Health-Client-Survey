@@ -228,7 +228,6 @@ const emptyNoteEl   = document.getElementById('empty-note');
 const filterSelEl   = document.getElementById('filter-select');
 const searchEl      = document.getElementById('filter-search');
 const exportBtn     = document.getElementById('export-csv');
-const footerCount   = document.getElementById('footer-count');
 const confirmOverlay= document.getElementById('confirm-overlay');
 const confirmProject= document.getElementById('confirm-project');
 const confirmCancel = document.getElementById('confirm-cancel');
@@ -513,8 +512,6 @@ function applyFilters() {
 
   responsesEl.innerHTML = rs.map(renderResponse).join('');
   emptyNoteEl.hidden = rs.length > 0;
-  const liveSuffix = window.__dashMode === 'mock' ? ' (mock)' : '';
-  footerCount.textContent = `${rs.length} of ${allResponses.length}${liveSuffix}`;
 }
 
 filterSelEl.addEventListener('change', applyFilters);

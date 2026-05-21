@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="https://use.typekit.net/wek0eum.css" />
   <link rel="stylesheet" href="./styles.css?v=24" />
   <link rel="stylesheet" href="./dashboard.css?v=7" />
-  <link rel="stylesheet" href="./showcase.css?v=14" />
+  <link rel="stylesheet" href="./showcase.css?v=15" />
 </head>
 <body class="showcase">
 
@@ -55,17 +55,20 @@
         <p class="cell-sub">Groundbreaking or really creative</p>
       </div>
 
-      <!-- Budget position — vertical scale -->
+      <!-- Budget position — horizontal scale (matches admin dashboard) -->
       <div class="data-cell data-budget">
         <p class="cell-label">Budget position</p>
-        <div class="budget-vertical" role="img" aria-label="Budget position scale">
-          <div class="budget-axis-v">
+        <div class="budget-display">
+          <div class="budget-scale" role="img" aria-label="Budget position scale">
+            <span class="budget-zone is-higher"></span>
+            <span class="budget-zone is-on-par"></span>
+            <span class="budget-zone is-cheaper"></span>
+            <span class="budget-marker" id="budget-marker" style="left:50%"></span>
+          </div>
+          <div class="budget-axis">
             <span>Higher</span>
             <span>On par</span>
             <span>Competitive</span>
-          </div>
-          <div class="budget-track">
-            <span class="budget-marker-v" id="budget-marker" style="top:50%"></span>
           </div>
         </div>
       </div>
@@ -101,7 +104,7 @@
     </div>
   </footer>
 
-  <script type="module" src="./showcase.js?v=8"></script>
+  <script type="module" src="./showcase.js?v=9"></script>
   <script src="./menu.js?v=2"></script>
   <script src="./privacy.js?v=1"></script>
 </body>

@@ -96,15 +96,11 @@ function renderCreativity(creativity) {
   if (numEl) numEl.textContent = creativity.pct;
 }
 
-// ─── Budget marker (vertical) ──────────────────────────────
-// markerPos is 0–100 along the horizontal scale; for the vertical
-// version we invert so 0 (= "Higher" on the horizontal left) lands
-// at the TOP of the vertical track, and 100 (= "Competitive" on
-// the horizontal right) lands at the BOTTOM.
+// ─── Budget marker (horizontal scale, matches dashboard) ──
 function renderBudget(budget) {
   const marker = document.getElementById('budget-marker');
   if (marker) {
-    marker.style.top = `${budget.markerPos}%`;
+    marker.style.left = `${budget.markerPos}%`;
     if (budget.total === 0) marker.classList.add('is-empty');
   }
 }
