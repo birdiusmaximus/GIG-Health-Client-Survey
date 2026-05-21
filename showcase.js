@@ -80,49 +80,8 @@ function renderHeroCount(total) {
 
 // ─── Quality cell ───────────────────────────────────────────
 function renderQuality(quality) {
-  const numEl     = document.getElementById('quality-num');
-  const donutEl   = document.getElementById('quality-donut');
-  const legendEl  = document.getElementById('quality-legend');
+  const numEl = document.getElementById('quality-num');
   if (numEl) numEl.textContent = quality.pct;
-
-  const entries = Object.entries(quality.breakdown);
-  const total = entries.reduce((s, [, c]) => s + c, 0);
-  const R = 40;
-  const C = 2 * Math.PI * R;
-
-  if (donutEl) {
-    let svg = `<svg viewBox="0 0 100 100" aria-hidden="true">`;
-    svg += `<circle r="${R}" cx="50" cy="50" fill="none" stroke="rgba(254,246,246,0.06)" stroke-width="10" />`;
-    if (total > 0) {
-      let offset = 0;
-      for (const [key, count] of entries) {
-        if (!count) continue;
-        const pct = count / total;
-        const dashLen = pct * C;
-        const dashGap = C - dashLen;
-        svg += `<circle r="${R}" cx="50" cy="50" fill="none"
-          stroke="${QUALITY_COLORS[key]}" stroke-width="10"
-          stroke-dasharray="${dashLen.toFixed(2)} ${dashGap.toFixed(2)}"
-          stroke-dashoffset="${(-offset * C).toFixed(2)}"
-          transform="rotate(-90 50 50)" stroke-linecap="butt" />`;
-        offset += pct;
-      }
-    }
-    svg += `</svg>`;
-    donutEl.innerHTML = svg;
-  }
-
-  if (legendEl) {
-    legendEl.innerHTML = entries
-      .filter(([, count]) => count > 0)
-      .map(([key, count]) => `
-        <div class="legend-row">
-          <span class="legend-dot" style="--c:${QUALITY_COLORS[key]}"></span>
-          <span class="legend-label">${QUALITY_LABELS[key]}</span>
-          <span class="legend-count">${count}</span>
-        </div>
-      `).join('');
-  }
 }
 
 // ─── Responses cell ─────────────────────────────────────────
@@ -131,27 +90,21 @@ function renderResponses(total) {
   if (el) el.textContent = total > 0 ? `+${total}` : '0';
 }
 
-// ─── Creativity cell + bars ────────────────────────────────
+// ─── Creativity cell ───────────────────────────────────────
 function renderCreativity(creativity) {
-  const numEl  = document.getElementById('creativity-num');
-  const barsEl = document.getElementById('creativity-bars');
+  const numEl = document.getElementById('creativity-num');
   if (numEl) numEl.textContent = creativity.pct;
-
-  if (!barsEl) return;
-  const entries = Object.entries(creativity.breakdown);
-  const max = Math.max(...entries.map(([, c]) => c), 1);
-  barsEl.innerHTML = entries.map(([key, count]) => {
-    const h = Math.max(10, (count / max) * 100);
-    return `<div class="creativity-bar" style="--h:${h}%; --c:${CREATIVITY_COLORS[key]}"
-      title="${CREATIVITY_LABELS[key]}: ${count}"></div>`;
-  }).join('');
 }
 
-// ─── Budget marker ─────────────────────────────────────────
+// ─── Budget marker (vertical) ──────────────────────────────
+// markerPos is 0–100 along the horizontal scale; for the vertical
+// version we invert so 0 (= "Higher" on the horizontal left) lands
+// at the TOP of the vertical track, and 100 (= "Competitive" on
+// the horizontal right) lands at the BOTTOM.
 function renderBudget(budget) {
   const marker = document.getElementById('budget-marker');
   if (marker) {
-    marker.style.left = `${budget.markerPos}%`;
+    marker.style.top = `${budget.markerPos}%`;
     if (budget.total === 0) marker.classList.add('is-empty');
   }
 }

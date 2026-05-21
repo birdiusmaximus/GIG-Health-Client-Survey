@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="https://use.typekit.net/wek0eum.css" />
   <link rel="stylesheet" href="./styles.css?v=24" />
   <link rel="stylesheet" href="./dashboard.css?v=7" />
-  <link rel="stylesheet" href="./showcase.css?v=10" />
+  <link rel="stylesheet" href="./showcase.css?v=11" />
 </head>
 <body class="showcase">
 
@@ -41,39 +41,31 @@
         <div class="quote-nav" id="quote-nav" aria-label="Quote navigation"></div>
       </div>
 
-      <!-- Quality — donut + legend, bottom-left -->
+      <!-- Quality — just the big number -->
       <div class="data-cell data-quality">
         <p class="cell-label">Quality</p>
         <p class="cell-num"><span id="quality-num">—</span><small>%</small></p>
         <p class="cell-sub">Excellent or high standard</p>
-        <div class="quality-stack">
-          <div class="quality-donut" id="quality-donut"></div>
-          <div class="quality-legend" id="quality-legend"></div>
-        </div>
       </div>
 
-      <!-- Creativity — % + bars -->
+      <!-- Creativity — just the big number -->
       <div class="data-cell data-creativity">
         <p class="cell-label">Creativity</p>
         <p class="cell-num"><span id="creativity-num">—</span><small>%</small></p>
         <p class="cell-sub">Groundbreaking or really creative</p>
-        <div class="creativity-bars" id="creativity-bars"></div>
       </div>
 
-      <!-- Budget position scale -->
+      <!-- Budget position — vertical scale -->
       <div class="data-cell data-budget">
         <p class="cell-label">Budget position</p>
-        <div class="budget-display">
-          <div class="budget-scale" role="img" aria-label="Budget position">
-            <span class="budget-zone is-higher"></span>
-            <span class="budget-zone is-on-par"></span>
-            <span class="budget-zone is-cheaper"></span>
-            <span class="budget-marker" id="budget-marker" style="left:50%"></span>
-          </div>
-          <div class="budget-axis">
+        <div class="budget-vertical" role="img" aria-label="Budget position scale">
+          <div class="budget-axis-v">
             <span>Higher</span>
             <span>On par</span>
             <span>Competitive</span>
+          </div>
+          <div class="budget-track">
+            <span class="budget-marker-v" id="budget-marker" style="top:50%"></span>
           </div>
         </div>
       </div>
@@ -109,7 +101,7 @@
     </div>
   </footer>
 
-  <script type="module" src="./showcase.js?v=7"></script>
+  <script type="module" src="./showcase.js?v=8"></script>
   <script src="./menu.js?v=2"></script>
   <script src="./privacy.js?v=1"></script>
 </body>
