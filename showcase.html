@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="https://use.typekit.net/wek0eum.css" />
   <link rel="stylesheet" href="./styles.css?v=24" />
   <link rel="stylesheet" href="./dashboard.css?v=7" />
-  <link rel="stylesheet" href="./showcase.css?v=8" />
+  <link rel="stylesheet" href="./showcase.css?v=9" />
 </head>
 <body class="showcase">
 
@@ -35,32 +35,38 @@
       <p class="show-hero-count" id="show-count">Loading…</p>
     </section>
 
-    <!-- Data — hairline grid, quote included as a cell -->
+    <!-- Data — quote takes the wide top row as the hero -->
     <section class="show-data">
 
+      <!-- Quote — full-width top, the human moment -->
+      <div class="data-cell data-quote">
+        <p class="cell-label">In their words</p>
+        <div class="quote-stage" id="quote-stage">
+          <p class="show-empty">Loading…</p>
+        </div>
+        <div class="quote-nav" id="quote-nav" aria-label="Quote navigation"></div>
+      </div>
+
+      <!-- Quality — donut + legend, bottom-left -->
       <div class="data-cell data-quality">
         <p class="cell-label">Quality</p>
         <p class="cell-num"><span id="quality-num">—</span><small>%</small></p>
-        <p class="cell-sub">Of responses rated work as excellent or high standard</p>
+        <p class="cell-sub">Excellent or high standard</p>
         <div class="quality-stack">
           <div class="quality-donut" id="quality-donut"></div>
           <div class="quality-legend" id="quality-legend"></div>
         </div>
       </div>
 
-      <div class="data-cell data-responses">
-        <p class="cell-label">Responses</p>
-        <p class="cell-num" id="responses-num">—</p>
-        <p class="cell-sub">Recent feedback submissions</p>
-      </div>
-
+      <!-- Creativity — % + bars -->
       <div class="data-cell data-creativity">
         <p class="cell-label">Creativity</p>
         <p class="cell-num"><span id="creativity-num">—</span><small>%</small></p>
-        <p class="cell-sub">Rated groundbreaking or really creative</p>
+        <p class="cell-sub">Groundbreaking or really creative</p>
         <div class="creativity-bars" id="creativity-bars"></div>
       </div>
 
+      <!-- Budget position scale -->
       <div class="data-cell data-budget">
         <p class="cell-label">Budget position</p>
         <div class="budget-display">
@@ -71,20 +77,11 @@
             <span class="budget-marker" id="budget-marker" style="left:50%"></span>
           </div>
           <div class="budget-axis">
-            <span>Higher than market</span>
+            <span>Higher</span>
             <span>On par</span>
-            <span>More competitive</span>
+            <span>Competitive</span>
           </div>
         </div>
-      </div>
-
-      <!-- Quote — sits IN the grid, full width of bottom row -->
-      <div class="data-cell data-quote">
-        <p class="cell-label">In their words</p>
-        <div class="quote-stage" id="quote-stage">
-          <p class="show-empty">Loading…</p>
-        </div>
-        <div class="quote-nav" id="quote-nav" aria-label="Quote navigation"></div>
       </div>
 
     </section>
