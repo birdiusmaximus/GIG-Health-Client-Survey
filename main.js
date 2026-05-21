@@ -20,6 +20,29 @@ const sceneVideos   = Array.from(document.querySelectorAll('.scene-video'));
 // the end (or start) any further scroll in the same direction
 // navigates to the next (or previous) scene.
 // ──────────────────────────────────────────────────────────────
+// Load each video as a blob URL so it's fully seekable regardless of
+// whether the server supports HTTP Range requests. Python's http.server
+// doesn't (which breaks scrub-on-scroll in local dev), and even on
+// Vercel this guarantees instant scrubbing the moment the file is in.
+async function makeVideoSeekable(v) {
+  const source = v.querySelector('source');
+  if (!source) return;
+  const url = source.getAttribute('src');
+  if (!url) return;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    // Replace the <source> with a direct src to the blob URL
+    source.remove();
+    v.src = blobUrl;
+    v.load();
+  } catch (err) {
+    console.warn('[scene-video] blob load failed, falling back to original URL', err);
+  }
+}
+
 sceneVideos.forEach(v => {
   v.loop = false;
   v.autoplay = false;
@@ -32,6 +55,8 @@ sceneVideos.forEach(v => {
   else v.addEventListener('loadedmetadata', initVideo, { once: true });
   // Keep paused — autoplay was already off but some browsers may try once
   v.addEventListener('play', () => { try { v.pause(); } catch (e) {} });
+  // Load as blob to guarantee seekability
+  makeVideoSeekable(v);
 });
 
 function getCurrentSceneVideo() {
