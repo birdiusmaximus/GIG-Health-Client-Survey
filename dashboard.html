@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#0D1A2D" />
   <link rel="stylesheet" href="https://use.typekit.net/wek0eum.css" />
   <link rel="stylesheet" href="./styles.css?v=25" />
-  <link rel="stylesheet" href="./dashboard.css?v=8" />
+  <link rel="stylesheet" href="./dashboard.css?v=9" />
 </head>
 <body class="dashboard">
 
@@ -68,11 +68,15 @@
         <span class="kicker-label">Sign in required</span>
       </p>
       <h2 class="auth-title" id="auth-title">Dashboard access</h2>
-      <p class="auth-text">Enter the admin token to view client responses. The token was generated when the dashboard was set up — it lives in your password manager.</p>
+      <p class="auth-text">Enter your admin credentials to view client responses.</p>
       <form class="auth-form" id="auth-form" novalidate>
         <label class="auth-field">
-          <span class="auth-label">Dashboard token</span>
-          <input class="auth-input" id="auth-input" type="password" autocomplete="off" required spellcheck="false" />
+          <span class="auth-label">Username</span>
+          <input class="auth-input" id="auth-user-input" type="text" autocomplete="username" required spellcheck="false" autocapitalize="off" />
+        </label>
+        <label class="auth-field">
+          <span class="auth-label">Password</span>
+          <input class="auth-input" id="auth-input" type="password" autocomplete="current-password" required spellcheck="false" />
         </label>
         <p class="auth-error" id="auth-error" hidden></p>
         <button class="auth-btn" id="auth-btn" type="submit">
@@ -112,7 +116,7 @@
     </div>
   </footer>
 
-  <script type="module" src="./dashboard.js?v=7"></script>
+  <script type="module" src="./dashboard.js?v=8"></script>
   <script src="./menu.js?v=1"></script>
 </body>
 </html>

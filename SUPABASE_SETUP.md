@@ -47,25 +47,28 @@ In Supabase, go to **Settings → API**. You need:
 
 The service role key is sensitive — it bypasses RLS. Only use it in serverless functions, never in client-side code.
 
-## 4. Generate a dashboard access token
+## 4. Pick a dashboard username + password
 
-Pick any long random string to gate `/dashboard.html`. From your terminal:
+The dashboard sign-in form takes both. Pick a username (e.g. `gig` or your name) and generate a strong password — from your terminal:
 
 ```bash
-openssl rand -hex 32
+openssl rand -hex 24
 ```
 
-Copy the output — this is your `DASHBOARD_TOKEN`.
+You can also use any long passphrase from your password manager. Save both somewhere safe.
 
 ## 5. Add env vars to Vercel
 
-In your Vercel project: **Settings → Environment Variables**. Add three vars (apply them to Production, Preview, and Development):
+In your Vercel project: **Settings → Environment Variables**. Add four vars (apply them to Production, Preview, and Development):
 
 ```
 SUPABASE_URL                = https://YOUR-PROJECT.supabase.co
 SUPABASE_SERVICE_ROLE_KEY   = eyJhbGc... (from step 3)
-DASHBOARD_TOKEN             = (your random string from step 4)
+DASHBOARD_USERNAME          = (your username from step 4)
+DASHBOARD_PASSWORD          = (your generated password from step 4)
 ```
+
+> **Note**: `DASHBOARD_TOKEN` (used in earlier versions) still works as a fallback for the password. If you already have it set, add `DASHBOARD_USERNAME` and optionally rename `DASHBOARD_TOKEN` → `DASHBOARD_PASSWORD` for clarity.
 
 Then **redeploy** (Vercel needs a new build to pick up new env vars).
 
@@ -73,11 +76,11 @@ Then **redeploy** (Vercel needs a new build to pick up new env vars).
 
 - Go to `https://YOUR-SITE.vercel.app/` and complete the survey. Submitting the last question should respond `{"ok": true, "persisted": true, "id": "..."}`.
 - In Supabase, **Table Editor → responses** — you should see the row.
-- Go to `https://YOUR-SITE.vercel.app/dashboard.html`. It'll prompt for your `DASHBOARD_TOKEN`. Paste it. Hit OK. The token is stored in your browser's localStorage so you'll only be prompted once per browser.
+- Go to `https://YOUR-SITE.vercel.app/dashboard`. The branded sign-in overlay asks for your `DASHBOARD_USERNAME` + `DASHBOARD_PASSWORD`. Credentials are validated against the live API before being stored in your browser's localStorage, so wrong values never get cached.
 
 ## 7. Who else can read the dashboard?
 
-Anyone you give the token to. Send it via Signal/1Password/whatever — don't paste it in Slack or email. To revoke access, generate a new `DASHBOARD_TOKEN` and redeploy.
+Anyone you share the credentials with. Send them via Signal / 1Password / your password manager of choice — don't paste them in Slack or email. To revoke access, rotate `DASHBOARD_PASSWORD` (or `DASHBOARD_TOKEN`) in Vercel and redeploy.
 
 If you want proper auth later (e.g. Google sign-in restricted to `@gig.health` emails), Supabase Auth handles that for free — happy to wire it up.
 

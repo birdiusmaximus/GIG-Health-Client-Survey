@@ -156,17 +156,38 @@ const MOCK_RESPONSES = [
 // MOCK_RESPONSES if the API isn't reachable (e.g., on the static
 // dev server, or before Supabase env vars are configured).
 // ──────────────────────────────────────────────────────────────
-const TOKEN_KEY = 'gig_dash_token';
+const USER_KEY        = 'gig_dash_user';
+const PASS_KEY        = 'gig_dash_pass';
+const LEGACY_TOKEN_KEY = 'gig_dash_token';
 
-// One round-trip to /api/responses with a candidate token.
+// One-time migration: any legacy bare-token in localStorage becomes the
+// stored password (with an empty username) so existing dashboards don't
+// log people out on the upgrade.
+(() => {
+  const legacy = localStorage.getItem(LEGACY_TOKEN_KEY);
+  if (legacy && !localStorage.getItem(PASS_KEY)) {
+    localStorage.setItem(PASS_KEY, legacy);
+    localStorage.removeItem(LEGACY_TOKEN_KEY);
+  }
+})();
+
+function authHeaderValue(username, password) {
+  if (!password) return null;
+  const creds = `${username || ''}:${password}`;
+  return 'Basic ' + btoa(unescape(encodeURIComponent(creds)));
+}
+
+// One round-trip to /api/responses with a candidate username + password.
 // Returns one of:
 //   { ok: true,  data }                       — auth + fetch worked
-//   { ok: false, status: 401 }                — token wrong/missing
+//   { ok: false, status: 401 }                — credentials wrong/missing
 //   { ok: false, networkError: true }         — API unreachable (dev / down)
 //   { ok: false, status, error }              — other server error
-async function tryFetch(token) {
+async function tryFetch(username, password) {
   try {
-    const headers = token ? { Authorization: 'Bearer ' + token } : {};
+    const headers = {};
+    const auth = authHeaderValue(username, password);
+    if (auth) headers['Authorization'] = auth;
     const res = await fetch('/api/responses', { headers });
     if (res.status === 401) return { ok: false, status: 401 };
     if (!res.ok) {
@@ -181,22 +202,19 @@ async function tryFetch(token) {
 }
 
 async function loadResponses() {
-  const token = localStorage.getItem(TOKEN_KEY) || '';
-  const result = await tryFetch(token);
+  const username = localStorage.getItem(USER_KEY) || '';
+  const password = localStorage.getItem(PASS_KEY) || '';
+  const result = await tryFetch(username, password);
 
-  if (result.ok) {
-    return { mode: 'live', data: result.data };
-  }
-  if (result.networkError) {
-    // API unavailable (local dev or outage) — fall back to mock so the
-    // dashboard is still visible for design iteration
-    return { mode: 'mock', data: MOCK_RESPONSES };
-  }
+  if (result.ok) return { mode: 'live', data: result.data };
+  if (result.networkError) return { mode: 'mock', data: MOCK_RESPONSES };
   if (result.status === 401) {
-    if (token) localStorage.removeItem(TOKEN_KEY);   // clear stale/wrong token
+    if (password) {
+      localStorage.removeItem(USER_KEY);
+      localStorage.removeItem(PASS_KEY);
+    }
     return { mode: 'needs-auth' };
   }
-  // Some other 5xx — show mock with no banner; admin can debug logs
   console.error('[dashboard] unexpected API error', result);
   return { mode: 'mock', data: MOCK_RESPONSES };
 }
@@ -687,11 +705,12 @@ confirmDelete?.addEventListener('click', async () => {
 // ──────────────────────────────────────────────────────────────
 // Admin sign-in overlay
 // ──────────────────────────────────────────────────────────────
-const authOverlay = document.getElementById('auth-overlay');
-const authForm    = document.getElementById('auth-form');
-const authInput   = document.getElementById('auth-input');
-const authError   = document.getElementById('auth-error');
-const authBtn     = document.getElementById('auth-btn');
+const authOverlay   = document.getElementById('auth-overlay');
+const authForm      = document.getElementById('auth-form');
+const authUserInput = document.getElementById('auth-user-input');
+const authInput     = document.getElementById('auth-input');
+const authError     = document.getElementById('auth-error');
+const authBtn       = document.getElementById('auth-btn');
 
 function showAuth(errMsg) {
   if (!authOverlay) return;
@@ -699,7 +718,11 @@ function showAuth(errMsg) {
   authOverlay.setAttribute('aria-hidden', 'false');
   requestAnimationFrame(() => authOverlay.classList.add('is-shown'));
   if (errMsg) showAuthError(errMsg);
-  setTimeout(() => authInput?.focus(), 250);
+  // focus username first; if pre-filled, skip to password
+  setTimeout(() => {
+    if (authUserInput && !authUserInput.value) authUserInput.focus();
+    else authInput?.focus();
+  }, 250);
 }
 function hideAuth() {
   if (!authOverlay) return;
@@ -721,42 +744,37 @@ function clearAuthError() {
 }
 
 authInput?.addEventListener('input', clearAuthError);
+authUserInput?.addEventListener('input', clearAuthError);
+
+function setBtnLabel(text) {
+  const label = authBtn?.querySelector('span:first-child');
+  if (label) label.textContent = text;
+}
 
 authForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const token = (authInput?.value || '').trim();
-  if (!token) return;
-  authBtn.disabled = true;
-  const originalLabel = authBtn.querySelector('span:first-child')?.textContent;
-  if (authBtn.querySelector('span:first-child')) {
-    authBtn.querySelector('span:first-child').textContent = 'Signing in…';
-  }
+  const username = (authUserInput?.value || '').trim();
+  const password = (authInput?.value || '').trim();
+  if (!password) return;
 
-  const result = await tryFetch(token);
+  authBtn.disabled = true;
+  setBtnLabel('Signing in…');
+
+  const result = await tryFetch(username, password);
 
   if (result.ok) {
-    localStorage.setItem(TOKEN_KEY, token);
+    localStorage.setItem(USER_KEY, username);
+    localStorage.setItem(PASS_KEY, password);
     hideAuth();
     bootDashboard(result.data);
-  } else if (result.status === 401) {
-    showAuthError('Invalid token. Check the value and try again.');
-    authBtn.disabled = false;
-    if (authBtn.querySelector('span:first-child') && originalLabel) {
-      authBtn.querySelector('span:first-child').textContent = originalLabel;
-    }
-  } else if (result.networkError) {
-    showAuthError("Couldn't reach the server. Are you offline?");
-    authBtn.disabled = false;
-    if (authBtn.querySelector('span:first-child') && originalLabel) {
-      authBtn.querySelector('span:first-child').textContent = originalLabel;
-    }
-  } else {
-    showAuthError(result.error || 'Sign-in failed.');
-    authBtn.disabled = false;
-    if (authBtn.querySelector('span:first-child') && originalLabel) {
-      authBtn.querySelector('span:first-child').textContent = originalLabel;
-    }
+    return;
   }
+  if (result.status === 401) showAuthError('Invalid username or password.');
+  else if (result.networkError) showAuthError("Couldn't reach the server. Are you offline?");
+  else showAuthError(result.error || 'Sign-in failed.');
+
+  authBtn.disabled = false;
+  setBtnLabel('Sign in');
 });
 
 // ──────────────────────────────────────────────────────────────

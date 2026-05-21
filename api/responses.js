@@ -34,17 +34,40 @@ const TEXT_FIELDS = [
 const NULLABLE_TEXT_FIELDS = new Set(['q9_referral', 'q10_trends']);
 
 export default async function handler(req, res) {
-  // ── Auth ──────────────────────────────────────────────────────
-  const expected = process.env.DASHBOARD_TOKEN;
-  if (!expected) {
-    return res.status(500).json({ error: 'DASHBOARD_TOKEN env var not set on server' });
+  // ── Auth (Basic username + password, with legacy Bearer fallback) ──
+  // Env vars:
+  //   DASHBOARD_USERNAME — required for username check (if unset, any user is accepted)
+  //   DASHBOARD_PASSWORD — required password
+  //   DASHBOARD_TOKEN    — legacy alias for DASHBOARD_PASSWORD
+  const expectedUser = process.env.DASHBOARD_USERNAME;
+  const expectedPass = process.env.DASHBOARD_PASSWORD || process.env.DASHBOARD_TOKEN;
+  if (!expectedPass) {
+    return res.status(500).json({ error: 'DASHBOARD_PASSWORD (or DASHBOARD_TOKEN) env var not set on server' });
   }
-  const auth = req.headers.authorization || '';
-  const token = auth.startsWith('Bearer ')
-    ? auth.slice(7)
-    : (req.query?.token || '');
-  if (!token || token !== expected) {
-    return res.status(401).json({ error: 'invalid or missing token' });
+
+  const authHeader = req.headers.authorization || '';
+  let providedUser = '';
+  let providedPass = '';
+
+  if (authHeader.startsWith('Basic ')) {
+    try {
+      const decoded = Buffer.from(authHeader.slice(6), 'base64').toString('utf8');
+      const idx = decoded.indexOf(':');
+      providedUser = idx !== -1 ? decoded.slice(0, idx) : '';
+      providedPass = idx !== -1 ? decoded.slice(idx + 1) : decoded;
+    } catch { /* malformed base64 → empty creds → 401 below */ }
+  } else if (authHeader.startsWith('Bearer ')) {
+    // Legacy: bare bearer token, treat as the password (any username accepted)
+    providedPass = authHeader.slice(7);
+  } else if (req.query?.token) {
+    // Convenience for browser testing — token as ?token=…
+    providedPass = req.query.token;
+  }
+
+  const userOk = !expectedUser || providedUser === expectedUser;
+  const passOk = providedPass === expectedPass;
+  if (!userOk || !passOk) {
+    return res.status(401).json({ error: 'invalid username or password' });
   }
 
   if (!supabase) {
