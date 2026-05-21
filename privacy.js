@@ -35,19 +35,45 @@ document.body.insertAdjacentHTML('beforeend', PRIVACY_HTML);
 
 const privacyOverlay = document.getElementById('privacy-overlay');
 const privacyClose   = document.getElementById('privacy-close');
+const privacyCard    = privacyOverlay?.querySelector('.privacy-card');
+let privacyLastFocused = null;
+
+function focusables(el) {
+  if (!el) return [];
+  return Array.from(el.querySelectorAll(
+    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  )).filter(n => n.offsetParent !== null);
+}
+function trapKey(e) {
+  if (e.key !== 'Tab' || !privacyCard) return;
+  const items = focusables(privacyCard);
+  if (!items.length) return;
+  const first = items[0], last = items[items.length - 1];
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+}
 
 function openPrivacy() {
   if (!privacyOverlay) return;
+  privacyLastFocused = document.activeElement;
   privacyOverlay.hidden = false;
   privacyOverlay.setAttribute('aria-hidden', 'false');
-  requestAnimationFrame(() => privacyOverlay.classList.add('is-shown'));
+  requestAnimationFrame(() => {
+    privacyOverlay.classList.add('is-shown');
+    privacyClose?.focus();
+  });
+  document.addEventListener('keydown', trapKey);
 }
 function closePrivacy() {
   if (!privacyOverlay) return;
   privacyOverlay.classList.remove('is-shown');
+  document.removeEventListener('keydown', trapKey);
   setTimeout(() => {
     privacyOverlay.hidden = true;
     privacyOverlay.setAttribute('aria-hidden', 'true');
+    if (privacyLastFocused && typeof privacyLastFocused.focus === 'function') {
+      try { privacyLastFocused.focus(); } catch (e) {}
+    }
   }, 350);
 }
 

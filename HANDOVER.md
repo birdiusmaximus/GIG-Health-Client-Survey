@@ -83,8 +83,11 @@ Bright, playful, healthcare-creative. Not clinical. Strong typography, generous 
 | Pacing | **One scene = one question** | 10 scenes total |
 | Animation | **Pre-keyframed**, not real physics | Every visitor sees the same choreographed sequence. Use GSAP timelines, not a physics engine. |
 | Hosting | **Vercel** | |
-| Backend | **Vercel serverless function** (`api/submit.js`) | Receives POST with all 10 answers |
-| Backend long-term destination | **Not yet decided** | Options: Google Sheets via Apps Script webhook, Airtable, Notion DB, email via Resend, or Vercel KV/Postgres. **Ask user before wiring.** |
+| Backend | **Vercel serverless functions** in `/api` | `submit.js` (POST survey, public), `responses.js` (CRUD, Basic auth), `public.js` (sanitised aggregates, public) |
+| Database | **Supabase Postgres** | EU region; service-role key on the server, never the browser. See `SUPABASE_SETUP.md`. |
+| Auth | **HTTP Basic** on `/api/responses` | `DASHBOARD_USERNAME` + `DASHBOARD_PASSWORD` env vars; constant-time compare; no legacy fallback. |
+| Notifications | **Resend** (optional) | `RESEND_API_KEY` + `NOTIFY_EMAIL` env vars; fire-and-forget on submit, never blocks ack. |
+| Spam defence | Honeypot field + per-IP rate-limit (6/min) + 32 KB body cap | Honeypot named `website`, hidden offscreen on the survey page. Lambda-local memory only — pair with Upstash / Vercel Edge for hardened distributed rate-limiting before scaling. |
 | Project location | `~/Documents/GIG/survey-3d/` | This folder. Kebab-case, no spaces. |
 
 ---

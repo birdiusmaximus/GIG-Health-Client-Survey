@@ -12,11 +12,21 @@ body.dashboard .progress {
   display: none !important;
 }
 
-.topbar-title {
-  display: flex;
-  align-items: center;
+/* Inline "Client Feedback · Dashboard" tag on the right of the topbar
+   (the burger sits on the left and the GIG logo in the middle, matching
+   gig.health). On narrow screens the tag is hidden — see media query. */
+.topbar-tag {
+  margin: 0;
   pointer-events: auto;
-  margin-left: -4rem;          /* visually centre against the bar */
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: var(--track-cap);
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  white-space: nowrap;
 }
 
 .dash-main {
@@ -667,5 +677,5 @@ body.dashboard .progress {
   .response summary::after { display: none; }
   .r-body { grid-template-columns: 1fr; }
   .r-edit-form { grid-template-columns: 1fr; }
-  .topbar-title { display: none; }
+  .topbar-tag { display: none; }
 }

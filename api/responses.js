@@ -3,12 +3,12 @@
 //   PATCH ?id=<uuid>         → update a response (whitelisted fields only)
 //   DELETE ?id=<uuid>        → delete a response
 //
-// Auth on every method: bearer token matching env var DASHBOARD_TOKEN.
-//   Authorization: Bearer <token>
-//   …or query string fallback for easy browser testing:
-//   /api/responses?token=<token>
+// Auth on every method: HTTP Basic with env vars DASHBOARD_USERNAME +
+// DASHBOARD_PASSWORD. Comparison is constant-time to avoid leaking
+// credential length / prefix via response timing.
 
 import { createClient } from '@supabase/supabase-js';
+import { timingSafeEqual } from 'node:crypto';
 
 // Strip trailing slashes / whitespace defensively
 const cleanUrl = (process.env.SUPABASE_URL || '').trim().replace(/\/+$/, '');
@@ -33,16 +33,38 @@ const TEXT_FIELDS = [
 ];
 const NULLABLE_TEXT_FIELDS = new Set(['q9_referral', 'q10_trends']);
 
+// UUID v1-v5 shape — we use this to reject garbage `id` values fast
+// rather than letting them hit Supabase and bounce back as PG errors.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+// Length-checked, constant-time string comparison. Returns true iff
+// both inputs are non-empty, equal length, and equal content.
+function safeEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  if (a.length === 0 || b.length === 0) return false;
+  if (a.length !== b.length) return false;
+  try {
+    return timingSafeEqual(Buffer.from(a, 'utf8'), Buffer.from(b, 'utf8'));
+  } catch {
+    return false;
+  }
+}
+
+function unauthorised(res, message) {
+  res.setHeader('WWW-Authenticate', 'Basic realm="GIG admin", charset="UTF-8"');
+  return res.status(401).json({ error: message || 'unauthorised' });
+}
+
 export default async function handler(req, res) {
-  // ── Auth (Basic username + password, with legacy Bearer fallback) ──
-  // Env vars:
-  //   DASHBOARD_USERNAME — required for username check (if unset, any user is accepted)
-  //   DASHBOARD_PASSWORD — required password
-  //   DASHBOARD_TOKEN    — legacy alias for DASHBOARD_PASSWORD
+  // ── Auth (HTTP Basic, constant-time comparison) ──────────────
+  // Required env vars (no defaults, no fail-open):
+  //   DASHBOARD_USERNAME — required
+  //   DASHBOARD_PASSWORD — required (DASHBOARD_TOKEN accepted as alias)
   const expectedUser = process.env.DASHBOARD_USERNAME;
   const expectedPass = process.env.DASHBOARD_PASSWORD || process.env.DASHBOARD_TOKEN;
-  if (!expectedPass) {
-    return res.status(500).json({ error: 'DASHBOARD_PASSWORD (or DASHBOARD_TOKEN) env var not set on server' });
+  if (!expectedUser || !expectedPass) {
+    console.error('[responses] DASHBOARD_USERNAME and/or DASHBOARD_PASSWORD env vars not set');
+    return res.status(500).json({ error: 'server not configured' });
   }
 
   const authHeader = req.headers.authorization || '';
@@ -54,24 +76,19 @@ export default async function handler(req, res) {
       const decoded = Buffer.from(authHeader.slice(6), 'base64').toString('utf8');
       const idx = decoded.indexOf(':');
       providedUser = idx !== -1 ? decoded.slice(0, idx) : '';
-      providedPass = idx !== -1 ? decoded.slice(idx + 1) : decoded;
+      providedPass = idx !== -1 ? decoded.slice(idx + 1) : '';
     } catch { /* malformed base64 → empty creds → 401 below */ }
-  } else if (authHeader.startsWith('Bearer ')) {
-    // Legacy: bare bearer token, treat as the password (any username accepted)
-    providedPass = authHeader.slice(7);
-  } else if (req.query?.token) {
-    // Convenience for browser testing — token as ?token=…
-    providedPass = req.query.token;
   }
+  // NB: legacy Bearer / ?token= fallbacks were removed — Basic only
 
-  const userOk = !expectedUser || providedUser === expectedUser;
-  const passOk = providedPass === expectedPass;
-  if (!userOk || !passOk) {
-    return res.status(401).json({ error: 'invalid username or password' });
-  }
+  // Run both comparisons unconditionally so timing is constant regardless
+  // of which (if either) credential is wrong.
+  const userOk = safeEqual(providedUser, expectedUser);
+  const passOk = safeEqual(providedPass, expectedPass);
+  if (!(userOk && passOk)) return unauthorised(res, 'invalid username or password');
 
   if (!supabase) {
-    return res.status(500).json({ error: 'Supabase not configured on server' });
+    return res.status(500).json({ error: 'server not configured' });
   }
 
   // ── GET: list all ────────────────────────────────────────────
@@ -82,7 +99,7 @@ export default async function handler(req, res) {
       .order('submitted_at', { ascending: false });
     if (error) {
       console.error('[responses GET] supabase error', error);
-      return res.status(500).json({ error: error.message });
+      return res.status(500).json({ error: 'failed to load responses' });
     }
     res.setHeader('Cache-Control', 'no-store');
     return res.status(200).json(data);
@@ -91,7 +108,9 @@ export default async function handler(req, res) {
   // ── PATCH: update a single response (whitelisted fields) ─────
   if (req.method === 'PATCH') {
     const id = req.query?.id;
-    if (!id) return res.status(400).json({ error: 'id query param required' });
+    if (!id || !UUID_RE.test(String(id))) {
+      return res.status(400).json({ error: 'invalid id' });
+    }
 
     const body = req.body && typeof req.body === 'object' ? req.body : null;
     if (!body) return res.status(400).json({ error: 'invalid body' });
@@ -136,7 +155,7 @@ export default async function handler(req, res) {
 
     if (error) {
       console.error('[responses PATCH] supabase error', error);
-      return res.status(500).json({ error: error.message });
+      return res.status(500).json({ error: 'failed to update response' });
     }
     return res.status(200).json(data);
   }
@@ -144,7 +163,9 @@ export default async function handler(req, res) {
   // ── DELETE: remove a single response ─────────────────────────
   if (req.method === 'DELETE') {
     const id = req.query?.id;
-    if (!id) return res.status(400).json({ error: 'id query param required' });
+    if (!id || !UUID_RE.test(String(id))) {
+      return res.status(400).json({ error: 'invalid id' });
+    }
 
     const { error } = await supabase
       .from('responses')
@@ -153,7 +174,7 @@ export default async function handler(req, res) {
 
     if (error) {
       console.error('[responses DELETE] supabase error', error);
-      return res.status(500).json({ error: error.message });
+      return res.status(500).json({ error: 'failed to delete response' });
     }
     return res.status(200).json({ ok: true, id });
   }

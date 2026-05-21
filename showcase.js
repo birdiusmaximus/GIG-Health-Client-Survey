@@ -1,7 +1,7 @@
 // Showcase page — minimal editorial layout. Loads from /api/public.
 // Falls back to a small sample if the API is unreachable.
 
-const countEl    = document.getElementById('show-count');
+import { escapeHtml } from './util.js?v=1';
 
 const QUALITY_LABELS = {
   excellent: 'Excellent',
@@ -63,19 +63,6 @@ async function loadPublic() {
     console.warn('[showcase] live stats unreachable, using fallback', err);
     return FALLBACK;
   }
-}
-
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, c => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-  }[c]));
-}
-
-// ─── Hero count ─────────────────────────────────────────────
-function renderHeroCount(total) {
-  if (!countEl) return;
-  if (!total) { countEl.textContent = 'Honest feedback, collected as projects wrap.'; return; }
-  countEl.textContent = `${total} response${total === 1 ? '' : 's'} across recent projects`;
 }
 
 // ─── Quality cell ───────────────────────────────────────────
@@ -171,7 +158,6 @@ function setupScrollReveal() {
 // ─── Bootstrap ─────────────────────────────────────────────
 (async () => {
   const data = await loadPublic();
-  renderHeroCount(data.total);
   renderQuality(data.quality);
   renderResponses(data.total);
   renderCreativity(data.creativity);

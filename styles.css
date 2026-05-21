@@ -102,17 +102,24 @@ body.has-video .scene-overlay { opacity: 1; }
   pointer-events: none;
 }
 
-/* ─── Top bar ─────────────────────────────────────────────────── */
+/* ─── Top bar — burger left · logo centred · spacer right ────────
+   Mirrors the gig.health header so the sister site feels from the
+   same family: three columns, logo locked to the middle, the Flame
+   circle-burger on the left. */
 .topbar {
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 4;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
-  padding: 1.4rem 2rem;
+  padding: 1.1rem 1.6rem;
   pointer-events: none;
+  gap: 1rem;
 }
+.topbar-left   { display: flex; justify-content: flex-start; }
+.topbar-center { display: flex; justify-content: center; }
+.topbar-right  { display: flex; justify-content: flex-end; }
 
 .logo {
   pointer-events: auto;
@@ -121,32 +128,47 @@ body.has-video .scene-overlay { opacity: 1; }
   text-decoration: none;
 }
 .logo img {
-  height: 64px;
+  height: 58px;
   width: auto;
   display: block;
 }
 
+/* Circular Flame-outline burger (gig.health signature). The SVG is
+   injected by menu.js, so the button itself just needs to be sized
+   and styled. Two icons live inside the button — the lines and the
+   X — and swap via .is-open. */
 .menu {
   pointer-events: auto;
   background: transparent;
-  border: none;
+  border: 0;
   cursor: pointer;
-  padding: 0.6rem;
+  padding: 0;
+  width: 42px;
+  height: 42px;
+  position: relative;
   display: inline-flex;
-  flex-direction: column;
-  gap: 5px;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.18s ease;
 }
-/* keep the survey's menu clear of the right-side progress dots */
-body.survey .menu { margin-right: 4.5rem; }
-.menu span {
+/* survey page nudges the burger right to clear the giant numeral */
+body.survey .menu { margin-left: 0.2rem; }
+.menu svg {
+  width: 42px;
+  height: 42px;
   display: block;
-  width: 26px;
-  height: 2px;
-  background: var(--ink);
-  border-radius: 2px;
+  transition: opacity 0.15s ease;
 }
-.menu span:nth-child(2) { width: 18px; }
-.menu:hover span { background: var(--flame); }
+.menu .menu-icon-close {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  opacity: 0;
+  pointer-events: none;
+}
+.menu:hover { transform: scale(1.04); }
+.menu[aria-expanded="true"] .menu-icon-open  { opacity: 0; }
+.menu[aria-expanded="true"] .menu-icon-close { opacity: 1; }
 
 /* ─── Shared menu slide-out panel (injected by menu.js) ──────── */
 .menu-panel {
@@ -924,7 +946,69 @@ body.survey .menu { margin-right: 4.5rem; }
   }
   .foot-links { display: none; }      /* keep the bottom strip compact on mobile */
   .continue { min-width: 0; padding: 0.9rem 1.4rem; }
-  .menu { margin-right: 3rem; }
-  .topbar { padding: 1rem 1.2rem; }
+  .menu { margin-left: 0; }
+  .topbar { padding: 0.85rem 1rem; gap: 0.5rem; }
   .logo img { height: 50px; }
+}
+
+/* ─── Visually-hidden helper for screen-reader-only labels ──── */
+.sr-only {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ─── Toast (transient error/info messages from util.js) ─────── */
+.gig-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 2.5rem;
+  transform: translate(-50%, 12px);
+  z-index: 400;
+  padding: 0.9rem 1.4rem;
+  border-radius: 999px;
+  font-family: var(--font);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--paper);
+  background: var(--dusk);
+  border: 1px solid var(--ink-mute);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  max-width: min(560px, calc(100vw - 2rem));
+  text-align: center;
+}
+.gig-toast.is-shown {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  pointer-events: auto;
+}
+.gig-toast.tone-error {
+  background: color-mix(in srgb, var(--flame) 18%, var(--dusk));
+  border-color: color-mix(in srgb, var(--flame) 40%, transparent);
+}
+
+/* Reset fieldset visual default so wrapping radios in <fieldset>
+   for a11y doesn't add a stray border or padding. */
+.scene fieldset.choices {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.scene fieldset.choices > legend {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

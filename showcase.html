@@ -7,19 +7,22 @@
   <meta name="theme-color" content="#0D1A2D" />
   <meta name="description" content="Recent feedback from healthcare partners working with GIG Health." />
   <link rel="stylesheet" href="https://use.typekit.net/wek0eum.css" />
-  <link rel="stylesheet" href="./styles.css?v=24" />
+  <link rel="stylesheet" href="./styles.css?v=29" />
   <link rel="stylesheet" href="./dashboard.css?v=7" />
   <link rel="stylesheet" href="./showcase.css?v=15" />
 </head>
 <body class="showcase">
 
   <header class="topbar">
-    <a class="logo" href="https://gig.health" target="_blank" rel="noopener" aria-label="GIG Health">
-      <img src="./assets/gig-logo-primary.svg" alt="GIG Health" />
-    </a>
-    <button class="menu" type="button" aria-label="Menu">
-      <span></span><span></span><span></span>
-    </button>
+    <div class="topbar-left">
+      <button class="menu" type="button" aria-label="Open menu" aria-controls="menu-panel" aria-expanded="false"></button>
+    </div>
+    <div class="topbar-center">
+      <a class="logo" href="https://gig.health" target="_blank" rel="noopener" aria-label="GIG Health — go to gig.health">
+        <img src="./assets/gig-logo-primary.svg" alt="GIG Health" />
+      </a>
+    </div>
+    <div class="topbar-right" aria-hidden="true"></div>
   </header>
 
   <main class="show-main">
@@ -104,8 +107,8 @@
     </div>
   </footer>
 
-  <script type="module" src="./showcase.js?v=9"></script>
-  <script src="./menu.js?v=2"></script>
-  <script src="./privacy.js?v=1"></script>
+  <script type="module" src="./showcase.js?v=10"></script>
+  <script src="./menu.js?v=3"></script>
+  <script src="./privacy.js?v=2"></script>
 </body>
 </html>

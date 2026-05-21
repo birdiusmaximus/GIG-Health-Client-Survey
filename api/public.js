@@ -54,7 +54,7 @@ export default async function handler(req, res) {
 
   if (error) {
     console.error('[public] supabase error', error);
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: 'failed to load aggregates' });
   }
 
   const rows = data || [];

@@ -156,20 +156,30 @@ const MOCK_RESPONSES = [
 // MOCK_RESPONSES if the API isn't reachable (e.g., on the static
 // dev server, or before Supabase env vars are configured).
 // ──────────────────────────────────────────────────────────────
-const USER_KEY        = 'gig_dash_user';
-const PASS_KEY        = 'gig_dash_pass';
+import { safeStorage, showToast, escapeHtml as escapeHtmlShared } from './util.js?v=1';
+
+const USER_KEY         = 'gig_dash_user';
+const PASS_KEY         = 'gig_dash_pass';
 const LEGACY_TOKEN_KEY = 'gig_dash_token';
 
 // One-time migration: any legacy bare-token in localStorage becomes the
 // stored password (with an empty username) so existing dashboards don't
-// log people out on the upgrade.
+// log people out on the upgrade. Wrapped in safeStorage so Safari
+// private-mode (where localStorage throws) doesn't crash the page.
 (() => {
-  const legacy = localStorage.getItem(LEGACY_TOKEN_KEY);
-  if (legacy && !localStorage.getItem(PASS_KEY)) {
-    localStorage.setItem(PASS_KEY, legacy);
-    localStorage.removeItem(LEGACY_TOKEN_KEY);
+  const legacy = safeStorage.get(LEGACY_TOKEN_KEY);
+  if (legacy && !safeStorage.get(PASS_KEY)) {
+    safeStorage.set(PASS_KEY, legacy);
+    safeStorage.remove(LEGACY_TOKEN_KEY);
   }
 })();
+
+// Mock data is fine for the static dev server (no Vercel functions),
+// but in production a transient API blip should NOT silently fall
+// back to demo data — admins can't tell the difference. Only allow
+// mock fallback on localhost / 127.0.0.1.
+const HOSTNAME = (typeof location !== 'undefined' && location.hostname) || '';
+const ALLOW_MOCK = HOSTNAME === 'localhost' || HOSTNAME === '127.0.0.1' || HOSTNAME === '';
 
 function authHeaderValue(username, password) {
   if (!password) return null;
@@ -202,21 +212,25 @@ async function tryFetch(username, password) {
 }
 
 async function loadResponses() {
-  const username = localStorage.getItem(USER_KEY) || '';
-  const password = localStorage.getItem(PASS_KEY) || '';
+  const username = safeStorage.get(USER_KEY) || '';
+  const password = safeStorage.get(PASS_KEY) || '';
   const result = await tryFetch(username, password);
 
   if (result.ok) return { mode: 'live', data: result.data };
-  if (result.networkError) return { mode: 'mock', data: MOCK_RESPONSES };
+  if (result.networkError) {
+    if (ALLOW_MOCK) return { mode: 'mock', data: MOCK_RESPONSES };
+    return { mode: 'error', error: 'Network error reaching /api/responses.' };
+  }
   if (result.status === 401) {
     if (password) {
-      localStorage.removeItem(USER_KEY);
-      localStorage.removeItem(PASS_KEY);
+      safeStorage.remove(USER_KEY);
+      safeStorage.remove(PASS_KEY);
     }
     return { mode: 'needs-auth' };
   }
   console.error('[dashboard] unexpected API error', result);
-  return { mode: 'mock', data: MOCK_RESPONSES };
+  if (ALLOW_MOCK) return { mode: 'mock', data: MOCK_RESPONSES };
+  return { mode: 'error', error: result.error || 'Unexpected API error.' };
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -296,16 +310,16 @@ function renderResponse(r) {
         <div class="r-rating">
           <span class="r-rating-label">Quality</span>
           ${renderPips(qScore)}
-          <span class="r-rating-value">${QUALITY_LABEL[r.q2_quality]}</span>
+          <span class="r-rating-value">${escapeHtml(QUALITY_LABEL[r.q2_quality] || r.q2_quality || '—')}</span>
         </div>
         <div class="r-rating">
           <span class="r-rating-label">Creativity</span>
           ${renderPips(cScore)}
-          <span class="r-rating-value">${CREATIVITY_LABEL[r.q3_creativity]}</span>
+          <span class="r-rating-value">${escapeHtml(CREATIVITY_LABEL[r.q3_creativity] || r.q3_creativity || '—')}</span>
         </div>
         <div class="r-rating">
           <span class="r-rating-label">Budget</span>
-          <span class="r-rating-value">${BUDGET_LABEL[r.q4_budget]}</span>
+          <span class="r-rating-value">${escapeHtml(BUDGET_LABEL[r.q4_budget] || r.q4_budget || '—')}</span>
         </div>
         ${renderTags(r)}
       </summary>
@@ -410,11 +424,8 @@ function renderEditForm(r) {
   `;
 }
 
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, c => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-  }[c]));
-}
+// Alias to the shared util — kept for the existing call sites
+const escapeHtml = escapeHtmlShared;
 
 function renderStats(rs) {
   const total = rs.length;
@@ -542,7 +553,8 @@ exportBtn.addEventListener('click', () => {
       r.q10_trends || '',
     ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
   }
-  const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8' });
+  // BOM (﻿) so Excel renders UTF-8 curly quotes / em-dashes correctly
+  const blob = new Blob(['﻿' + csvRows.join('\n')], { type: 'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -604,8 +616,8 @@ responsesEl.addEventListener('submit', async (e) => {
   formData.forEach((v, k) => { updates[k] = (v || '').toString(); });
 
   try {
-    const username = localStorage.getItem(USER_KEY) || '';
-    const password = localStorage.getItem(PASS_KEY) || '';
+    const username = safeStorage.get(USER_KEY) || '';
+    const password = safeStorage.get(PASS_KEY) || '';
     const auth = authHeaderValue(username, password);
     const res = await fetch(`/api/responses?id=${encodeURIComponent(id)}`, {
       method: 'PATCH',
@@ -618,21 +630,26 @@ responsesEl.addEventListener('submit', async (e) => {
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
 
-    // Update the local copy
+    // Update the local copy — only if the API returned a real row.
+    // Guards against a backend that returns just `{ok:true}` (which
+    // would otherwise overwrite the row with that shape).
     const idx = allResponses.findIndex(r => r.id === id);
-    if (idx >= 0) {
+    if (idx >= 0 && data && typeof data === 'object' && data.id) {
       allResponses[idx] = {
         ...allResponses[idx],
         ...data,
         submittedAt: data.submitted_at || allResponses[idx].submittedAt,
       };
+    } else if (idx >= 0) {
+      // Backend didn't echo the row — apply our own optimistic updates
+      allResponses[idx] = { ...allResponses[idx], ...updates };
     }
     editingIds.delete(id);
     applyFilters();
   } catch (err) {
     saveBtn.disabled = false;
     saveBtn.textContent = 'Save';
-    alert('Couldn\'t save changes: ' + err.message);
+    showToast(`Couldn't save — ${err.message}`);
   }
 });
 
@@ -650,20 +667,45 @@ function rerenderRow(id) {
 // ──────────────────────────────────────────────────────────────
 // Delete confirmation modal
 // ──────────────────────────────────────────────────────────────
+let confirmLastFocused = null;
+const _confirmCard = confirmOverlay?.querySelector('.confirm-card, .privacy-card, .menu-panel-card, [role="dialog"]');
+function _confirmFocusables() {
+  if (!_confirmCard) return [];
+  return Array.from(_confirmCard.querySelectorAll(
+    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  )).filter(n => n.offsetParent !== null);
+}
+function _confirmTrap(e) {
+  if (e.key !== 'Tab') return;
+  const items = _confirmFocusables();
+  if (!items.length) return;
+  const first = items[0], last = items[items.length - 1];
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+}
 function openDeleteConfirm(id) {
   pendingDeleteId = id;
+  confirmLastFocused = document.activeElement;
   const r = allResponses.find(x => x.id === id);
   if (confirmProject) confirmProject.textContent = r?.q1_project_name || 'this project';
   confirmOverlay.hidden = false;
   confirmOverlay.setAttribute('aria-hidden', 'false');
-  requestAnimationFrame(() => confirmOverlay.classList.add('is-shown'));
+  requestAnimationFrame(() => {
+    confirmOverlay.classList.add('is-shown');
+    confirmCancel?.focus();   // safer default than the destructive button
+  });
+  document.addEventListener('keydown', _confirmTrap);
 }
 function closeDeleteConfirm() {
   pendingDeleteId = null;
   confirmOverlay.classList.remove('is-shown');
+  document.removeEventListener('keydown', _confirmTrap);
   setTimeout(() => {
     confirmOverlay.hidden = true;
     confirmOverlay.setAttribute('aria-hidden', 'true');
+    if (confirmLastFocused && typeof confirmLastFocused.focus === 'function') {
+      try { confirmLastFocused.focus(); } catch (e) {}
+    }
   }, 300);
 }
 confirmCancel?.addEventListener('click', closeDeleteConfirm);
@@ -681,8 +723,8 @@ confirmDelete?.addEventListener('click', async () => {
   confirmDelete.textContent = 'Deleting…';
 
   try {
-    const username = localStorage.getItem(USER_KEY) || '';
-    const password = localStorage.getItem(PASS_KEY) || '';
+    const username = safeStorage.get(USER_KEY) || '';
+    const password = safeStorage.get(PASS_KEY) || '';
     const auth = authHeaderValue(username, password);
     const res = await fetch(`/api/responses?id=${encodeURIComponent(id)}`, {
       method: 'DELETE',
@@ -696,7 +738,7 @@ confirmDelete?.addEventListener('click', async () => {
     applyFilters();
     closeDeleteConfirm();
   } catch (err) {
-    alert('Couldn\'t delete: ' + err.message);
+    showToast(`Couldn't delete — ${err.message}`);
   } finally {
     confirmDelete.disabled = false;
     confirmDelete.textContent = 'Delete';
@@ -764,8 +806,8 @@ authForm?.addEventListener('submit', async (e) => {
   const result = await tryFetch(username, password);
 
   if (result.ok) {
-    localStorage.setItem(USER_KEY, username);
-    localStorage.setItem(PASS_KEY, password);
+    safeStorage.set(USER_KEY, username);
+    safeStorage.set(PASS_KEY, password);
     hideAuth();
     bootDashboard(result.data);
     return;
@@ -798,6 +840,14 @@ function bootDashboard(data) {
     // Don't render anything underneath — auth overlay covers the full viewport
     showAuth();
     return;
+  }
+  if (result.mode === 'error') {
+    // Surface the error cleanly instead of silently rendering mock data
+    showToast(`Couldn't load responses — ${result.error}`);
+    return;
+  }
+  if (result.mode === 'mock') {
+    showToast('Showing mock data — API not reachable.', { tone: 'info', duration: 7000 });
   }
 
   bootDashboard(result.data);

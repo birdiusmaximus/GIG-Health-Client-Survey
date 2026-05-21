@@ -4,6 +4,10 @@
 // validation, and the Continue / Submit button.
 // ──────────────────────────────────────────────────────────────
 
+import { safeStorage, showToast } from './util.js?v=1';
+
+const SESSION_ANSWERS_KEY = 'gig_survey_draft';
+
 const scenes        = Array.from(document.querySelectorAll('.scene'));
 const numeralEl     = document.getElementById('numeral');
 const dotsEls       = Array.from(document.querySelectorAll('#dots .dot'));
@@ -57,23 +61,25 @@ Object.entries(pairs).forEach(([n, p]) => {
   p.transitioning = false;
 });
 
+// Only wake the crossfade RAF when the current scene actually has
+// a video pair to mask. Scenes without a video (2-10 right now) skip
+// the renderer entirely. The loop self-rearms via crossfadeRafId.
+let crossfadeRafId = 0;
 function tickCrossfade() {
+  crossfadeRafId = 0;
   const p = pairs[state ? state.current : 1];
-  if (p && p.buffer && !p.transitioning && p.primary.duration) {
+  if (!p || !p.buffer || !p.primary || !p.primary.duration) return;
+  if (!p.transitioning) {
     const triggerAt = Math.max(0, p.primary.duration - SEAM_LEAD);
     if (p.primary.currentTime >= triggerAt) {
       p.transitioning = true;
-      // Restart the buffer from the start and fade it in
       try { p.buffer.currentTime = 0; } catch (e) {}
       p.buffer.play().catch(() => {});
       p.buffer.classList.add('is-shown');
-      // Once buffer is fully covering, fade the primary out
       setTimeout(() => {
         p.primary.classList.remove('is-shown');
         const oldPrimary = p.primary;
         [p.primary, p.buffer] = [p.buffer, p.primary];
-        // After the fade-out completes, reset old primary so it's
-        // ready to be the next buffer
         setTimeout(() => {
           try { oldPrimary.pause(); } catch (e) {}
           try { oldPrimary.currentTime = 0; } catch (e) {}
@@ -82,9 +88,11 @@ function tickCrossfade() {
       }, CROSSFADE_MS);
     }
   }
-  requestAnimationFrame(tickCrossfade);
+  crossfadeRafId = requestAnimationFrame(tickCrossfade);
 }
-requestAnimationFrame(tickCrossfade);
+function ensureCrossfadeTicking() {
+  if (!crossfadeRafId) crossfadeRafId = requestAnimationFrame(tickCrossfade);
+}
 
 const TOTAL = scenes.length;
 
@@ -141,7 +149,17 @@ function setCurrentScene(n) {
   });
   // body class lets the dark overlay fade in/out with the video
   document.body.classList.toggle('has-video', anyActive);
+  // Wake the crossfade tick only if the new scene actually has a pair
+  if (pairs[n] && pairs[n].buffer) ensureCrossfadeTicking();
   updateContinueButton();
+}
+
+// Single source of truth for "go to scene N" — used by wheel,
+// keyboard, dot clicks, and Continue button.
+function goToScene(n) {
+  const target = Math.max(1, Math.min(TOTAL, n));
+  if (target === state.current) return;
+  scenes[target - 1].scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -193,20 +211,26 @@ function updateContinueButton() {
 
 continueBtn.addEventListener('click', async () => {
   if (continueBtn.disabled) return;
+  // Disable synchronously to prevent a fast double-click from firing
+  // submitSurvey twice (was a real race).
+  continueBtn.disabled = true;
   collectAnswer(state.current);
+  persistDraft();
 
   if (state.current >= TOTAL) {
     await submitSurvey();
     return;
   }
-  scenes[state.current].scrollIntoView({ behavior: 'smooth', block: 'start' });
+  goToScene(state.current + 1);
+  // Re-evaluate validity once we're on the next scene; the IntersectionObserver
+  // will call updateContinueButton when the scroll lands.
 });
 
-// re-validate whenever any input changes (radios, text, textareas)
+// re-validate + persist whenever any input changes
 scenes.forEach(scene => {
   scene.querySelectorAll('input, textarea').forEach(inp => {
-    inp.addEventListener('input',  updateContinueButton);
-    inp.addEventListener('change', updateContinueButton);
+    inp.addEventListener('input',  () => { updateContinueButton(); collectAnswer(state.current); persistDraft(); });
+    inp.addEventListener('change', () => { updateContinueButton(); collectAnswer(state.current); persistDraft(); });
   });
   // Enter on a single-line text input = advance
   scene.querySelectorAll('input[type="text"]').forEach(inp => {
@@ -220,13 +244,40 @@ scenes.forEach(scene => {
 });
 
 // ──────────────────────────────────────────────────────────────
+// Session draft — survive accidental refresh / back-button
+// ──────────────────────────────────────────────────────────────
+function persistDraft() {
+  try {
+    safeStorage.setSession(SESSION_ANSWERS_KEY, JSON.stringify(state.answers));
+  } catch (e) { /* private mode etc. — best effort */ }
+}
+function loadDraft() {
+  const raw = safeStorage.getSession(SESSION_ANSWERS_KEY);
+  if (!raw) return;
+  let parsed;
+  try { parsed = JSON.parse(raw); } catch { return; }
+  if (!parsed || typeof parsed !== 'object') return;
+  // Rehydrate matching fields
+  scenes.forEach((scene, idx) => {
+    const key = scene.dataset.key || `q${idx + 1}`;
+    const val = parsed[key];
+    if (val == null) return;
+    const text = scene.querySelector('input[type="text"], textarea');
+    if (text) { text.value = val; return; }
+    const radio = scene.querySelector(`input[type="radio"][value="${CSS.escape(String(val))}"]`);
+    if (radio) radio.checked = true;
+  });
+  state.answers = { ...parsed };
+}
+function clearDraft() { safeStorage.removeSession(SESSION_ANSWERS_KEY); }
+
+// ──────────────────────────────────────────────────────────────
 // Progress dot click → jump to scene
 // ──────────────────────────────────────────────────────────────
 dotsEls.forEach((dot) => {
   dot.addEventListener('click', () => {
     const n = parseInt(dot.dataset.scene, 10);
-    if (Number.isNaN(n)) return;
-    scenes[n - 1].scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (!Number.isNaN(n)) goToScene(n);
   });
 });
 
@@ -236,7 +287,7 @@ dotsEls.forEach((dot) => {
 async function submitSurvey() {
   if (state.submitted) return;
   collectAll();
-  console.log('[submit] payload:', state.answers);
+  // NB: never log state.answers here — q9 carries referral name + email (PII).
 
   continueBtn.disabled = true;
   continueLabel.textContent = 'Sending…';
@@ -251,21 +302,18 @@ async function submitSurvey() {
     if (res.ok && data.ok) {
       state.submitted = true;
       continueLabel.textContent = 'Thanks ✓';
+      clearDraft();
       showSubmitOverlay(state.answers.q1_project_name);
     } else {
       continueLabel.textContent = 'Submit';
       continueBtn.disabled = false;
-      alert('Submission failed: ' + (data.error || `HTTP ${res.status}`));
+      showToast(`Submission failed — ${data.error || `HTTP ${res.status}`}. Please try again.`);
     }
   } catch (err) {
-    console.error(err);
+    console.error('[submit] network error', err);
     continueLabel.textContent = 'Submit';
     continueBtn.disabled = false;
-    alert(
-      'Couldn\'t reach /api/submit.\n\n' +
-      'On the static dev server this is expected (no serverless functions). ' +
-      'On Vercel, check the function logs.'
-    );
+    showToast("Couldn't reach the server. Check your connection and try again.");
   }
 }
 
@@ -340,22 +388,24 @@ function navToScene(targetSceneNum) {
 
 // keyboard nav as a bonus — ↑/↓, PageUp/Down, Home/End
 window.addEventListener('keydown', (e) => {
-  if (e.target.matches('input, textarea')) return;   // don't steal typing
+  const tgt = e.target;
+  // Don't steal typing inside form fields
+  if (tgt instanceof Element && tgt.matches('input, textarea, select')) return;
   let target = null;
   if (e.key === 'ArrowDown' || e.key === 'PageDown') target = state.current + 1;
   else if (e.key === 'ArrowUp' || e.key === 'PageUp') target = state.current - 1;
   else if (e.key === 'Home') target = 1;
   else if (e.key === 'End')  target = TOTAL;
   if (target === null) return;
-  target = Math.max(1, Math.min(TOTAL, target));
-  if (target === state.current) return;
   e.preventDefault();
-  scenes[target - 1].scrollIntoView({ behavior: 'smooth', block: 'start' });
+  goToScene(target);
 });
 
 // ──────────────────────────────────────────────────────────────
-// Initial state — show the video for whatever scene we land on
+// Initial state — restore any session draft, then prime the
+// active scene's video.
 // ──────────────────────────────────────────────────────────────
+loadDraft();
 updateContinueButton();
 let anyInitialActive = false;
 sceneVideos.forEach(v => {
@@ -364,3 +414,5 @@ sceneVideos.forEach(v => {
   if (matches) anyInitialActive = true;
 });
 document.body.classList.toggle('has-video', anyInitialActive);
+// Kick off the crossfade tick now if we landed on a video scene
+if (pairs[state.current] && pairs[state.current].buffer) ensureCrossfadeTicking();

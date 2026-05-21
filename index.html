@@ -6,7 +6,7 @@
   <title>GIG — Tell us how we did</title>
   <meta name="theme-color" content="#0D1A2D" />
   <link rel="stylesheet" href="https://use.typekit.net/wek0eum.css" />
-  <link rel="stylesheet" href="./styles.css?v=28" />
+  <link rel="stylesheet" href="./styles.css?v=29" />
 </head>
 <body class="survey">
 
@@ -34,10 +34,12 @@
     aria-hidden="true">
     <source src="./assets/videos/scene-01.webm" type="video/webm" />
   </video>
+  <!-- Buffer video — only fetched lazily (metadata) so we don't double-pull
+       the same 11 MB file on first paint. JS warms it before each seam. -->
   <video
     class="scene-video"
     data-scene="1" data-role="b"
-    loop muted playsinline preload="auto"
+    loop muted playsinline preload="metadata"
     aria-hidden="true">
     <source src="./assets/videos/scene-01.webm" type="video/webm" />
   </video>
@@ -45,32 +47,36 @@
   <!-- Dark gradient overlay shown when a scene video is active -->
   <div class="scene-overlay" aria-hidden="true"></div>
 
-  <!-- Top bar: logo + menu -->
+  <!-- Top bar — burger left · logo centred · spacer right (mirrors gig.health) -->
   <header class="topbar">
-    <a class="logo" href="https://gig.health" target="_blank" rel="noopener" aria-label="GIG Health">
-      <img src="./assets/gig-logo-primary.svg" alt="GIG Health" />
-    </a>
-    <button class="menu" type="button" aria-label="Menu">
-      <span></span><span></span><span></span>
-    </button>
+    <div class="topbar-left">
+      <button class="menu" type="button" aria-label="Open menu" aria-controls="menu-panel" aria-expanded="false"></button>
+    </div>
+    <div class="topbar-center">
+      <a class="logo" href="https://gig.health" target="_blank" rel="noopener" aria-label="GIG Health — go to gig.health">
+        <img src="./assets/gig-logo-primary.svg" alt="GIG Health" />
+      </a>
+    </div>
+    <div class="topbar-right" aria-hidden="true"></div>
   </header>
 
   <!-- Giant section numeral, far left — updated by JS on scroll -->
   <div class="numeral" id="numeral" aria-hidden="true">01</div>
 
-  <!-- Progress dots, far right, vertical — clickable to jump -->
+  <!-- Progress dots, far right, vertical — clickable to jump (real
+       buttons so they're keyboard-activable) -->
   <nav class="progress" aria-label="Survey progress">
     <ol id="dots">
-      <li class="dot active" data-scene="1"><span class="dot-label">Project</span></li>
-      <li class="dot" data-scene="2"><span class="dot-label">Quality</span></li>
-      <li class="dot" data-scene="3"><span class="dot-label">Creativity</span></li>
-      <li class="dot" data-scene="4"><span class="dot-label">Budget</span></li>
-      <li class="dot" data-scene="5"><span class="dot-label">Experience</span></li>
-      <li class="dot" data-scene="6"><span class="dot-label">Permission</span></li>
-      <li class="dot" data-scene="7"><span class="dot-label">Improvement</span></li>
-      <li class="dot" data-scene="8"><span class="dot-label">Marketing</span></li>
-      <li class="dot" data-scene="9"><span class="dot-label">Referral</span></li>
-      <li class="dot" data-scene="10"><span class="dot-label">Trends</span></li>
+      <li><button class="dot active" type="button" data-scene="1" aria-label="Go to question 1: Project"><span class="dot-label">Project</span></button></li>
+      <li><button class="dot" type="button" data-scene="2"  aria-label="Go to question 2: Quality"><span class="dot-label">Quality</span></button></li>
+      <li><button class="dot" type="button" data-scene="3"  aria-label="Go to question 3: Creativity"><span class="dot-label">Creativity</span></button></li>
+      <li><button class="dot" type="button" data-scene="4"  aria-label="Go to question 4: Budget"><span class="dot-label">Budget</span></button></li>
+      <li><button class="dot" type="button" data-scene="5"  aria-label="Go to question 5: Experience"><span class="dot-label">Experience</span></button></li>
+      <li><button class="dot" type="button" data-scene="6"  aria-label="Go to question 6: Permission"><span class="dot-label">Permission</span></button></li>
+      <li><button class="dot" type="button" data-scene="7"  aria-label="Go to question 7: Improvement"><span class="dot-label">Improvement</span></button></li>
+      <li><button class="dot" type="button" data-scene="8"  aria-label="Go to question 8: Marketing"><span class="dot-label">Marketing</span></button></li>
+      <li><button class="dot" type="button" data-scene="9"  aria-label="Go to question 9: Referral"><span class="dot-label">Referral</span></button></li>
+      <li><button class="dot" type="button" data-scene="10" aria-label="Go to question 10: Trends"><span class="dot-label">Trends</span></button></li>
     </ol>
   </nav>
 
@@ -83,8 +89,15 @@
       <h1 class="question">What was the name of <em>this&nbsp;project?</em></h1>
       <p class="hint">Tell us which project this feedback is for — a quick word or two is fine.</p>
       <div class="field">
-        <input class="answer-input" type="text" autocomplete="off" placeholder="Type the project name" />
+        <input class="answer-input" id="q1-input" type="text" autocomplete="off"
+               placeholder="Type the project name"
+               aria-label="What was the name of this project?" />
       </div>
+      <!-- Honeypot: hidden from humans, bots fill it. Server silently drops anything that arrives with this filled. -->
+      <label class="sr-only" for="hp-website">Website (leave blank)</label>
+      <input id="hp-website" name="website" type="text" tabindex="-1" autocomplete="off"
+             aria-hidden="true"
+             style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none" />
     </div>
   </section>
 
@@ -94,13 +107,14 @@
       <p class="kicker"><span class="kicker-num">Question 02</span><span class="kicker-sep" aria-hidden="true"></span><span class="kicker-label">Quality</span></p>
       <h1 class="question">How would you rate the <em>final&nbsp;deliverable(s)?</em></h1>
       <p class="hint">Pick the option that best reflects how the work landed.</p>
-      <ul class="choices">
-        <li class="choice"><label><input type="radio" name="q2" value="excellent" /><span class="choice-marker"></span><span class="choice-text">An excellent standard</span></label></li>
-        <li class="choice"><label><input type="radio" name="q2" value="high" /><span class="choice-marker"></span><span class="choice-text">A high standard</span></label></li>
-        <li class="choice"><label><input type="radio" name="q2" value="fair" /><span class="choice-marker"></span><span class="choice-text">Fair</span></label></li>
-        <li class="choice"><label><input type="radio" name="q2" value="not_everything" /><span class="choice-marker"></span><span class="choice-text">Not everything we'd hoped for</span></label></li>
-        <li class="choice"><label><input type="radio" name="q2" value="disappointing" /><span class="choice-marker"></span><span class="choice-text">Disappointing</span></label></li>
-      </ul>
+      <fieldset class="choices">
+        <legend class="sr-only">How would you rate the final deliverable(s)?</legend>
+        <div class="choice"><label><input type="radio" name="q2" value="excellent" /><span class="choice-marker"></span><span class="choice-text">An excellent standard</span></label></div>
+        <div class="choice"><label><input type="radio" name="q2" value="high" /><span class="choice-marker"></span><span class="choice-text">A high standard</span></label></div>
+        <div class="choice"><label><input type="radio" name="q2" value="fair" /><span class="choice-marker"></span><span class="choice-text">Fair</span></label></div>
+        <div class="choice"><label><input type="radio" name="q2" value="not_everything" /><span class="choice-marker"></span><span class="choice-text">Not everything we'd hoped for</span></label></div>
+        <div class="choice"><label><input type="radio" name="q2" value="disappointing" /><span class="choice-marker"></span><span class="choice-text">Disappointing</span></label></div>
+      </fieldset>
     </div>
   </section>
 
@@ -110,13 +124,14 @@
       <p class="kicker"><span class="kicker-num">Question 03</span><span class="kicker-sep" aria-hidden="true"></span><span class="kicker-label">Creativity</span></p>
       <h1 class="question">How creative was the <em>final&nbsp;product?</em></h1>
       <p class="hint">Honest answers help us push further next time.</p>
-      <ul class="choices">
-        <li class="choice"><label><input type="radio" name="q3" value="groundbreaking" /><span class="choice-marker"></span><span class="choice-text">Ground breaking</span></label></li>
-        <li class="choice"><label><input type="radio" name="q3" value="really_creative" /><span class="choice-marker"></span><span class="choice-text">Really creative and engaging</span></label></li>
-        <li class="choice"><label><input type="radio" name="q3" value="quite_creative" /><span class="choice-marker"></span><span class="choice-text">Quite creative, fit for purpose</span></label></li>
-        <li class="choice"><label><input type="radio" name="q3" value="average" /><span class="choice-marker"></span><span class="choice-text">Average, not very original</span></label></li>
-        <li class="choice"><label><input type="radio" name="q3" value="lacking" /><span class="choice-marker"></span><span class="choice-text">Lacking thought and creativity</span></label></li>
-      </ul>
+      <fieldset class="choices">
+        <legend class="sr-only">How creative was the final product?</legend>
+        <div class="choice"><label><input type="radio" name="q3" value="groundbreaking" /><span class="choice-marker"></span><span class="choice-text">Ground breaking</span></label></div>
+        <div class="choice"><label><input type="radio" name="q3" value="really_creative" /><span class="choice-marker"></span><span class="choice-text">Really creative and engaging</span></label></div>
+        <div class="choice"><label><input type="radio" name="q3" value="quite_creative" /><span class="choice-marker"></span><span class="choice-text">Quite creative, fit for purpose</span></label></div>
+        <div class="choice"><label><input type="radio" name="q3" value="average" /><span class="choice-marker"></span><span class="choice-text">Average, not very original</span></label></div>
+        <div class="choice"><label><input type="radio" name="q3" value="lacking" /><span class="choice-marker"></span><span class="choice-text">Lacking thought and creativity</span></label></div>
+      </fieldset>
     </div>
   </section>
 
@@ -126,12 +141,13 @@
       <p class="kicker"><span class="kicker-num">Question 04</span><span class="kicker-sep" aria-hidden="true"></span><span class="kicker-label">Budget</span></p>
       <h1 class="question">How competitive was our <em>cost&nbsp;/&nbsp;budget?</em></h1>
       <p class="hint">Compared to others you've worked with.</p>
-      <ul class="choices">
-        <li class="choice"><label><input type="radio" name="q4" value="higher" /><span class="choice-marker"></span><span class="choice-text">Higher than others</span></label></li>
-        <li class="choice"><label><input type="radio" name="q4" value="on_par" /><span class="choice-marker"></span><span class="choice-text">On par with others</span></label></li>
-        <li class="choice"><label><input type="radio" name="q4" value="cheaper" /><span class="choice-marker"></span><span class="choice-text">Cheaper than others</span></label></li>
-        <li class="choice"><label><input type="radio" name="q4" value="na" /><span class="choice-marker"></span><span class="choice-text">N/A — budget was predetermined</span></label></li>
-      </ul>
+      <fieldset class="choices">
+        <legend class="sr-only">How competitive was our cost or budget?</legend>
+        <div class="choice"><label><input type="radio" name="q4" value="higher" /><span class="choice-marker"></span><span class="choice-text">Higher than others</span></label></div>
+        <div class="choice"><label><input type="radio" name="q4" value="on_par" /><span class="choice-marker"></span><span class="choice-text">On par with others</span></label></div>
+        <div class="choice"><label><input type="radio" name="q4" value="cheaper" /><span class="choice-marker"></span><span class="choice-text">Cheaper than others</span></label></div>
+        <div class="choice"><label><input type="radio" name="q4" value="na" /><span class="choice-marker"></span><span class="choice-text">N/A — budget was predetermined</span></label></div>
+      </fieldset>
     </div>
   </section>
 
@@ -142,7 +158,9 @@
       <h1 class="question">Describe <em>your&nbsp;experience</em> working with GIG.</h1>
       <p class="hint">How have you benefited from our work? A few sentences is great.</p>
       <div class="field">
-        <textarea class="answer-input answer-textarea" rows="4" placeholder="Share your experience"></textarea>
+        <textarea class="answer-input answer-textarea" id="q5-input" rows="4"
+                  placeholder="Share your experience"
+                  aria-label="Describe your experience working with GIG."></textarea>
       </div>
     </div>
   </section>
@@ -153,10 +171,11 @@
       <p class="kicker"><span class="kicker-num">Question 06</span><span class="kicker-sep" aria-hidden="true"></span><span class="kicker-label">Permission</span></p>
       <h1 class="question">Happy for us to share <em>your&nbsp;response</em> on our channels?</h1>
       <p class="hint">We'd love to feature your words — only with your say-so.</p>
-      <ul class="choices choices-binary">
-        <li class="choice"><label><input type="radio" name="q6" value="yes" /><span class="choice-marker"></span><span class="choice-text">Yes</span></label></li>
-        <li class="choice"><label><input type="radio" name="q6" value="no" /><span class="choice-marker"></span><span class="choice-text">No</span></label></li>
-      </ul>
+      <fieldset class="choices choices-binary">
+        <legend class="sr-only">Happy for us to share your response on our channels?</legend>
+        <div class="choice"><label><input type="radio" name="q6" value="yes" /><span class="choice-marker"></span><span class="choice-text">Yes</span></label></div>
+        <div class="choice"><label><input type="radio" name="q6" value="no" /><span class="choice-marker"></span><span class="choice-text">No</span></label></div>
+      </fieldset>
     </div>
   </section>
 
@@ -167,7 +186,9 @@
       <h1 class="question">What could we <em>do&nbsp;better,</em> to work together again?</h1>
       <p class="hint">Direct feedback welcome. We'd rather know.</p>
       <div class="field">
-        <textarea class="answer-input answer-textarea" rows="4" placeholder="What would you change"></textarea>
+        <textarea class="answer-input answer-textarea" id="q7-input" rows="4"
+                  placeholder="What would you change"
+                  aria-label="What could we do better, to work together again?"></textarea>
       </div>
     </div>
   </section>
@@ -178,12 +199,13 @@
       <p class="kicker"><span class="kicker-num">Question 08</span><span class="kicker-sep" aria-hidden="true"></span><span class="kicker-label">Marketing</span></p>
       <h1 class="question">Can we use this project in our <em>case&nbsp;studies?</em></h1>
       <p class="hint">With citation, in our marketing materials.</p>
-      <ul class="choices">
-        <li class="choice"><label><input type="radio" name="q8" value="yes_as_is" /><span class="choice-marker"></span><span class="choice-text">Yes — as it is</span></label></li>
-        <li class="choice"><label><input type="radio" name="q8" value="yes_adapted" /><span class="choice-marker"></span><span class="choice-text">Yes, with adaptation (remove client/product name, abridged, etc.)</span></label></li>
-        <li class="choice"><label><input type="radio" name="q8" value="possibly" /><span class="choice-marker"></span><span class="choice-text">Possibly — need to check</span></label></li>
-        <li class="choice"><label><input type="radio" name="q8" value="no" /><span class="choice-marker"></span><span class="choice-text">No</span></label></li>
-      </ul>
+      <fieldset class="choices">
+        <legend class="sr-only">Can we use this project in our case studies?</legend>
+        <div class="choice"><label><input type="radio" name="q8" value="yes_as_is" /><span class="choice-marker"></span><span class="choice-text">Yes — as it is</span></label></div>
+        <div class="choice"><label><input type="radio" name="q8" value="yes_adapted" /><span class="choice-marker"></span><span class="choice-text">Yes, with adaptation (remove client/product name, abridged, etc.)</span></label></div>
+        <div class="choice"><label><input type="radio" name="q8" value="possibly" /><span class="choice-marker"></span><span class="choice-text">Possibly — need to check</span></label></div>
+        <div class="choice"><label><input type="radio" name="q8" value="no" /><span class="choice-marker"></span><span class="choice-text">No</span></label></div>
+      </fieldset>
     </div>
   </section>
 
@@ -194,7 +216,9 @@
       <h1 class="question">Know anyone who could <em>benefit from GIG?</em></h1>
       <p class="hint">We'd be delighted to work with likeminded clients. Share their name and email if you can.</p>
       <div class="field">
-        <textarea class="answer-input answer-textarea" rows="3" placeholder="Name and email"></textarea>
+        <textarea class="answer-input answer-textarea" id="q9-input" rows="3"
+                  placeholder="Name and email"
+                  aria-label="Know anyone who could benefit from GIG?"></textarea>
       </div>
     </div>
   </section>
@@ -206,7 +230,9 @@
       <h1 class="question">Any <em>trends or challenges</em> you'd like to get ahead of?</h1>
       <p class="hint">As healthcare communications keeps evolving, anything you'd like to better understand?</p>
       <div class="field">
-        <textarea class="answer-input answer-textarea" rows="4" placeholder="What's on your mind"></textarea>
+        <textarea class="answer-input answer-textarea" id="q10-input" rows="4"
+                  placeholder="What's on your mind"
+                  aria-label="Any trends or challenges you'd like to get ahead of?"></textarea>
       </div>
     </div>
   </section>
@@ -258,8 +284,8 @@
     </div>
   </div>
 
-  <script type="module" src="./main.js?v=32"></script>
-  <script src="./menu.js?v=2"></script>
-  <script src="./privacy.js?v=1"></script>
+  <script type="module" src="./main.js?v=33"></script>
+  <script src="./menu.js?v=3"></script>
+  <script src="./privacy.js?v=2"></script>
 </body>
 </html>

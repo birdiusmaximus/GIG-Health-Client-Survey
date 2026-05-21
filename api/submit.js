@@ -29,14 +29,58 @@ const ALLOWED = {
 
 const REQUIRED_TEXT_FIELDS = ['q1_project_name', 'q5_experience', 'q7_improvement'];
 
+// Rough cap on incoming JSON payload size. We already trim/slice every
+// text field below, but rejecting absurdly large bodies before parsing
+// limits the damage a bot can do per request.
+const MAX_BODY_BYTES = 32 * 1024;   // 32 KB
+
+// Best-effort per-IP throttle for the lifetime of this lambda instance.
+// Cold starts wipe state, so this won't catch a distributed flood — pair
+// with a real rate-limiter (Upstash / Vercel Edge) before scaling up.
+const RATE_BUCKET = new Map();        // ip -> { count, windowStart }
+const RATE_WINDOW_MS = 60 * 1000;
+const RATE_LIMIT     = 6;             // 6 submissions / minute / IP
+
+function isRateLimited(ip) {
+  if (!ip) return false;
+  const now = Date.now();
+  const entry = RATE_BUCKET.get(ip);
+  if (!entry || now - entry.windowStart > RATE_WINDOW_MS) {
+    RATE_BUCKET.set(ip, { count: 1, windowStart: now });
+    return false;
+  }
+  entry.count += 1;
+  return entry.count > RATE_LIMIT;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ error: 'method not allowed' });
   }
 
+  // Reject oversize bodies before doing anything else
+  const lenHeader = req.headers['content-length'];
+  if (lenHeader && parseInt(lenHeader, 10) > MAX_BODY_BYTES) {
+    return res.status(413).json({ error: 'payload too large' });
+  }
+
+  // Rough client IP (Vercel sets x-forwarded-for; fall back to socket)
+  const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim()
+          || req.socket?.remoteAddress || '';
+  if (isRateLimited(ip)) {
+    return res.status(429).json({ error: 'too many requests' });
+  }
+
   const body = req.body && typeof req.body === 'object' ? req.body : null;
   if (!body) return res.status(400).json({ error: 'missing or invalid body' });
+
+  // Honeypot — if a bot fills the hidden `website` field, silently accept
+  // and discard. Returning 200 means bots stop retrying.
+  if (typeof body.website === 'string' && body.website.trim().length > 0) {
+    console.warn('[submit] honeypot tripped, dropping silently', { ip });
+    return res.status(200).json({ ok: true, persisted: false });
+  }
 
   // Validate text fields
   for (const field of REQUIRED_TEXT_FIELDS) {
@@ -77,10 +121,13 @@ export default async function handler(req, res) {
     .single();
 
   if (error) {
+    // Log full PostgREST detail server-side only — never leak column /
+    // constraint names back to the client
     console.error('[submit] supabase insert error', error);
     return res.status(500).json({ error: 'failed to save response' });
   }
 
+  // Log only the id — never the payload (q9 contains referral PII)
   console.log('[submit] saved response id:', data.id);
 
   // Fire-and-forget notification email — never blocks the response,
