@@ -96,6 +96,10 @@ function setCurrentScene(n) {
     return;
   }
   state.current = n;
+  // New scene → drop any dwell-timer / accumulator carry-over from the last one
+  reachedEndAt = 0;
+  reachedStartAt = 0;
+  noVideoAccum = 0;
   numeralEl.textContent = String(n).padStart(2, '0');
   dotsEls.forEach((dot, i) => {
     dot.classList.toggle('active', i + 1 === n);
@@ -281,12 +285,13 @@ function hideSubmitOverlay() {
 // (same UX as before — works for the un-video'd scenes 2–10).
 // ──────────────────────────────────────────────────────────────
 const SCRUB_SECS_PER_PX  = 0.0022;  // wheel deltaY → seconds of video (softer than v1)
-const END_THRESHOLD      = 0.08;    // how close to the end counts as "at end"
-const START_THRESHOLD    = 0.05;    // how close to the start counts as "at start"
 const NO_VIDEO_THRESHOLD = 120;     // px of accumulated deltaY to flip scene without a video
 const NAV_COOLDOWN_MS    = 700;     // gap between scene changes (kills trackpad inertia)
+const END_DWELL_MS       = 350;     // sit on final frame this long before scroll advances
 
 let lastNavAt = 0;
+let reachedEndAt = 0;       // timestamp when forward scrub first hit end of current video
+let reachedStartAt = 0;     // timestamp when backward scrub first hit start of current video
 let noVideoAccum = 0;
 let noVideoAccumResetT = 0;
 
@@ -307,9 +312,11 @@ window.addEventListener('wheel', (e) => {
 
   if (video && video.duration && video.readyState >= 2) {
     // ── Scrub mode ────────────────────────────────────────────
-    // Key invariant: the video must play through to its end before
-    // the scene advances. A scroll that *would* overshoot the end
-    // just CLAMPS to end; another scroll is needed to advance.
+    // Key invariant: the video must play through to its actual end
+    // before the scene advances. The very first scroll that *would*
+    // overshoot just CLAMPS the playhead to the final frame and
+    // starts a dwell timer. The user has to keep scrolling after
+    // END_DWELL_MS for the scene change to fire.
     const dur = video.duration;
     const end = Math.max(0, dur - 0.02);
     const ct  = video.currentTime;
@@ -319,24 +326,36 @@ window.addEventListener('wheel', (e) => {
     try { video.pause(); } catch (err) {}
 
     if (dir > 0) {
-      const atEnd = ct >= end - END_THRESHOLD;
-      if (atEnd && newTime > end) {
-        // Already finished + still scrolling → advance scene
-        lastNavAt = now;
-        navToScene(state.current + 1);
+      if (newTime > end) {
+        // Would overshoot the end
+        if (reachedEndAt > 0 && now - reachedEndAt >= END_DWELL_MS) {
+          // Already sat on the final frame long enough → advance
+          reachedEndAt = 0;
+          lastNavAt = now;
+          navToScene(state.current + 1);
+        } else {
+          // First overshoot OR still in dwell → pin at end, arm timer
+          video.currentTime = end;
+          if (reachedEndAt === 0) reachedEndAt = now;
+        }
       } else {
-        // Scrub forward, clamp at end so the video always reaches
-        // its final frame before any scene change
-        video.currentTime = Math.min(end, newTime);
+        // Normal forward scrub
+        reachedEndAt = 0;
+        video.currentTime = newTime;
       }
     } else {
-      const atStart = ct <= START_THRESHOLD;
-      if (atStart && newTime < 0) {
-        // Already at frame 0 + still scrolling up → previous scene
-        lastNavAt = now;
-        navToScene(state.current - 1);
+      if (newTime < 0) {
+        if (reachedStartAt > 0 && now - reachedStartAt >= END_DWELL_MS) {
+          reachedStartAt = 0;
+          lastNavAt = now;
+          navToScene(state.current - 1);
+        } else {
+          video.currentTime = 0;
+          if (reachedStartAt === 0) reachedStartAt = now;
+        }
       } else {
-        video.currentTime = Math.max(0, newTime);
+        reachedStartAt = 0;
+        video.currentTime = newTime;
       }
     }
   } else {
