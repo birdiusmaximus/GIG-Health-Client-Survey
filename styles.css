@@ -51,9 +51,16 @@ body { min-height: 100vh; }
                    (the other one in the pair is the buffer, opacity 0).
    The crossfade swaps `.is-shown` between A and B at each loop seam. */
 .scene-video {
+  /* The element is intentionally wider than the viewport and shifted
+     left, which scoots the animation's focal point closer to the left
+     edge of the screen (further from the form copy on the right) while
+     keeping the video edge-to-edge. Tweak --scene-shift to taste —
+     bigger value = more leftward push. */
+  --scene-shift: 8vw;
   position: fixed;
-  inset: 0;
-  width: 100vw;
+  top: 0;
+  left: calc(var(--scene-shift) * -1);
+  width: calc(100vw + var(--scene-shift));
   height: 100vh;
   object-fit: cover;
   object-position: left center;
@@ -889,6 +896,12 @@ body.survey .menu { margin-left: 0.2rem; }
 
 /* ─── Mobile (under 880px) ────────────────────────────────────── */
 @media (max-width: 880px) {
+  /* On narrow viewports the form stacks below the video instead of
+     sitting next to it, so there's no "horizontal whitespace" to gain
+     by pushing the video left. Reset the shift to 0 on mobile so the
+     animation re-centres. */
+  .scene-video { --scene-shift: 0vw; }
+
   .progress {
     right: 0.8rem;
   }
