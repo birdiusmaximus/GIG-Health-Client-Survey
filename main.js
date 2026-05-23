@@ -431,14 +431,21 @@ function hideSubmitOverlay() {
 // ──────────────────────────────────────────────────────────────
 // Wheel handler — small flicks accumulate, then snap decisively
 // to the next scene. Works on top of native scroll-snap.
+//
+// Safari sends much larger deltaY per wheel event than Chrome, so
+// the trigger threshold needs to be high enough that a tiny twitch
+// doesn't immediately jump scenes. The cooldown only blocks
+// SAME-direction repeat navs — reversing direction is allowed
+// instantly so you can bounce back up without a wait.
 // ──────────────────────────────────────────────────────────────
-const WHEEL_TRIGGER  = 28;     // px of accumulated deltaY before snapping
-const WHEEL_COOLDOWN = 650;    // ms — minimum gap between snaps
-const WHEEL_RESET    = 140;    // ms — accumulator decays if you stop scrolling
+const WHEEL_TRIGGER  = 55;     // px of accumulated deltaY before snapping
+const WHEEL_COOLDOWN = 420;    // ms — minimum gap between SAME-direction navs
+const WHEEL_RESET    = 180;    // ms — accumulator decays if you stop scrolling
 
 let wheelAccum     = 0;
 let wheelResetT    = 0;
 let lastWheelNavAt = 0;
+let lastNavDir     = 0;     // +1 = down, -1 = up
 
 window.addEventListener('wheel', (e) => {
   const tgt = e.target;
@@ -446,7 +453,10 @@ window.addEventListener('wheel', (e) => {
       && tgt.closest('textarea, input, select')) return;
 
   const now = performance.now();
-  if (now - lastWheelNavAt < WHEEL_COOLDOWN) {
+  const incomingDir = e.deltaY > 0 ? 1 : -1;
+  // Cooldown only applies to same-direction repeats. Reversing
+  // direction bypasses it so users can undo a jump immediately.
+  if (incomingDir === lastNavDir && now - lastWheelNavAt < WHEEL_COOLDOWN) {
     e.preventDefault();
     return;
   }
@@ -461,6 +471,7 @@ window.addEventListener('wheel', (e) => {
   wheelAccum = 0;
   e.preventDefault();
   lastWheelNavAt = now;
+  lastNavDir = dir;
   navToScene(state.current + dir);
 }, { passive: false });
 

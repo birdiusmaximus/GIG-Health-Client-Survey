@@ -26,6 +26,9 @@ html {
   scroll-snap-type: y proximity;
   scroll-behavior: smooth;
   scrollbar-width: none;          /* hide native scrollbar — dots do the navigating */
+  /* Stop Safari's elastic bounce + scroll-chaining from fighting our
+     wheel handler at the top and bottom of the survey. */
+  overscroll-behavior-y: contain;
 }
 html::-webkit-scrollbar { display: none; }
 
