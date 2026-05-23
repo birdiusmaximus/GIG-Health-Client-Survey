@@ -158,8 +158,8 @@
       <li><button class="dot" type="button" data-scene="6"  aria-label="Go to question 6: Permission"><span class="dot-label">Permission</span></button></li>
       <li><button class="dot" type="button" data-scene="7"  aria-label="Go to question 7: Improvement"><span class="dot-label">Improvement</span></button></li>
       <li><button class="dot" type="button" data-scene="8"  aria-label="Go to question 8: Marketing"><span class="dot-label">Marketing</span></button></li>
-      <li><button class="dot" type="button" data-scene="9"  aria-label="Go to question 9: Referral"><span class="dot-label">Referral</span></button></li>
-      <li><button class="dot" type="button" data-scene="10" aria-label="Go to question 10: Trends"><span class="dot-label">Trends</span></button></li>
+      <li><button class="dot" type="button" data-scene="9"  aria-label="Go to question 9: Trends"><span class="dot-label">Trends</span></button></li>
+      <li><button class="dot" type="button" data-scene="10" aria-label="Go to question 10: Referral"><span class="dot-label">Referral</span></button></li>
     </ol>
   </nav>
 
@@ -292,30 +292,33 @@
     </div>
   </section>
 
-  <!-- Q9 — Referral (optional) -->
-  <section class="scene" data-scene="9" data-key="q9_referral">
+  <!-- Q9 — Trends / challenges (optional) — was Q10, moved earlier
+       so the optional 'referral' ask is the very last thing. data-key
+       stays as q10_trends to preserve the Supabase column mapping. -->
+  <section class="scene" data-scene="9" data-key="q10_trends">
     <div class="scene-content">
-      <p class="kicker"><span class="kicker-num">Question 09</span><span class="kicker-sep" aria-hidden="true"></span><span class="kicker-label">Referral</span><span class="kicker-tag">Optional</span></p>
-      <h1 class="question">Know anyone who could <em>benefit from GIG?</em></h1>
-      <p class="hint">We'd be delighted to work with likeminded clients. Share their name and email if you can.</p>
-      <div class="field">
-        <textarea class="answer-input answer-textarea" id="q9-input" rows="3"
-                  placeholder="Name and email"
-                  aria-label="Know anyone who could benefit from GIG?"></textarea>
-      </div>
-    </div>
-  </section>
-
-  <!-- Q10 — Trends / challenges (optional) -->
-  <section class="scene" data-scene="10" data-key="q10_trends">
-    <div class="scene-content">
-      <p class="kicker"><span class="kicker-num">Question 10</span><span class="kicker-sep" aria-hidden="true"></span><span class="kicker-label">Trends</span><span class="kicker-tag">Optional</span></p>
+      <p class="kicker"><span class="kicker-num">Question 09</span><span class="kicker-sep" aria-hidden="true"></span><span class="kicker-label">Trends</span><span class="kicker-tag">Optional</span></p>
       <h1 class="question">What <em>trends or challenges</em> are you facing at the moment?</h1>
       <p class="hint">As healthcare communications keeps evolving, anything you'd like to better understand?</p>
       <div class="field">
         <textarea class="answer-input answer-textarea" id="q10-input" rows="4"
                   placeholder="What's on your mind"
                   aria-label="What trends or challenges are you facing at the moment?"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- Q10 — Referral (optional) — was Q9, moved to the end.
+       data-key stays as q9_referral to preserve the Supabase column. -->
+  <section class="scene" data-scene="10" data-key="q9_referral">
+    <div class="scene-content">
+      <p class="kicker"><span class="kicker-num">Question 10</span><span class="kicker-sep" aria-hidden="true"></span><span class="kicker-label">Referral</span><span class="kicker-tag">Optional</span></p>
+      <h1 class="question">Know anyone who could <em>benefit from GIG?</em></h1>
+      <p class="hint">We'd be delighted to work with likeminded clients. Share their name and email if you can.</p>
+      <div class="field">
+        <textarea class="answer-input answer-textarea" id="q9-input" rows="3"
+                  placeholder="Name and email"
+                  aria-label="Know anyone who could benefit from GIG?"></textarea>
       </div>
     </div>
   </section>
