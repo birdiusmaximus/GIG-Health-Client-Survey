@@ -39,13 +39,14 @@ Object.entries(pairs).forEach(([n, p]) => {
   if (!b) {
     a.loop = true;
     a.classList.add('is-shown');
-    a.play().catch(() => {});
+    // NB: don't call play() at init — scene 1's <video autoplay> attribute
+    // handles that for itself; other scenes are off-screen and should not
+    // be downloading their WebM until the user actually scrolls to them.
     return;
   }
   a.loop = true;
   b.loop = true;
   a.classList.add('is-shown');
-  a.play().catch(() => {});
   // Hold the buffer paused at frame 0 — restarts fresh on every crossfade
   const holdBufferAtZero = () => {
     try { b.pause(); } catch (e) {}
@@ -142,7 +143,14 @@ function setCurrentScene(n) {
     v.classList.toggle('is-active', matches);
     if (matches) {
       anyActive = true;
-      if (v.classList.contains('is-shown')) v.play().catch(() => {});
+      if (v.classList.contains('is-shown')) {
+        v.play().catch(() => {});
+      } else {
+        // Buffer for the now-active scene — bump preload from
+        // 'metadata' to 'auto' so it's downloading in the background
+        // and ready to fade in when the seam arrives.
+        if (v.preload !== 'auto') v.preload = 'auto';
+      }
     } else {
       try { v.pause(); } catch (e) {}
     }

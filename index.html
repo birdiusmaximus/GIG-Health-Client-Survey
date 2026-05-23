@@ -26,22 +26,78 @@
   <!-- Scene videos — pairs of two per scene for seamless-loop crossfade
        (browser's native loop seam is a visible flash on 4K WebM; we mask
        it by fading a fresh second video over the top right before the
-       seam happens). -->
-  <video
-    class="scene-video"
-    data-scene="1" data-role="a"
-    autoplay loop muted playsinline preload="auto"
-    aria-hidden="true">
+       seam happens). Only scene 1's primary preloads eagerly — the
+       other scenes' videos pull metadata only until the user lands on
+       them, to keep the first-paint network cost reasonable. -->
+
+  <!-- Scene 1 — primary preloads (first scene the user sees) -->
+  <video class="scene-video" data-scene="1" data-role="a"
+    autoplay loop muted playsinline preload="auto" aria-hidden="true">
     <source src="./assets/videos/scene-01.webm" type="video/webm" />
   </video>
-  <!-- Buffer video — only fetched lazily (metadata) so we don't double-pull
-       the same 11 MB file on first paint. JS warms it before each seam. -->
-  <video
-    class="scene-video"
-    data-scene="1" data-role="b"
-    loop muted playsinline preload="metadata"
-    aria-hidden="true">
+  <video class="scene-video" data-scene="1" data-role="b"
+    loop muted playsinline preload="metadata" aria-hidden="true">
     <source src="./assets/videos/scene-01.webm" type="video/webm" />
+  </video>
+
+  <!-- Scene 2 -->
+  <video class="scene-video" data-scene="2" data-role="a"
+    loop muted playsinline preload="metadata" aria-hidden="true">
+    <source src="./assets/videos/scene-02.webm" type="video/webm" />
+  </video>
+  <video class="scene-video" data-scene="2" data-role="b"
+    loop muted playsinline preload="metadata" aria-hidden="true">
+    <source src="./assets/videos/scene-02.webm" type="video/webm" />
+  </video>
+
+  <!-- Scene 3 -->
+  <video class="scene-video" data-scene="3" data-role="a"
+    loop muted playsinline preload="metadata" aria-hidden="true">
+    <source src="./assets/videos/scene-03.webm" type="video/webm" />
+  </video>
+  <video class="scene-video" data-scene="3" data-role="b"
+    loop muted playsinline preload="metadata" aria-hidden="true">
+    <source src="./assets/videos/scene-03.webm" type="video/webm" />
+  </video>
+
+  <!-- Scene 4 -->
+  <video class="scene-video" data-scene="4" data-role="a"
+    loop muted playsinline preload="metadata" aria-hidden="true">
+    <source src="./assets/videos/scene-04.webm" type="video/webm" />
+  </video>
+  <video class="scene-video" data-scene="4" data-role="b"
+    loop muted playsinline preload="metadata" aria-hidden="true">
+    <source src="./assets/videos/scene-04.webm" type="video/webm" />
+  </video>
+
+  <!-- Scene 5 -->
+  <video class="scene-video" data-scene="5" data-role="a"
+    loop muted playsinline preload="metadata" aria-hidden="true">
+    <source src="./assets/videos/scene-05.webm" type="video/webm" />
+  </video>
+  <video class="scene-video" data-scene="5" data-role="b"
+    loop muted playsinline preload="metadata" aria-hidden="true">
+    <source src="./assets/videos/scene-05.webm" type="video/webm" />
+  </video>
+
+  <!-- Scene 6 -->
+  <video class="scene-video" data-scene="6" data-role="a"
+    loop muted playsinline preload="metadata" aria-hidden="true">
+    <source src="./assets/videos/scene-06.webm" type="video/webm" />
+  </video>
+  <video class="scene-video" data-scene="6" data-role="b"
+    loop muted playsinline preload="metadata" aria-hidden="true">
+    <source src="./assets/videos/scene-06.webm" type="video/webm" />
+  </video>
+
+  <!-- Scene 7 -->
+  <video class="scene-video" data-scene="7" data-role="a"
+    loop muted playsinline preload="metadata" aria-hidden="true">
+    <source src="./assets/videos/scene-07.webm" type="video/webm" />
+  </video>
+  <video class="scene-video" data-scene="7" data-role="b"
+    loop muted playsinline preload="metadata" aria-hidden="true">
+    <source src="./assets/videos/scene-07.webm" type="video/webm" />
   </video>
 
   <!-- Dark gradient overlay shown when a scene video is active -->
@@ -281,7 +337,7 @@
     </div>
   </div>
 
-  <script type="module" src="./main.js?v=34"></script>
+  <script type="module" src="./main.js?v=35"></script>
   <script src="./menu.js?v=3"></script>
   <script src="./privacy.js?v=2"></script>
 </body>
