@@ -207,6 +207,42 @@ function collectAll() {
   for (let i = 1; i <= TOTAL; i++) collectAnswer(i);
 }
 
+// First required scene the user hasn't answered yet, or null if none.
+// Used by the Continue/Submit click and by submit-error mapping to
+// take the user back to whatever still needs filling in.
+function firstInvalidScene() {
+  for (let i = 1; i <= TOTAL; i++) {
+    const scene = scenes[i - 1];
+    if (scene.dataset.required === 'true' && !isSceneValid(i)) return i;
+  }
+  return null;
+}
+
+// Friendly label for a scene — pulls the kicker word ("Experience",
+// "Permission" etc.) so toasts can address it by name not just number.
+function sceneLabel(n) {
+  const scene = scenes[n - 1];
+  return scene?.querySelector('.kicker-label')?.textContent?.trim() || `Question ${n}`;
+}
+
+// data-key → scene number (Q9 and Q10 are intentionally swapped on
+// screen vs. their Supabase column names, so we have to look up by
+// attribute rather than parsing the digits out of the key).
+function sceneNumberForKey(key) {
+  for (let i = 1; i <= TOTAL; i++) {
+    if (scenes[i - 1].dataset.key === key) return i;
+  }
+  return null;
+}
+
+// Scroll the user to a still-needed scene and explain what's wrong.
+function nagAboutScene(n, customMsg) {
+  goToScene(n);
+  const msg = customMsg
+    || `Question ${n} (${sceneLabel(n)}) needs an answer before we can send this.`;
+  showToast(msg, { tone: 'info', duration: 7500 });
+}
+
 // ──────────────────────────────────────────────────────────────
 // Continue / Submit button
 // ──────────────────────────────────────────────────────────────
@@ -226,6 +262,17 @@ continueBtn.addEventListener('click', async () => {
   persistDraft();
 
   if (state.current >= TOTAL) {
+    // Pre-flight: make sure every required scene has an answer before
+    // we hit the API. Without this, a user who jumps via the progress
+    // dots could land on Q10, fill it, and try to submit with Q1-Q8
+    // empty — the API would reject but the toast would be cryptic.
+    collectAll();
+    const missing = firstInvalidScene();
+    if (missing !== null) {
+      continueBtn.disabled = false;
+      nagAboutScene(missing);
+      return;
+    }
     await submitSurvey();
     return;
   }
@@ -312,10 +359,40 @@ async function submitSurvey() {
       continueLabel.textContent = 'Thanks ✓';
       clearDraft();
       showSubmitOverlay(state.answers.q1_project_name);
+      return;
+    }
+
+    // Failure path — restore the button and translate the failure
+    // into something the user can act on.
+    continueLabel.textContent = 'Submit';
+    continueBtn.disabled = false;
+    const errMsg = (data && data.error) || '';
+
+    // 1) Per-field rejection — API errors usually mention the column
+    //    name (e.g. "missing required field: q5_experience"). Map that
+    //    back to its on-screen scene and send the user there.
+    const keyMatch = /(q\d+_[a-z_]+)/i.exec(errMsg);
+    if (keyMatch) {
+      const sceneNum = sceneNumberForKey(keyMatch[1]);
+      if (sceneNum) {
+        nagAboutScene(sceneNum);
+        return;
+      }
+    }
+
+    // 2) Status-coded fallbacks — pick a message the user can actually do something with
+    if (res.status === 429) {
+      showToast("That's too many submissions in a short time. Please wait a moment and try again.");
+    } else if (res.status === 413) {
+      showToast("One of your answers is very long. Please shorten it and try again.");
+    } else if (res.status === 501) {
+      showToast("Submissions aren't wired up on this dev server — open the live site to submit for real.", { duration: 8000 });
+    } else if (res.status >= 500) {
+      showToast("Something went wrong on our end. Please try again in a moment.");
+    } else if (errMsg) {
+      showToast(errMsg);
     } else {
-      continueLabel.textContent = 'Submit';
-      continueBtn.disabled = false;
-      showToast(`Submission failed — ${data.error || `HTTP ${res.status}`}. Please try again.`);
+      showToast(`Submission failed (HTTP ${res.status}). Please try again.`);
     }
   } catch (err) {
     console.error('[submit] network error', err);
