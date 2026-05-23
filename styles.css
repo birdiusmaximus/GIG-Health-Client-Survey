@@ -719,6 +719,22 @@ body.survey .menu { margin-left: 0.2rem; }
   flex-direction: column;
   gap: 0.25rem;
 }
+/* Anchor inside the bottom-left .foot-meta slot uses the same
+   label-over-handle treatment as the social row, so the corner Privacy
+   link reads as part of the same family. */
+.foot-meta a {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-decoration: none;
+  color: var(--ink);
+}
+.foot-meta a .foot-handle {
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+.foot-meta a:hover .foot-handle { color: var(--flame); }
 .foot-label {
   font-size: 0.68rem;
   font-weight: 700;
