@@ -375,12 +375,42 @@ body.showcase .progress {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto;
   }
-  .data-quote      { grid-column: 1 / -1; grid-row: auto; min-height: 260px; }
+  .data-quote      { grid-column: 1 / -1; grid-row: auto; min-height: 0; }
   .data-quality    { grid-column: 1 / -1; grid-row: auto; min-height: 280px; }
   .data-creativity { grid-column: 1; grid-row: auto; }
   .data-budget     { grid-column: 2; grid-row: auto; }
   .show-cta { flex-direction: column; align-items: flex-start; gap: 0.8rem; padding: 1.5rem; }
   .show-footer { position: relative; padding: 1.5rem 1rem; }
+
+  /* Long quotes: stop absolutely-positioning each card inside a
+     fixed-height stage — that was clipping multi-paragraph
+     testimonials against .data-cell's overflow:hidden. On mobile,
+     the active card flows in the normal layout so the cell grows
+     to fit its text and nothing escapes the border. Carousel still
+     works via the nav dots; we just lose the fade transition. */
+  .data-cell { overflow: visible; }
+  .data-quote .quote-stage {
+    position: static;
+    min-height: 0;
+    height: auto;
+    display: block;
+  }
+  .data-quote .quote-card {
+    position: static;
+    opacity: 0;
+    transform: none;
+    transition: none;
+    display: none;
+  }
+  .data-quote .quote-card.is-active {
+    opacity: 1;
+    display: flex;
+  }
+  /* Tighten the oversized opening-quote glyph on small screens so
+     the body text has room to breathe within the card width. */
+  .quote-text { padding-left: 2.2rem; max-width: none; }
+  .quote-text::before { font-size: 2.6em; top: -0.15em; }
+  .quote-nav { padding-left: 2.2rem; }
 }
 @media (max-width: 520px) {
   .show-data { grid-template-columns: 1fr; }
