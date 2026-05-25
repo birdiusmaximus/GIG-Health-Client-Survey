@@ -913,33 +913,70 @@ body.survey .menu { margin-left: 0.2rem; }
 .submit-close-arrow { transition: transform 0.25s ease; }
 .submit-close:hover .submit-close-arrow { transform: translateX(4px); }
 
-/* ─── Mobile (under 880px) ────────────────────────────────────── */
+/* ─── Mobile (under 880px) ─────────────────────────────────────
+   Narrow viewports get a dedicated, video-free layout: a clean
+   vertical scroll of the questions on the navy gradient body
+   background. The desktop animations are *the* desktop experience;
+   trying to overlay them on a phone-sized screen looks chaotic
+   and fights with the on-screen keyboard. */
 @media (max-width: 880px) {
-  /* On narrow viewports the form stacks below the video instead of
-     sitting next to it, so there's no "horizontal whitespace" to gain
-     by pushing the video left. Reset the shift to 0 on mobile so the
-     animation re-centres. */
-  .scene-video { --scene-shift: 0vw; }
-
-  .progress {
-    right: 0.8rem;
+  /* Hide the rich-media layer entirely. Body's --dusk → --night
+     gradient shows through and matches the brand palette. */
+  .scene-video,
+  .scene-overlay,
+  .arc {
+    display: none !important;
   }
-  .progress ol { gap: 0.55rem; }
-  .progress .dot-label { display: none; }
 
-  .scene { justify-content: flex-start; padding: 18vh 0 22vh; }
+  /* Drop scroll-snap on touch — feels more natural to scroll
+     freely than to have every question lock into place, especially
+     with the iOS keyboard appearing and disappearing. */
+  html {
+    scroll-snap-type: none;
+    overscroll-behavior-y: auto;
+  }
+  .scene { scroll-snap-align: none; }
+
+  /* Smaller, more breathable scene layout. Each scene is its own
+     'card' worth of vertical space — title, hint, input, then
+     the next one — rather than 100vh blocks. */
+  .scene {
+    min-height: auto;
+    justify-content: flex-start;
+    /* Bottom padding clears the fixed Continue/Submit bar so the
+       last input on each scene isn't covered. */
+    padding: 5vh 0 12vh;
+  }
+  /* Top spacing on the first scene clears the topbar */
+  .scene[data-scene="1"] { padding-top: 10vh; }
+  /* Extra room at the very end of the survey */
+  .scene[data-scene="10"] { padding-bottom: 18vh; }
+
   .scene-content {
     width: 100%;
     max-width: none;
     margin-right: 0;
-    padding: 0 6vw 0 6vw;
+    padding: 0 6vw;
   }
+
+  /* Slightly smaller heading sizes for narrow screens */
+  .question { font-size: clamp(1.55rem, 6.5vw, 2.1rem); line-height: 1.15; }
+  .hint     { font-size: 0.95rem; }
+  .kicker   { font-size: 0.62rem; }
+
+  /* Right-side progress dots — keep but make them tighter */
+  .progress { right: 0.7rem; }
+  .progress ol { gap: 0.55rem; }
+  .progress .dot-label { display: none; }
+  .progress .dot { width: 8px; height: 8px; }
+  .progress .dot.active { width: 10px; height: 10px; }
+
   .footbar {
     padding: 1rem 1.2rem;
     flex-wrap: wrap;
     gap: 0.8rem;
   }
-  .foot-links { display: none; }      /* keep the bottom strip compact on mobile */
+  .foot-links { display: none; }      /* social row hidden — keep Privacy reachable in foot-meta */
   .continue { min-width: 0; padding: 0.9rem 1.4rem; }
   .menu { margin-left: 0; }
   .topbar { padding: 0.85rem 1rem; gap: 0.5rem; }
