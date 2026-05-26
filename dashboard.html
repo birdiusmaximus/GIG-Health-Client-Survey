@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#0D1A2D" />
   <link rel="stylesheet" href="https://use.typekit.net/yot0vkj.css" />
   <link rel="stylesheet" href="./styles.css?v=30" />
-  <link rel="stylesheet" href="./dashboard.css?v=10" />
+  <link rel="stylesheet" href="./dashboard.css?v=11" />
 </head>
 <body class="dashboard">
 
@@ -48,6 +48,10 @@
         <input id="filter-search" type="text" placeholder="Project name or keyword…" />
       </div>
       <div class="filter-group right">
+        <button class="export-btn export-btn-secondary" id="new-link-btn" type="button">
+          <span>New survey link</span>
+          <span class="export-btn-icon" aria-hidden="true">+</span>
+        </button>
         <button class="export-btn" id="export-csv">Export CSV ↓</button>
       </div>
     </section>
@@ -60,6 +64,40 @@
     <p class="dash-note" id="empty-note" hidden>No responses match these filters.</p>
 
   </main>
+
+  <!-- New-survey-link modal — opened by #new-link-btn -->
+  <div class="newlink-overlay" id="newlink-overlay" hidden aria-hidden="true">
+    <div class="newlink-card" role="dialog" aria-modal="true" aria-labelledby="newlink-title">
+      <button class="newlink-close" id="newlink-close" type="button" aria-label="Close">×</button>
+      <p class="kicker">
+        <span class="kicker-num">New survey</span>
+        <span class="kicker-sep" aria-hidden="true"></span>
+        <span class="kicker-label">Shareable link</span>
+      </p>
+      <h2 class="newlink-title" id="newlink-title">Generate a survey link</h2>
+      <p class="newlink-hint">
+        Pre-fill the project name so the client doesn't have to type it on Q1. They can still edit it before submitting.
+      </p>
+
+      <label class="newlink-label" for="newlink-project">Project name</label>
+      <input class="newlink-input" id="newlink-project" type="text" autocomplete="off"
+             placeholder="e.g. AstraZeneca Tagrisso Patient Stories" />
+
+      <p class="newlink-label newlink-label-url">Generated link</p>
+      <div class="newlink-url-row">
+        <input class="newlink-url" id="newlink-url" type="text" readonly
+               aria-label="Generated survey URL — copy to send to client" />
+        <button class="newlink-copy" id="newlink-copy" type="button" disabled>
+          <span id="newlink-copy-label">Copy</span>
+        </button>
+      </div>
+      <p class="newlink-meta">
+        <a id="newlink-open" href="#" target="_blank" rel="noopener">Open in new tab ↗</a>
+        <span class="newlink-meta-sep" aria-hidden="true">·</span>
+        <span class="newlink-meta-note">Link is reusable and never expires.</span>
+      </p>
+    </div>
+  </div>
 
   <!-- Branded admin sign-in (shown on initial load until valid token entered) -->
   <div class="auth-overlay" id="auth-overlay" hidden aria-hidden="true">
@@ -107,7 +145,7 @@
     </div>
   </div>
 
-  <script type="module" src="./dashboard.js?v=13"></script>
+  <script type="module" src="./dashboard.js?v=14"></script>
   <script src="./menu.js?v=3"></script>
 </body>
 </html>

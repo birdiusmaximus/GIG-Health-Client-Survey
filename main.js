@@ -498,10 +498,37 @@ window.addEventListener('keydown', (e) => {
 });
 
 // ──────────────────────────────────────────────────────────────
+// ?project=… prefill (set by the admin "New survey link" tool).
+// If the URL carries a project name, treat the visit as a fresh
+// session for that project: clear any leftover draft from a previous
+// survey (so the admin's pre-fill is honoured, not overwritten by an
+// old in-progress answer) and seed Q1's input.
+// ──────────────────────────────────────────────────────────────
+function applyProjectPrefill() {
+  let preset = '';
+  try {
+    preset = (new URLSearchParams(location.search).get('project') || '').trim();
+  } catch { return; }
+  if (!preset) return;
+  // Wipe any stale draft so the URL parameter wins.
+  clearDraft();
+  state.answers = {};
+  const q1 = scenes[0];
+  if (!q1) return;
+  const input = q1.querySelector('input[type="text"], textarea');
+  if (!input) return;
+  // Cap at the same 500-char ceiling the server applies to q1_project_name.
+  input.value = preset.slice(0, 500);
+  state.answers[q1.dataset.key || 'q1_project_name'] = input.value;
+  persistDraft();
+}
+
+// ──────────────────────────────────────────────────────────────
 // Initial state — restore any session draft, then prime the
 // active scene's video.
 // ──────────────────────────────────────────────────────────────
 loadDraft();
+applyProjectPrefill();   // URL param wins over a stale draft
 updateContinueButton();
 let anyInitialActive = false;
 sceneVideos.forEach(v => {

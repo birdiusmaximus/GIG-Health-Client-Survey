@@ -576,6 +576,113 @@ exportBtn.addEventListener('click', () => {
 });
 
 // ──────────────────────────────────────────────────────────────
+// "New survey link" modal
+// Admin types a project name → we generate a survey URL with the
+// name as a ?project= query param. The survey page reads that on
+// load and pre-fills Q1. Link is reusable, never expires, no auth.
+// ──────────────────────────────────────────────────────────────
+const newLinkBtn       = document.getElementById('new-link-btn');
+const newLinkOverlay   = document.getElementById('newlink-overlay');
+const newLinkCard      = newLinkOverlay?.querySelector('.newlink-card');
+const newLinkClose     = document.getElementById('newlink-close');
+const newLinkProject   = document.getElementById('newlink-project');
+const newLinkUrl       = document.getElementById('newlink-url');
+const newLinkCopy      = document.getElementById('newlink-copy');
+const newLinkCopyLabel = document.getElementById('newlink-copy-label');
+const newLinkOpen      = document.getElementById('newlink-open');
+
+// Survey lives at the project root. On localhost we still link to the
+// production survey, since that's where a client opens it from.
+const SURVEY_BASE = 'https://gig-health-client-survey.vercel.app/';
+
+function buildSurveyUrl(projectName) {
+  const trimmed = (projectName || '').trim();
+  if (!trimmed) return SURVEY_BASE;
+  const params = new URLSearchParams({ project: trimmed });
+  return `${SURVEY_BASE}?${params.toString()}`;
+}
+
+function refreshNewLinkUI() {
+  const name = newLinkProject.value;
+  const url  = buildSurveyUrl(name);
+  newLinkUrl.value = url;
+  newLinkOpen.href = url;
+  const hasName = name.trim().length > 0;
+  newLinkCopy.disabled = !hasName;
+  newLinkCopy.classList.remove('is-copied');
+  newLinkCopyLabel.textContent = 'Copy';
+}
+
+let newLinkLastFocused = null;
+function newLinkTrapKey(e) {
+  if (e.key !== 'Tab' || !newLinkCard) return;
+  const items = Array.from(newLinkCard.querySelectorAll(
+    'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  )).filter(n => n.offsetParent !== null);
+  if (!items.length) return;
+  const first = items[0], last = items[items.length - 1];
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+}
+function openNewLink() {
+  if (!newLinkOverlay) return;
+  newLinkLastFocused = document.activeElement;
+  newLinkProject.value = '';
+  refreshNewLinkUI();
+  newLinkOverlay.hidden = false;
+  newLinkOverlay.setAttribute('aria-hidden', 'false');
+  requestAnimationFrame(() => {
+    newLinkOverlay.classList.add('is-shown');
+    newLinkProject.focus();
+  });
+  document.addEventListener('keydown', newLinkTrapKey);
+}
+function closeNewLink() {
+  if (!newLinkOverlay) return;
+  newLinkOverlay.classList.remove('is-shown');
+  document.removeEventListener('keydown', newLinkTrapKey);
+  setTimeout(() => {
+    newLinkOverlay.hidden = true;
+    newLinkOverlay.setAttribute('aria-hidden', 'true');
+    if (newLinkLastFocused && typeof newLinkLastFocused.focus === 'function') {
+      try { newLinkLastFocused.focus(); } catch (e) {}
+    }
+  }, 300);
+}
+
+newLinkBtn?.addEventListener('click', openNewLink);
+newLinkClose?.addEventListener('click', closeNewLink);
+newLinkOverlay?.addEventListener('click', (e) => {
+  if (e.target === newLinkOverlay) closeNewLink();
+});
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && newLinkOverlay && !newLinkOverlay.hidden) closeNewLink();
+});
+
+newLinkProject?.addEventListener('input', refreshNewLinkUI);
+// Enter in the project field copies the link (skip the extra click)
+newLinkProject?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !newLinkCopy.disabled) {
+    e.preventDefault();
+    newLinkCopy.click();
+  }
+});
+
+newLinkCopy?.addEventListener('click', async () => {
+  const url = newLinkUrl.value;
+  try {
+    await navigator.clipboard.writeText(url);
+  } catch {
+    // Fallback for older browsers / non-secure contexts
+    newLinkUrl.select();
+    document.execCommand('copy');
+  }
+  newLinkCopy.classList.add('is-copied');
+  newLinkCopyLabel.textContent = 'Copied ✓';
+  showToast(`Survey link copied — send it to ${newLinkProject.value.trim() || 'the client'}.`, { tone: 'info', duration: 5000 });
+});
+
+// ──────────────────────────────────────────────────────────────
 // Event delegation — Edit / Cancel / Save / Delete on response cards
 // ──────────────────────────────────────────────────────────────
 responsesEl.addEventListener('click', async (e) => {
