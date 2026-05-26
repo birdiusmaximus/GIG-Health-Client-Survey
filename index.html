@@ -309,18 +309,18 @@
     </div>
   </section>
 
-  <!-- Q10 — Referral (optional) — was Q9, moved to the end.
-       data-key stays as q9_referral to preserve the Supabase column. -->
+  <!-- Q10 — Referral (optional) — yes/no binary; data-key stays as
+       q9_referral to preserve the Supabase column mapping. -->
   <section class="scene" data-scene="10" data-key="q9_referral">
     <div class="scene-content">
       <p class="kicker"><span class="kicker-num">Question 10</span><span class="kicker-sep" aria-hidden="true"></span><span class="kicker-label">Referral</span><span class="kicker-tag">Optional</span></p>
-      <h1 class="question">Know anyone who could <em>benefit from GIG?</em></h1>
-      <p class="hint">We'd be delighted to work with likeminded clients. Share their name and email if you can.</p>
-      <div class="field">
-        <textarea class="answer-input answer-textarea" id="q9-input" rows="3"
-                  placeholder="Name and email"
-                  aria-label="Know anyone who could benefit from GIG?"></textarea>
-      </div>
+      <h1 class="question">Would you <em>recommend us</em> to your colleagues?</h1>
+      <p class="hint">Know anyone who could benefit from GIG? We'd be delighted to work with likeminded clients.</p>
+      <fieldset class="choices choices-binary">
+        <legend class="sr-only">Would you recommend us to your colleagues?</legend>
+        <div class="choice"><label><input type="radio" name="q10" value="yes" /><span class="choice-marker"></span><span class="choice-text">Yes</span></label></div>
+        <div class="choice"><label><input type="radio" name="q10" value="no"  /><span class="choice-marker"></span><span class="choice-text">No</span></label></div>
+      </fieldset>
     </div>
   </section>
 

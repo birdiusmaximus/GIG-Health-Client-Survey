@@ -297,8 +297,12 @@ function renderTags(r) {
     tags.push('<span class="r-tag is-bad">No case study</span>');
   }
 
-  // Referral — only show if present, always green
-  if (r.q9_referral && r.q9_referral.trim()) {
+  // Referral — Q10 is now yes/no. Show a positive tag for 'yes',
+  // skip for 'no', and fall back to the legacy "Referral" tag for
+  // any pre-change rows that still contain free-text name+email.
+  if (r.q9_referral === 'yes') {
+    tags.push('<span class="r-tag is-good">Will recommend</span>');
+  } else if (r.q9_referral && r.q9_referral !== 'no' && r.q9_referral.trim()) {
     tags.push('<span class="r-tag is-good">Referral</span>');
   }
 
@@ -359,8 +363,10 @@ function renderStaticBody(r) {
         <p>${MARKETING_LABEL[r.q8_marketing]}</p>
       </div>
       <div class="r-field">
-        <h4>Referral (optional)</h4>
-        ${optional(r.q9_referral)}
+        <h4>Would recommend (optional)</h4>
+        ${r.q9_referral === 'yes' ? '<p>Yes</p>'
+          : r.q9_referral === 'no' ? '<p>No</p>'
+          : optional(r.q9_referral)}
       </div>
       <div class="r-field">
         <h4>Trends / challenges (optional)</h4>
@@ -419,7 +425,10 @@ function renderEditForm(r) {
         <select name="q8_marketing">${selectOpts(r.q8_marketing, MARKETING_LABEL)}</select>
       </label>
       <label class="r-edit-field is-wide">
-        <span>Referral · optional (Q9)</span>
+        <span>Would recommend · optional (Q10)</span>
+        <!-- Textarea kept (not a select) so admins can still edit
+             pre-change rows that contain free-text name+email. New
+             rows arrive as "yes" / "no". -->
         <textarea name="q9_referral" rows="2">${escapeHtml(r.q9_referral || '')}</textarea>
       </label>
       <label class="r-edit-field is-wide">
