@@ -6,7 +6,7 @@
   <title>GIG — Tell us how we did</title>
   <meta name="theme-color" content="#0D1A2D" />
   <link rel="stylesheet" href="https://use.typekit.net/yot0vkj.css" />
-  <link rel="stylesheet" href="./styles.css?v=34" />
+  <link rel="stylesheet" href="./styles.css?v=35" />
 </head>
 <body class="survey">
 
@@ -293,18 +293,34 @@
     </div>
   </section>
 
-  <!-- Q9 — Trends / challenges (optional) — was Q10, moved earlier
-       so the optional 'referral' ask is the very last thing. data-key
-       stays as q10_trends to preserve the Supabase column mapping. -->
+  <!-- Q9 — Focus areas (optional, multi-select) — data-key stays as
+       q10_trends so the existing Supabase column receives the answers.
+       Selections are JSON-encoded in main.js: e.g. ["ai_automation",
+       "storytelling","other:Free-text the client typed"]. -->
   <section class="scene" data-scene="9" data-key="q10_trends">
     <div class="scene-content">
-      <p class="kicker"><span class="kicker-num">Question 09</span><span class="kicker-sep" aria-hidden="true"></span><span class="kicker-label">Trends</span><span class="kicker-tag">Optional</span></p>
-      <h1 class="question">What <em>trends or challenges</em> are you facing at the moment?</h1>
-      <p class="hint">As healthcare communications keeps evolving, anything you'd like to better understand?</p>
-      <div class="field">
-        <textarea class="answer-input answer-textarea" id="q10-input" rows="4"
-                  placeholder="What's on your mind"
-                  aria-label="What trends or challenges are you facing at the moment?"></textarea>
+      <p class="kicker"><span class="kicker-num">Question 09</span><span class="kicker-sep" aria-hidden="true"></span><span class="kicker-label">Focus</span><span class="kicker-tag">Optional</span></p>
+      <h1 class="question">What would be useful for us to <em>help you think&nbsp;through</em> next?</h1>
+      <p class="hint">Select any areas that are currently on your mind, whether they relate to future projects, internal challenges, industry shifts or things you'd simply like to understand better.</p>
+      <fieldset class="choices choices-multi">
+        <legend class="sr-only">Select any areas that are currently on your mind — choose as many as apply.</legend>
+        <div class="choice"><label><input type="checkbox" name="q9_focus" value="ai_automation" /><span class="choice-marker"></span><span class="choice-text">AI and automation in healthcare communications</span></label></div>
+        <div class="choice"><label><input type="checkbox" name="q9_focus" value="storytelling" /><span class="choice-marker"></span><span class="choice-text">Better storytelling and audience engagement</span></label></div>
+        <div class="choice"><label><input type="checkbox" name="q9_focus" value="regulated_creativity" /><span class="choice-marker"></span><span class="choice-text">Creativity in a regulated environment</span></label></div>
+        <div class="choice"><label><input type="checkbox" name="q9_focus" value="behaviour_change" /><span class="choice-marker"></span><span class="choice-text">Behaviour change and campaign impact</span></label></div>
+        <div class="choice"><label><input type="checkbox" name="q9_focus" value="audience_insight" /><span class="choice-marker"></span><span class="choice-text">Patient or HCP insight</span></label></div>
+        <div class="choice"><label><input type="checkbox" name="q9_focus" value="category_standout" /><span class="choice-marker"></span><span class="choice-text">Standing out in a crowded category</span></label></div>
+        <div class="choice"><label><input type="checkbox" name="q9_focus" value="omnichannel" /><span class="choice-marker"></span><span class="choice-text">Digital, social or omnichannel strategy</span></label></div>
+        <div class="choice"><label><input type="checkbox" name="q9_focus" value="content_scale" /><span class="choice-marker"></span><span class="choice-text">Content volume, speed or scalability</span></label></div>
+        <div class="choice"><label><input type="checkbox" name="q9_focus" value="stakeholder_alignment" /><span class="choice-marker"></span><span class="choice-text">Internal alignment or stakeholder buy-in</span></label></div>
+        <div class="choice"><label><input type="checkbox" name="q9_focus" value="other" data-toggles-other /><span class="choice-marker"></span><span class="choice-text">Other: please tell us</span></label></div>
+      </fieldset>
+      <div class="choice-other-wrap" data-other-wrap hidden>
+        <label class="sr-only" for="q9-other-input">Tell us what else is on your mind</label>
+        <input class="answer-input choice-other-input" id="q9-other-input" type="text"
+               autocomplete="off" data-other-text
+               placeholder="Tell us what else is on your mind"
+               aria-label="Tell us what else is on your mind" />
       </div>
     </div>
   </section>
@@ -376,7 +392,7 @@
     </div>
   </div>
 
-  <script type="module" src="./main.js?v=38"></script>
+  <script type="module" src="./main.js?v=39"></script>
   <script src="./menu.js?v=3"></script>
   <script src="./privacy.js?v=2"></script>
 </body>

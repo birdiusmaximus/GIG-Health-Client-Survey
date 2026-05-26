@@ -35,6 +35,21 @@ const MARKETING_LABEL = {
   possibly:     'Case study — check',
   no:           'No case study',
 };
+// Q9 focus areas — map storage values to readable labels for the
+// dashboard. New rows in q10_trends arrive as JSON arrays of these
+// keys; legacy rows are free text (rendered as-is by renderFocusList).
+const FOCUS_LABEL = {
+  ai_automation:         'AI & automation',
+  storytelling:          'Storytelling & engagement',
+  regulated_creativity:  'Creativity in regulated environments',
+  behaviour_change:      'Behaviour change & impact',
+  audience_insight:      'Patient / HCP insight',
+  category_standout:     'Standing out in a crowded category',
+  omnichannel:           'Digital / social / omnichannel',
+  content_scale:         'Content volume, speed, scale',
+  stakeholder_alignment: 'Internal alignment & buy-in',
+  other:                 'Other',
+};
 
 const MOCK_RESPONSES = [
   {
@@ -342,6 +357,30 @@ function renderResponse(r) {
   `;
 }
 
+// Q9 focus areas (stored in q10_trends). New rows are a JSON array
+// of FOCUS_LABEL keys, with 'other' entries serialised as
+// `other:<free-text>`. Legacy rows are plain text — display them
+// as-is so older responses still read sensibly.
+function renderFocusList(value) {
+  if (!value || !String(value).trim()) return '<p class="r-empty">—</p>';
+  const v = String(value).trim();
+  if (v.startsWith('[')) {
+    let arr;
+    try { arr = JSON.parse(v); } catch { arr = null; }
+    if (Array.isArray(arr) && arr.length) {
+      const chips = arr.map(item => {
+        const s = String(item);
+        if (s.startsWith('other:')) {
+          return `<span class="r-chip r-chip-other"><strong>Other —</strong> ${escapeHtml(s.slice(6))}</span>`;
+        }
+        return `<span class="r-chip">${escapeHtml(FOCUS_LABEL[s] || s)}</span>`;
+      }).join('');
+      return `<div class="r-chips">${chips}</div>`;
+    }
+  }
+  return `<p>${escapeHtml(v)}</p>`;
+}
+
 function renderStaticBody(r) {
   const optional = (v) => v && v.trim() ? `<p>${escapeHtml(v)}</p>` : '<p class="r-empty">—</p>';
   return `
@@ -368,9 +407,9 @@ function renderStaticBody(r) {
           : r.q9_referral === 'no' ? '<p>No</p>'
           : optional(r.q9_referral)}
       </div>
-      <div class="r-field">
-        <h4>Trends / challenges (optional)</h4>
-        ${optional(r.q10_trends)}
+      <div class="r-field is-wide">
+        <h4>Focus areas (optional)</h4>
+        ${renderFocusList(r.q10_trends)}
       </div>
       <div class="r-actions">
         <button class="r-edit-btn" type="button" data-edit-id="${escapeHtml(r.id)}">Edit</button>
@@ -432,8 +471,10 @@ function renderEditForm(r) {
         <textarea name="q9_referral" rows="2">${escapeHtml(r.q9_referral || '')}</textarea>
       </label>
       <label class="r-edit-field is-wide">
-        <span>Trends · optional (Q10)</span>
-        <textarea name="q10_trends" rows="2">${escapeHtml(r.q10_trends || '')}</textarea>
+        <span>Focus areas · optional (Q9)</span>
+        <!-- Raw value. New rows are a JSON array; legacy rows are
+             free text. Admin edits the raw string if needed. -->
+        <textarea name="q10_trends" rows="3">${escapeHtml(r.q10_trends || '')}</textarea>
       </label>
       <div class="r-edit-actions">
         <button type="button" class="r-cancel" data-cancel-id="${escapeHtml(r.id)}">Cancel</button>

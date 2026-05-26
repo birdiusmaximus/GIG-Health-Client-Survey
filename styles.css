@@ -659,10 +659,46 @@ body.survey .menu { margin-left: 0.2rem; }
   border-color: color-mix(in srgb, var(--sodium) 60%, transparent);
   background:   color-mix(in srgb, var(--sodium) 10%, transparent);
 }
-.choice input[type="radio"] {
+.choice input[type="radio"],
+.choice input[type="checkbox"] {
   position: absolute;
   opacity: 0;
   pointer-events: none;
+}
+
+/* Multi-select grid (Q9): square markers + checkmark instead of the
+   filled disc used for radios, so the user knows multiple selections
+   are possible at a glance. */
+.choices-multi .choice-marker {
+  border-radius: 4px;
+}
+.choices-multi .choice input:checked ~ .choice-marker::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 0;
+  background: none;
+  /* Tick mark drawn with two CSS borders */
+  border-right: 2px solid var(--paper);
+  border-bottom: 2px solid var(--paper);
+  width: 0.45rem;
+  height: 0.7rem;
+  inset: auto;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -55%) rotate(45deg);
+}
+
+/* Reveal-on-"Other" text input. Sits directly below the choices and
+   inherits the same answer-input look so it feels native. */
+.choice-other-wrap {
+  margin-top: 0.85rem;
+  transition: opacity 0.25s ease;
+}
+.choice-other-wrap[hidden] { display: none; }
+.choice-other-input {
+  width: 100%;
+  box-sizing: border-box;
 }
 .choice-marker {
   width: 1.25rem;

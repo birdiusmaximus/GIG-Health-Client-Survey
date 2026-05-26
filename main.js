@@ -178,6 +178,10 @@ function isSceneValid(n) {
   const required = scene.dataset.required === 'true';
   if (!required) return true;
 
+  // Checkbox grids — at least one tick = valid
+  const checkboxes = scene.querySelectorAll('input[type="checkbox"]');
+  if (checkboxes.length) return !!scene.querySelector('input[type="checkbox"]:checked');
+
   const text = scene.querySelector('input[type="text"], textarea');
   if (text) return text.value.trim().length > 0;
 
@@ -192,6 +196,27 @@ function isSceneValid(n) {
 function collectAnswer(n) {
   const scene = scenes[n - 1];
   const key   = scene.dataset.key || `q${n}`;
+
+  // Multi-select (checkbox) scenes — serialized as a JSON array of
+  // option values. The 'other' option, if checked AND accompanied by
+  // free text, is stored as `other:<text>` so we don't need a second
+  // DB column. Checkbox check has to run BEFORE the text-input branch
+  // below, otherwise the empty 'other' input would be grabbed first.
+  const checkboxes = scene.querySelectorAll('input[type="checkbox"]');
+  if (checkboxes.length) {
+    const selected = Array.from(checkboxes)
+      .filter(cb => cb.checked)
+      .map(cb => {
+        if (cb.value === 'other') {
+          const t = scene.querySelector('[data-other-text]')?.value?.trim() || '';
+          return t ? `other:${t}` : 'other';
+        }
+        return cb.value;
+      });
+    if (selected.length) state.answers[key] = JSON.stringify(selected);
+    else delete state.answers[key];
+    return;
+  }
 
   const text = scene.querySelector('input[type="text"], textarea');
   if (text) {
@@ -298,6 +323,23 @@ scenes.forEach(scene => {
   });
 });
 
+// "Other" reveal: when the checkbox marked [data-toggles-other] is
+// checked, show its scene's [data-other-wrap] text input and put
+// focus on it. Hiding it again on uncheck doesn't clear the text —
+// that way a user who unchecks by accident doesn't lose their entry.
+document.querySelectorAll('[data-toggles-other]').forEach(cb => {
+  cb.addEventListener('change', () => {
+    const scene = cb.closest('.scene');
+    const wrap  = scene?.querySelector('[data-other-wrap]');
+    if (!wrap) return;
+    wrap.hidden = !cb.checked;
+    if (cb.checked) {
+      const input = wrap.querySelector('[data-other-text]');
+      if (input) setTimeout(() => input.focus(), 50);
+    }
+  });
+});
+
 // ──────────────────────────────────────────────────────────────
 // Session draft — survive accidental refresh / back-button
 // ──────────────────────────────────────────────────────────────
@@ -317,6 +359,34 @@ function loadDraft() {
     const key = scene.dataset.key || `q${idx + 1}`;
     const val = parsed[key];
     if (val == null) return;
+
+    // Checkbox group — values stored as a JSON array; the 'other'
+    // option may carry inline text as `other:<text>`. Restore each
+    // tick and reveal the 'other' input if needed.
+    const checkboxes = scene.querySelectorAll('input[type="checkbox"]');
+    if (checkboxes.length) {
+      let arr;
+      try { arr = JSON.parse(val); if (!Array.isArray(arr)) arr = [String(val)]; }
+      catch  { arr = [String(val)]; }
+      arr.forEach(item => {
+        const s = String(item);
+        if (s === 'other' || s.startsWith('other:')) {
+          const otherCb = scene.querySelector('input[type="checkbox"][value="other"]');
+          if (otherCb) otherCb.checked = true;
+          const wrap = scene.querySelector('[data-other-wrap]');
+          if (wrap) wrap.hidden = false;
+          if (s.startsWith('other:')) {
+            const otherInput = scene.querySelector('[data-other-text]');
+            if (otherInput) otherInput.value = s.slice(6);
+          }
+        } else {
+          const cb = scene.querySelector(`input[type="checkbox"][value="${CSS.escape(s)}"]`);
+          if (cb) cb.checked = true;
+        }
+      });
+      return;
+    }
+
     const text = scene.querySelector('input[type="text"], textarea');
     if (text) { text.value = val; return; }
     const radio = scene.querySelector(`input[type="radio"][value="${CSS.escape(String(val))}"]`);
