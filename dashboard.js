@@ -38,17 +38,25 @@ const MARKETING_LABEL = {
 // Q9 focus areas — map storage values to readable labels for the
 // dashboard. New rows in q10_trends arrive as JSON arrays of these
 // keys; legacy rows are free text (rendered as-is by renderFocusList).
+//
+// Active keys (what the survey currently offers): ai_automation,
+// storytelling_behaviour, regulated_creativity, other.
+// Older keys are kept here so responses captured before the option
+// list was trimmed still display with friendly labels.
 const FOCUS_LABEL = {
-  ai_automation:         'AI & automation',
-  storytelling:          'Storytelling & engagement',
-  regulated_creativity:  'Creativity in regulated environments',
-  behaviour_change:      'Behaviour change & impact',
-  audience_insight:      'Patient / HCP insight',
-  category_standout:     'Standing out in a crowded category',
-  omnichannel:           'Digital / social / omnichannel',
-  content_scale:         'Content volume, speed, scale',
-  stakeholder_alignment: 'Internal alignment & buy-in',
-  other:                 'Other',
+  ai_automation:           'AI & automation',
+  storytelling_behaviour:  'Storytelling & behavioural change',
+  regulated_creativity:    'Creativity in regulated environments',
+  other:                   'Other',
+  // Legacy keys — kept for back-compat with rows submitted under
+  // the previous 10-option list.
+  storytelling:            'Storytelling & engagement',
+  behaviour_change:        'Behaviour change & impact',
+  audience_insight:        'Patient / HCP insight',
+  category_standout:       'Standing out in a crowded category',
+  omnichannel:             'Digital / social / omnichannel',
+  content_scale:           'Content volume, speed, scale',
+  stakeholder_alignment:   'Internal alignment & buy-in',
 };
 
 const MOCK_RESPONSES = [
