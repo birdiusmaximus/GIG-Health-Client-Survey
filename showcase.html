@@ -6,10 +6,23 @@
   <title>GIG Health — What our clients say</title>
   <meta name="theme-color" content="#0D1A2D" />
   <meta name="description" content="Recent feedback from healthcare partners working with GIG Health." />
+
+  <!-- Warm Typekit before the CSS request needs it. -->
+  <link rel="preconnect" href="https://use.typekit.net" crossorigin>
+  <link rel="preconnect" href="https://p.typekit.net" crossorigin>
+
   <link rel="stylesheet" href="https://use.typekit.net/yot0vkj.css" />
-  <link rel="stylesheet" href="./styles.css?v=30" />
-  <link rel="stylesheet" href="./dashboard.css?v=7" />
-  <link rel="stylesheet" href="./showcase.css?v=18" />
+  <link rel="stylesheet" href="./styles.css?v=36" />
+  <link rel="stylesheet" href="./showcase.css?v=19" />
+
+  <!-- Start downloading the JS module in parallel with the CSS so the
+       parser doesn't have to wait for </head> to discover it. -->
+  <link rel="modulepreload" href="./showcase.js?v=12">
+  <link rel="modulepreload" href="./util.js?v=1">
+
+  <!-- Same idea for the data call — kick the fetch off as early as
+       possible so the JSON is on its way before any JS runs. -->
+  <link rel="preload" href="/api/public" as="fetch" crossorigin>
 </head>
 <body class="showcase">
 
@@ -38,8 +51,14 @@
       <!-- Quote — full-width top, the human moment -->
       <div class="data-cell data-quote">
         <p class="cell-label">In their words</p>
-        <div class="quote-stage" id="quote-stage">
-          <p class="show-empty">Loading…</p>
+        <div class="quote-stage" id="quote-stage" aria-busy="true">
+          <!-- Skeleton placeholder — shown until the API resolves.
+               Removed by showcase.js once real quotes render. -->
+          <div class="quote-skeleton" aria-hidden="true">
+            <span class="skel skel-line skel-line-1"></span>
+            <span class="skel skel-line skel-line-2"></span>
+            <span class="skel skel-line skel-line-3"></span>
+          </div>
         </div>
         <div class="quote-nav" id="quote-nav" aria-label="Quote navigation"></div>
       </div>
@@ -47,14 +66,14 @@
       <!-- Quality — just the big number -->
       <div class="data-cell data-quality">
         <p class="cell-label">Quality of our work</p>
-        <p class="cell-num"><span id="quality-num">—</span><small>%</small></p>
+        <p class="cell-num"><span id="quality-num" class="skel-num">&nbsp;</span><small>%</small></p>
         <p class="cell-sub">Excellent or high standard</p>
       </div>
 
       <!-- Creativity — just the big number -->
       <div class="data-cell data-creativity">
         <p class="cell-label">Creativity of our work</p>
-        <p class="cell-num"><span id="creativity-num">—</span><small>%</small></p>
+        <p class="cell-num"><span id="creativity-num" class="skel-num">&nbsp;</span><small>%</small></p>
         <p class="cell-sub">Groundbreaking or really creative</p>
       </div>
 
@@ -107,7 +126,7 @@
     </div>
   </footer>
 
-  <script type="module" src="./showcase.js?v=11"></script>
+  <script type="module" src="./showcase.js?v=12"></script>
   <script src="./menu.js?v=3"></script>
   <script src="./privacy.js?v=2"></script>
 </body>

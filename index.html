@@ -5,8 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>GIG — Tell us how we did</title>
   <meta name="theme-color" content="#0D1A2D" />
+
+  <!-- Warm the Typekit connection before the CSS request needs it
+       (saves the DNS + TLS round-trip on the first stylesheet). -->
+  <link rel="preconnect" href="https://use.typekit.net" crossorigin>
+  <link rel="preconnect" href="https://p.typekit.net" crossorigin>
+
   <link rel="stylesheet" href="https://use.typekit.net/yot0vkj.css" />
   <link rel="stylesheet" href="./styles.css?v=36" />
+
+  <!-- Idle-priority prefetch for the showcase page the user is most
+       likely to visit next (linked from the thank-you screen and the
+       hamburger menu). Browsers fetch these only once main resources
+       are quiet, so they don't compete with the survey itself. -->
+  <link rel="prefetch" href="./showcase.html"      as="document">
+  <link rel="prefetch" href="./showcase.css?v=19"  as="style">
+  <link rel="prefetch" href="./showcase.js?v=12"   as="script" crossorigin>
+  <link rel="prefetch" href="/api/public"          as="fetch"  crossorigin>
 </head>
 <body class="survey">
 
@@ -387,7 +402,7 @@
     </div>
   </div>
 
-  <script type="module" src="./main.js?v=40"></script>
+  <script type="module" src="./main.js?v=41"></script>
   <script src="./menu.js?v=3"></script>
   <script src="./privacy.js?v=2"></script>
 </body>

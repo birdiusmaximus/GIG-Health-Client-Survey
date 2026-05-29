@@ -609,6 +609,40 @@ function applyProjectPrefill() {
 }
 
 // ──────────────────────────────────────────────────────────────
+// Warm the showcase page's data while the user is still in the
+// survey. The thank-you screen links to /showcase.html, which
+// otherwise has to wait on a fresh /api/public round-trip after
+// navigation. Firing it now (a) hits Vercel's edge cache while
+// it's warm and (b) leaves the JSON in sessionStorage so the
+// showcase can paint instantly. Best-effort; failures are silent.
+// ──────────────────────────────────────────────────────────────
+const SHOWCASE_CACHE_KEY = 'gig_showcase_public_v1';
+(function warmShowcase() {
+  // Skip on slow / metered connections — don't burn the client's data.
+  const conn = navigator.connection;
+  if (conn && (conn.saveData || /^(slow-)?2g$/.test(conn.effectiveType || ''))) return;
+  // Schedule at idle so it never competes with the survey's own assets.
+  const fire = () => {
+    const url = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+      ? 'https://gig-health-client-survey.vercel.app/api/public'
+      : '/api/public';
+    fetch(url, { cache: 'no-cache', credentials: 'omit' })
+      .then(r => r.ok ? r.json() : null)
+      .then(json => {
+        if (!json) return;
+        try {
+          sessionStorage.setItem(SHOWCASE_CACHE_KEY, JSON.stringify({
+            data: json, ts: Date.now(),
+          }));
+        } catch {}
+      })
+      .catch(() => {});
+  };
+  if ('requestIdleCallback' in window) requestIdleCallback(fire, { timeout: 4000 });
+  else setTimeout(fire, 1500);
+})();
+
+// ──────────────────────────────────────────────────────────────
 // Initial state — restore any session draft, then prime the
 // active scene's video.
 // ──────────────────────────────────────────────────────────────

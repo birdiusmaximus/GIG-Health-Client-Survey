@@ -62,21 +62,44 @@ const IS_LOCAL = HOSTNAME === 'localhost' || HOSTNAME === '127.0.0.1' || HOSTNAM
 const LIVE_API_BASE = 'https://gig-health-client-survey.vercel.app';
 const PUBLIC_URL = IS_LOCAL ? `${LIVE_API_BASE}/api/public` : '/api/public';
 
-async function loadPublic() {
+// Survey page pre-warms /api/public into sessionStorage so the
+// showcase can paint immediately on click-through. Treat the cached
+// copy as fresh for 5 min — it still kicks off a background refresh.
+const SHOWCASE_CACHE_KEY = 'gig_showcase_public_v1';
+const CACHE_FRESH_MS = 5 * 60 * 1000;
+
+function readWarmCache() {
   try {
-    const res = await fetch(PUBLIC_URL);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    return await res.json();
-  } catch (err) {
-    console.warn('[showcase] live stats unreachable, using fallback', err);
-    return FALLBACK;
-  }
+    const raw = sessionStorage.getItem(SHOWCASE_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || !parsed.data || typeof parsed.ts !== 'number') return null;
+    if (Date.now() - parsed.ts > CACHE_FRESH_MS) return null;
+    return parsed.data;
+  } catch { return null; }
+}
+
+async function fetchPublic() {
+  const res = await fetch(PUBLIC_URL);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return await res.json();
+}
+
+function writeWarmCache(json) {
+  try {
+    sessionStorage.setItem(SHOWCASE_CACHE_KEY, JSON.stringify({
+      data: json, ts: Date.now(),
+    }));
+  } catch {}
 }
 
 // ─── Quality cell ───────────────────────────────────────────
 function renderQuality(quality) {
   const numEl = document.getElementById('quality-num');
-  if (numEl) numEl.textContent = quality.pct;
+  if (numEl) {
+    numEl.textContent = quality.pct;
+    numEl.classList.remove('skel-num');
+  }
 }
 
 // ─── Responses cell ─────────────────────────────────────────
@@ -88,7 +111,10 @@ function renderResponses(total) {
 // ─── Creativity cell ───────────────────────────────────────
 function renderCreativity(creativity) {
   const numEl = document.getElementById('creativity-num');
-  if (numEl) numEl.textContent = creativity.pct;
+  if (numEl) {
+    numEl.textContent = creativity.pct;
+    numEl.classList.remove('skel-num');
+  }
 }
 
 // ─── Budget marker (horizontal scale, matches dashboard) ──
@@ -101,10 +127,20 @@ function renderBudget(budget) {
 }
 
 // ─── Quote carousel ────────────────────────────────────────
+// Tracks the currently-rendered quote signature so a background
+// refresh that returns identical text doesn't restart the carousel.
+let renderedQuoteSig = null;
+
 function renderQuotes(quotes) {
   const stage = document.getElementById('quote-stage');
   const nav   = document.getElementById('quote-nav');
   if (!stage || !nav) return;
+
+  const sig = JSON.stringify(quotes.map(q => q.text));
+  if (sig === renderedQuoteSig) return;
+  renderedQuoteSig = sig;
+
+  stage.removeAttribute('aria-busy');
 
   if (!quotes.length) {
     stage.innerHTML = '<p class="show-empty">Quotes will appear here once a few clients have submitted feedback with permission to share.</p>';
@@ -164,12 +200,36 @@ function setupScrollReveal() {
 }
 
 // ─── Bootstrap ─────────────────────────────────────────────
-(async () => {
-  const data = await loadPublic();
+// Stale-while-revalidate at the client level:
+//   1. If the survey page warmed sessionStorage, render that immediately
+//      (zero-network paint).
+//   2. Otherwise show the skeleton until the network resolves.
+//   3. Always kick off a fresh fetch in the background and re-render
+//      if anything changed.
+function renderAll(data) {
   renderQuality(data.quality);
   renderResponses(data.total);
   renderCreativity(data.creativity);
   renderBudget(data.budget);
   renderQuotes(data.quotes || []);
+}
+
+(async () => {
   setupScrollReveal();
+
+  const warm = readWarmCache();
+  if (warm) renderAll(warm);
+
+  try {
+    const fresh = await fetchPublic();
+    writeWarmCache(fresh);
+    renderAll(fresh);
+  } catch (err) {
+    if (!warm) {
+      console.warn('[showcase] live stats unreachable, using fallback', err);
+      renderAll(FALLBACK);
+    }
+    // If we had warm data, just keep showing it — no need to clobber
+    // it with FALLBACK on a transient network blip.
+  }
 })();

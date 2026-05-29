@@ -111,7 +111,11 @@ export default async function handler(req, res) {
     ? (((cntCheaper - cntHigher) / budgetTotal + 1) / 2) * 100
     : 50;
 
-  res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=60');
+  // Edge cache: fresh for 60 s, then serve stale instantly for up to
+  // 10 min while a background fetch refreshes. Browser keeps its own
+  // 60 s copy so a back-button hit is instant too. The combination
+  // means almost every showcase visit gets a precomputed response.
+  res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=60, stale-while-revalidate=600');
   return res.status(200).json({
     total,
     quality: {

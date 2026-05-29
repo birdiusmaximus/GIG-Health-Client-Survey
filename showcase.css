@@ -346,6 +346,64 @@ body.showcase .progress {
   font-style: italic;
 }
 
+/* ─── Skeleton placeholders ──────────────────────────────────
+   Shown immediately on first paint so the layout looks settled
+   while /api/public is in flight. JS removes them as soon as
+   real data arrives. The shimmer is subtle on purpose — fast
+   connections should barely see it.
+*/
+@keyframes skel-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+.skel {
+  display: block;
+  border-radius: 6px;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(254, 246, 246, 0.045) 0%,
+      rgba(254, 246, 246, 0.11)  50%,
+      rgba(254, 246, 246, 0.045) 100%
+    );
+  background-size: 200% 100%;
+  animation: skel-shimmer 1.4s ease-in-out infinite;
+}
+.quote-skeleton {
+  margin-top: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+.skel-line {
+  height: 1.1rem;
+}
+.skel-line-1 { width: 92%; }
+.skel-line-2 { width: 78%; }
+.skel-line-3 { width: 60%; }
+
+/* Big-number skeleton — keeps the cell at full height so nothing
+   reflows when the real number drops in. */
+.skel-num {
+  display: inline-block;
+  min-width: 2.2ch;
+  height: 0.78em;
+  border-radius: 8px;
+  vertical-align: middle;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(254, 246, 246, 0.045) 0%,
+      rgba(254, 246, 246, 0.11)  50%,
+      rgba(254, 246, 246, 0.045) 100%
+    );
+  background-size: 200% 100%;
+  animation: skel-shimmer 1.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .skel, .skel-num { animation: none; }
+}
+
 /* Footer — minimal one-line strip at the very bottom */
 .show-footer {
   position: fixed;
