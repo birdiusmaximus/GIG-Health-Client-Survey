@@ -649,9 +649,11 @@ const newLinkCopy      = document.getElementById('newlink-copy');
 const newLinkCopyLabel = document.getElementById('newlink-copy-label');
 const newLinkOpen      = document.getElementById('newlink-open');
 
-// Survey lives at the project root. On localhost we still link to the
-// production survey, since that's where a client opens it from.
-const SURVEY_BASE = 'https://gig-health-client-survey.vercel.app/';
+// Survey lives at the project root on our branded domain. Always
+// generate links against survey.gig.health so clients see the GIG
+// brand in the URL, even when the admin is opening the dashboard
+// from the vercel.app URL or localhost.
+const SURVEY_BASE = 'https://survey.gig.health/';
 
 function buildSurveyUrl(projectName) {
   const trimmed = (projectName || '').trim();
