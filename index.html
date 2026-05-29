@@ -6,7 +6,7 @@
   <title>GIG — Tell us how we did</title>
   <meta name="theme-color" content="#0D1A2D" />
   <link rel="stylesheet" href="https://use.typekit.net/yot0vkj.css" />
-  <link rel="stylesheet" href="./styles.css?v=35" />
+  <link rel="stylesheet" href="./styles.css?v=36" />
 </head>
 <body class="survey">
 
@@ -171,7 +171,7 @@
     <div class="scene-content">
       <p class="kicker"><span class="kicker-num">Question 01</span><span class="kicker-sep" aria-hidden="true"></span><span class="kicker-label">Project</span></p>
       <h1 class="question">What was the <em>name</em> of this project?</h1>
-      <p class="hint">Tell us which project this feedback is for — a quick word or two is fine.</p>
+      <p class="hint">Tell us which project this feedback is for.</p>
       <div class="field">
         <input class="answer-input" id="q1-input" type="text" autocomplete="off"
                placeholder="Type the project name"
@@ -189,15 +189,15 @@
   <section class="scene" data-scene="2" data-key="q2_quality" data-required="true">
     <div class="scene-content">
       <p class="kicker"><span class="kicker-num">Question 02</span><span class="kicker-sep" aria-hidden="true"></span><span class="kicker-label">Quality</span></p>
-      <h1 class="question">How would you rate the <em>final&nbsp;deliverable(s)?</em></h1>
+      <h1 class="question">How would you <em>rate</em> the final&nbsp;deliverable(s)?</h1>
       <p class="hint">Pick the option that best reflects how the work landed.</p>
       <fieldset class="choices">
         <legend class="sr-only">How would you rate the final deliverable(s)?</legend>
-        <div class="choice"><label><input type="radio" name="q2" value="excellent" /><span class="choice-marker"></span><span class="choice-text">An excellent standard</span></label></div>
-        <div class="choice"><label><input type="radio" name="q2" value="high" /><span class="choice-marker"></span><span class="choice-text">A high standard</span></label></div>
-        <div class="choice"><label><input type="radio" name="q2" value="fair" /><span class="choice-marker"></span><span class="choice-text">Fair</span></label></div>
-        <div class="choice"><label><input type="radio" name="q2" value="not_everything" /><span class="choice-marker"></span><span class="choice-text">Not everything we'd hoped for</span></label></div>
-        <div class="choice"><label><input type="radio" name="q2" value="disappointing" /><span class="choice-marker"></span><span class="choice-text">Disappointing</span></label></div>
+        <div class="choice"><label><input type="radio" name="q2" value="exceptional" /><span class="choice-marker"></span><span class="choice-text">Exceptional</span></label></div>
+        <div class="choice"><label><input type="radio" name="q2" value="strong" /><span class="choice-marker"></span><span class="choice-text">Strong</span></label></div>
+        <div class="choice"><label><input type="radio" name="q2" value="satisfactory" /><span class="choice-marker"></span><span class="choice-text">Satisfactory</span></label></div>
+        <div class="choice"><label><input type="radio" name="q2" value="below_expectations" /><span class="choice-marker"></span><span class="choice-text">Below expectations</span></label></div>
+        <div class="choice"><label><input type="radio" name="q2" value="unsatisfactory" /><span class="choice-marker"></span><span class="choice-text">Unsatisfactory</span></label></div>
       </fieldset>
     </div>
   </section>
@@ -206,7 +206,7 @@
   <section class="scene" data-scene="3" data-key="q3_creativity" data-required="true">
     <div class="scene-content">
       <p class="kicker"><span class="kicker-num">Question 03</span><span class="kicker-sep" aria-hidden="true"></span><span class="kicker-label">Creativity</span></p>
-      <h1 class="question">How creative was the <em>final&nbsp;product?</em></h1>
+      <h1 class="question">How <em>creative</em> was the final&nbsp;product?</h1>
       <p class="hint">Honest answers help us push further next time.</p>
       <fieldset class="choices">
         <legend class="sr-only">How creative was the final product?</legend>
@@ -240,7 +240,7 @@
     <div class="scene-content">
       <p class="kicker"><span class="kicker-num">Question 05</span><span class="kicker-sep" aria-hidden="true"></span><span class="kicker-label">Experience</span></p>
       <h1 class="question">Describe <em>your&nbsp;experience</em> working with GIG.</h1>
-      <p class="hint">How have you benefited from our work? A few sentences is great.</p>
+      <p class="hint">Think about the impact of our work, as well as your experience with our communication and processes.</p>
       <div class="field">
         <textarea class="answer-input answer-textarea" id="q5-input" rows="4"
                   placeholder="Share your experience"
@@ -307,7 +307,7 @@
         <div class="choice"><label><input type="checkbox" name="q9_focus" value="ai_automation"          /><span class="choice-marker"></span><span class="choice-text">AI and automation in healthcare communications</span></label></div>
         <div class="choice"><label><input type="checkbox" name="q9_focus" value="storytelling_behaviour" /><span class="choice-marker"></span><span class="choice-text">Storytelling and behavioural change</span></label></div>
         <div class="choice"><label><input type="checkbox" name="q9_focus" value="regulated_creativity"   /><span class="choice-marker"></span><span class="choice-text">Creativity in a regulated environment</span></label></div>
-        <div class="choice"><label><input type="checkbox" name="q9_focus" value="other" data-toggles-other /><span class="choice-marker"></span><span class="choice-text">Other: please tell us</span></label></div>
+        <div class="choice"><label><input type="checkbox" name="q9_focus" value="other" data-toggles-other /><span class="choice-marker"></span><span class="choice-text">Other: <em>tell us more</em>....</span></label></div>
       </fieldset>
       <div class="choice-other-wrap" data-other-wrap hidden>
         <label class="sr-only" for="q9-other-input">Tell us what else is on your mind</label>
@@ -328,9 +328,10 @@
       <p class="hint">Know anyone who could benefit from GIG? We'd be delighted to work with likeminded clients.</p>
       <fieldset class="choices choices-binary">
         <legend class="sr-only">Would you recommend us to your colleagues?</legend>
-        <div class="choice"><label><input type="radio" name="q10" value="yes" /><span class="choice-marker"></span><span class="choice-text">Yes</span></label></div>
+        <div class="choice"><label><input type="radio" name="q10" value="yes" data-reveals-hint /><span class="choice-marker"></span><span class="choice-text">Yes</span></label></div>
         <div class="choice"><label><input type="radio" name="q10" value="no"  /><span class="choice-marker"></span><span class="choice-text">No</span></label></div>
       </fieldset>
+      <p class="choice-reveal-hint" data-reveal-hint hidden>Wonderful, we'll reach out to you directly to arrange an introduction.</p>
     </div>
   </section>
 
@@ -386,7 +387,7 @@
     </div>
   </div>
 
-  <script type="module" src="./main.js?v=39"></script>
+  <script type="module" src="./main.js?v=40"></script>
   <script src="./menu.js?v=3"></script>
   <script src="./privacy.js?v=2"></script>
 </body>

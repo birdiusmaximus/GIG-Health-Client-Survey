@@ -340,6 +340,21 @@ document.querySelectorAll('[data-toggles-other]').forEach(cb => {
   });
 });
 
+// Conditional follow-up hint: a radio marked [data-reveals-hint]
+// shows its scene's [data-reveal-hint] message when chosen; any
+// other radio in the same group hides it again. Used on Q10 so
+// that "Yes" reveals the warm follow-up sentence but "No" does not.
+document.querySelectorAll('[data-reveals-hint]').forEach(radio => {
+  const scene = radio.closest('.scene');
+  const hint  = scene?.querySelector('[data-reveal-hint]');
+  if (!hint || !radio.name) return;
+  scene.querySelectorAll(`input[name="${radio.name}"]`).forEach(sibling => {
+    sibling.addEventListener('change', () => {
+      hint.hidden = !radio.checked;
+    });
+  });
+});
+
 // ──────────────────────────────────────────────────────────────
 // Session draft — survive accidental refresh / back-button
 // ──────────────────────────────────────────────────────────────
