@@ -15,3 +15,8 @@ build/
 # Local working folder for video / image generation sources.
 # Render outputs that ship to the site live in /assets/videos/.
 Animations/
+
+# Local-only backup of the original 4K renders. The shipped videos
+# in /assets/videos/ are 1080p re-encodes; the 4K originals stay on
+# disk as a safety net but are too large to commit.
+assets/videos/original-4k/
