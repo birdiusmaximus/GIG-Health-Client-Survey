@@ -39,12 +39,19 @@
   </svg>
 
   <!-- Scene videos — pairs of two per scene for seamless-loop crossfade
-       (browser's native loop seam is a visible flash on 4K WebM; we mask
-       it by fading a fresh second video over the top right before the
-       seam happens). Every scene's PRIMARY video preloads eagerly so
-       scrolling between scenes doesn't flash the page background while
-       a video buffers. Buffers stay preload="metadata" until their
-       scene activates — main.js bumps them to "auto" then. -->
+       (browser's native loop seam is a visible flash; we mask it by
+       fading a fresh second video over the top right before the seam
+       happens). Preload strategy:
+         - Scenes 1-3 primaries: preload="auto" so the first scenes
+           the user sees are ready immediately.
+         - Scenes 1-3 buffers: preload="metadata" so the crossfade
+           is ready by the time the first seam arrives.
+         - Scenes 4-10 BOTH videos: preload="none" — fully lazy;
+           main.js's look-ahead bumps the next few scenes back to
+           "auto"/"metadata" as the user advances, so we never burn
+           bandwidth on videos a client never reaches. These clips
+           are short (~7 s) so even preload="metadata" pulls most
+           of the file, which is why we go all the way to "none". -->
 
   <!-- Scene 1 — primary preloads (first scene the user sees) -->
   <video class="scene-video" data-scene="1" data-role="a"
@@ -78,71 +85,71 @@
 
   <!-- Scene 4 -->
   <video class="scene-video" data-scene="4" data-role="a"
-    loop muted playsinline preload="auto" aria-hidden="true">
+    loop muted playsinline preload="none" aria-hidden="true">
     <source src="./assets/videos/scene-04.webm?v=2" type="video/webm" />
   </video>
   <video class="scene-video" data-scene="4" data-role="b"
-    loop muted playsinline preload="metadata" aria-hidden="true">
+    loop muted playsinline preload="none" aria-hidden="true">
     <source src="./assets/videos/scene-04.webm?v=2" type="video/webm" />
   </video>
 
   <!-- Scene 5 -->
   <video class="scene-video" data-scene="5" data-role="a"
-    loop muted playsinline preload="auto" aria-hidden="true">
+    loop muted playsinline preload="none" aria-hidden="true">
     <source src="./assets/videos/scene-05.webm?v=2" type="video/webm" />
   </video>
   <video class="scene-video" data-scene="5" data-role="b"
-    loop muted playsinline preload="metadata" aria-hidden="true">
+    loop muted playsinline preload="none" aria-hidden="true">
     <source src="./assets/videos/scene-05.webm?v=2" type="video/webm" />
   </video>
 
   <!-- Scene 6 -->
   <video class="scene-video" data-scene="6" data-role="a"
-    loop muted playsinline preload="auto" aria-hidden="true">
+    loop muted playsinline preload="none" aria-hidden="true">
     <source src="./assets/videos/scene-06.webm?v=2" type="video/webm" />
   </video>
   <video class="scene-video" data-scene="6" data-role="b"
-    loop muted playsinline preload="metadata" aria-hidden="true">
+    loop muted playsinline preload="none" aria-hidden="true">
     <source src="./assets/videos/scene-06.webm?v=2" type="video/webm" />
   </video>
 
   <!-- Scene 7 -->
   <video class="scene-video" data-scene="7" data-role="a"
-    loop muted playsinline preload="auto" aria-hidden="true">
+    loop muted playsinline preload="none" aria-hidden="true">
     <source src="./assets/videos/scene-07.webm?v=2" type="video/webm" />
   </video>
   <video class="scene-video" data-scene="7" data-role="b"
-    loop muted playsinline preload="metadata" aria-hidden="true">
+    loop muted playsinline preload="none" aria-hidden="true">
     <source src="./assets/videos/scene-07.webm?v=2" type="video/webm" />
   </video>
 
   <!-- Scene 8 -->
   <video class="scene-video" data-scene="8" data-role="a"
-    loop muted playsinline preload="auto" aria-hidden="true">
+    loop muted playsinline preload="none" aria-hidden="true">
     <source src="./assets/videos/scene-08.webm?v=2" type="video/webm" />
   </video>
   <video class="scene-video" data-scene="8" data-role="b"
-    loop muted playsinline preload="metadata" aria-hidden="true">
+    loop muted playsinline preload="none" aria-hidden="true">
     <source src="./assets/videos/scene-08.webm?v=2" type="video/webm" />
   </video>
 
   <!-- Scene 9 -->
   <video class="scene-video" data-scene="9" data-role="a"
-    loop muted playsinline preload="auto" aria-hidden="true">
+    loop muted playsinline preload="none" aria-hidden="true">
     <source src="./assets/videos/scene-09.webm?v=2" type="video/webm" />
   </video>
   <video class="scene-video" data-scene="9" data-role="b"
-    loop muted playsinline preload="metadata" aria-hidden="true">
+    loop muted playsinline preload="none" aria-hidden="true">
     <source src="./assets/videos/scene-09.webm?v=2" type="video/webm" />
   </video>
 
   <!-- Scene 10 -->
   <video class="scene-video" data-scene="10" data-role="a"
-    loop muted playsinline preload="auto" aria-hidden="true">
+    loop muted playsinline preload="none" aria-hidden="true">
     <source src="./assets/videos/scene-10.webm?v=2" type="video/webm" />
   </video>
   <video class="scene-video" data-scene="10" data-role="b"
-    loop muted playsinline preload="metadata" aria-hidden="true">
+    loop muted playsinline preload="none" aria-hidden="true">
     <source src="./assets/videos/scene-10.webm?v=2" type="video/webm" />
   </video>
 
@@ -402,7 +409,7 @@
     </div>
   </div>
 
-  <script type="module" src="./main.js?v=41"></script>
+  <script type="module" src="./main.js?v=42"></script>
   <script src="./menu.js?v=3"></script>
   <script src="./privacy.js?v=2"></script>
 </body>

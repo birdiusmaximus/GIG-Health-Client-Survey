@@ -159,7 +159,37 @@ function setCurrentScene(n) {
   document.body.classList.toggle('has-video', anyActive);
   // Wake the crossfade tick only if the new scene actually has a pair
   if (pairs[n] && pairs[n].buffer) ensureCrossfadeTicking();
+  // Look-ahead lazy load: scenes 4-10 ship with preload="none" so
+  // first paint isn't competing with 7 videos the client may never
+  // reach. As soon as scene N becomes active, bump the primary
+  // videos for scenes N+1..N+3 to "auto" so they're downloading
+  // in the background and ready by the time the user scrolls in.
+  preloadUpcoming(n, 3);
   updateContinueButton();
+}
+
+// Promote both videos for each of the next `count` scenes from
+// preload="none" → "auto" (primary) and "metadata" (buffer). load()
+// is required because flipping the attribute alone doesn't re-arm
+// the network state once the browser has settled on "none".
+// Idempotent — re-running it for an already-promoted scene is a no-op.
+function preloadUpcoming(fromScene, count) {
+  for (let offset = 1; offset <= count; offset++) {
+    const target = fromScene + offset;
+    if (target > TOTAL) break;
+    sceneVideos.forEach(v => {
+      if (parseInt(v.dataset.scene, 10) !== target) return;
+      if (v.dataset.role === 'a') {
+        if (v.preload === 'auto') return;
+        v.preload = 'auto';
+        try { v.load(); } catch (e) {}
+      } else if (v.dataset.role === 'b') {
+        if (v.preload === 'auto' || v.preload === 'metadata') return;
+        v.preload = 'metadata';
+        try { v.load(); } catch (e) {}
+      }
+    });
+  }
 }
 
 // Single source of truth for "go to scene N" — used by wheel,
@@ -658,3 +688,7 @@ sceneVideos.forEach(v => {
 document.body.classList.toggle('has-video', anyInitialActive);
 // Kick off the crossfade tick now if we landed on a video scene
 if (pairs[state.current] && pairs[state.current].buffer) ensureCrossfadeTicking();
+// Look-ahead lazy load fires inside setCurrentScene(), but that
+// isn't called on first load (we're already on state.current). Run
+// it now so scenes adjacent to the landing scene start downloading.
+preloadUpcoming(state.current, 3);
