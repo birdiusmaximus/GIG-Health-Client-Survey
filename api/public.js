@@ -10,7 +10,13 @@ const supabase = (cleanUrl && cleanKey)
   ? createClient(cleanUrl, cleanKey, { auth: { persistSession: false } })
   : null;
 
-const QUALITY_KEYS    = ['excellent', 'high', 'fair', 'not_everything', 'disappointing'];
+// Q2 rating scale was renamed mid-2026; both key sets can appear in
+// historical rows. Aggregates count them together.
+const QUALITY_KEYS = [
+  'exceptional', 'strong', 'satisfactory', 'below_expectations', 'unsatisfactory',
+  'excellent', 'high', 'fair', 'not_everything', 'disappointing',
+];
+const QUALITY_HIGH_TIER = ['exceptional', 'strong', 'excellent', 'high'];
 const CREATIVITY_KEYS = ['groundbreaking', 'really_creative', 'quite_creative', 'average', 'lacking'];
 
 function countByKey(rows, field, keys) {
@@ -100,7 +106,7 @@ export default async function handler(req, res) {
   const qBreakdown = countByKey(rows, 'q2_quality',    QUALITY_KEYS);
   const cBreakdown = countByKey(rows, 'q3_creativity', CREATIVITY_KEYS);
 
-  const highQual = qBreakdown.excellent + qBreakdown.high;
+  const highQual = QUALITY_HIGH_TIER.reduce((sum, k) => sum + (qBreakdown[k] || 0), 0);
   const highCrea = cBreakdown.groundbreaking + cBreakdown.really_creative;
 
   const cntHigher  = rows.filter(r => r.q4_budget === 'higher').length;

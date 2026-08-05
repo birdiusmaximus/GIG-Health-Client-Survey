@@ -273,13 +273,6 @@ function firstInvalidScene() {
   return null;
 }
 
-// Friendly label for a scene — pulls the kicker word ("Experience",
-// "Permission" etc.) so toasts can address it by name not just number.
-function sceneLabel(n) {
-  const scene = scenes[n - 1];
-  return scene?.querySelector('.kicker-label')?.textContent?.trim() || `Question ${n}`;
-}
-
 // data-key → scene number (Q9 and Q10 are intentionally swapped on
 // screen vs. their Supabase column names, so we have to look up by
 // attribute rather than parsing the digits out of the key).
@@ -291,10 +284,13 @@ function sceneNumberForKey(key) {
 }
 
 // Scroll the user to a still-needed scene and explain what's wrong.
+// The kicker used to carry a category word (Experience, Permission…)
+// so the toast repeated it back to the user; that word was retired,
+// so we now just reference the question by number.
 function nagAboutScene(n, customMsg) {
   goToScene(n);
   const msg = customMsg
-    || `Question ${n} (${sceneLabel(n)}) needs an answer before we can send this.`;
+    || `Question ${n} needs an answer before we can send this.`;
   showToast(msg, { tone: 'info', duration: 7500 });
 }
 

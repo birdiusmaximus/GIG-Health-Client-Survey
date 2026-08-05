@@ -20,7 +20,14 @@ const supabase = (cleanUrl && cleanKey)
 // Whitelist of allowed values per radio question — guards against
 // arbitrary text getting written to columns we treat as enums later
 const ALLOWED = {
-  q2_quality:    ['excellent', 'high', 'fair', 'not_everything', 'disappointing'],
+  // Q2 was renamed mid-2026 from excellent/high/fair/not_everything/disappointing
+  // → exceptional/strong/satisfactory/below_expectations/unsatisfactory. Both
+  // sets are accepted here so historical clients don't get rejected and
+  // legacy rows in Supabase remain readable when re-submitted.
+  q2_quality: [
+    'exceptional', 'strong', 'satisfactory', 'below_expectations', 'unsatisfactory',
+    'excellent', 'high', 'fair', 'not_everything', 'disappointing',
+  ],
   q3_creativity: ['groundbreaking', 'really_creative', 'quite_creative', 'average', 'lacking'],
   q4_budget:     ['higher', 'on_par', 'cheaper', 'na'],
   q6_permission: ['yes', 'no'],
@@ -141,6 +148,10 @@ export default async function handler(req, res) {
 // Email notification (optional — requires Resend env vars)
 // ──────────────────────────────────────────────────────────────
 const QUALITY_LABEL = {
+  // Current form values
+  exceptional: 'Exceptional', strong: 'Strong', satisfactory: 'Satisfactory',
+  below_expectations: 'Below expectations', unsatisfactory: 'Unsatisfactory',
+  // Legacy values still present on older rows
   excellent: 'Excellent', high: 'High standard', fair: 'Fair',
   not_everything: "Didn't fully land", disappointing: 'Disappointing',
 };

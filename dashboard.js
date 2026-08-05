@@ -6,13 +6,21 @@
 // survey's /api/submit POSTs.
 // ──────────────────────────────────────────────────────────────
 
+// Q2 rating scale was renamed mid-2026. Both key sets are supported
+// here so historical responses in Supabase render correctly alongside
+// new submissions. HIGH_TIER is the "excellent+high"-equivalent bucket
+// used for the top-tier summary stat and the "high quality" filter.
 const QUALITY_SCORE = {
+  exceptional: 5, strong: 4, satisfactory: 3, below_expectations: 2, unsatisfactory: 1,
   excellent: 5, high: 4, fair: 3, not_everything: 2, disappointing: 1,
 };
+const QUALITY_HIGH_TIER = new Set(['exceptional', 'strong', 'excellent', 'high']);
 const CREATIVITY_SCORE = {
   groundbreaking: 5, really_creative: 4, quite_creative: 3, average: 2, lacking: 1,
 };
 const QUALITY_LABEL = {
+  exceptional: 'Exceptional', strong: 'Strong', satisfactory: 'Satisfactory',
+  below_expectations: 'Below expectations', unsatisfactory: 'Unsatisfactory',
   excellent: 'Excellent', high: 'High standard', fair: 'Fair',
   not_everything: "Not everything we'd hoped", disappointing: 'Disappointing',
 };
@@ -497,7 +505,7 @@ const escapeHtml = escapeHtmlShared;
 
 function renderStats(rs) {
   const total = rs.length;
-  const highQual = rs.filter(r => r.q2_quality === 'excellent' || r.q2_quality === 'high').length;
+  const highQual = rs.filter(r => QUALITY_HIGH_TIER.has(r.q2_quality)).length;
   const highCrea = rs.filter(r => r.q3_creativity === 'groundbreaking' || r.q3_creativity === 'really_creative').length;
 
   const cntHigher  = rs.filter(r => r.q4_budget === 'higher').length;
@@ -573,7 +581,7 @@ function applyFilters() {
 
   if (filter === 'quotable')    rs = rs.filter(r => r.q6_permission === 'yes');
   if (filter === 'case_study')  rs = rs.filter(r => r.q8_marketing !== 'no');
-  if (filter === 'high_quality') rs = rs.filter(r => r.q2_quality === 'excellent' || r.q2_quality === 'high');
+  if (filter === 'high_quality') rs = rs.filter(r => QUALITY_HIGH_TIER.has(r.q2_quality));
 
   if (search) {
     rs = rs.filter(r => {

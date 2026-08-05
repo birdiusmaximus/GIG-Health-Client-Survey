@@ -4,6 +4,13 @@
 import { escapeHtml } from './util.js?v=1';
 
 const QUALITY_LABELS = {
+  // Current form values
+  exceptional: 'Exceptional',
+  strong: 'Strong',
+  satisfactory: 'Satisfactory',
+  below_expectations: 'Below expectations',
+  unsatisfactory: 'Unsatisfactory',
+  // Legacy values still present on older rows
   excellent: 'Excellent',
   high: 'High standard',
   fair: 'Fair',
@@ -19,11 +26,18 @@ const CREATIVITY_LABELS = {
 };
 // Restrained mapping — Copper/Sodium/Flame variants only (no Potassium card chrome)
 const QUALITY_COLORS = {
-  excellent:      'var(--copper)',
-  high:           '#7BC8B6',
-  fair:           'var(--sodium)',
-  not_everything: '#F58A7E',
-  disappointing:  'var(--flame)',
+  // Current form values
+  exceptional:        'var(--copper)',
+  strong:             '#7BC8B6',
+  satisfactory:       'var(--sodium)',
+  below_expectations: '#F58A7E',
+  unsatisfactory:     'var(--flame)',
+  // Legacy values still present on older rows
+  excellent:          'var(--copper)',
+  high:               '#7BC8B6',
+  fair:               'var(--sodium)',
+  not_everything:     '#F58A7E',
+  disappointing:      'var(--flame)',
 };
 const CREATIVITY_COLORS = {
   groundbreaking:  'var(--copper)',
