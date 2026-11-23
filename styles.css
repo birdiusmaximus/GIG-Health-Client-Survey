@@ -20,10 +20,15 @@
 
 * { box-sizing: border-box; }
 html {
-  /* "proximity" lets the wheel scroll freely and only snaps when it
-     naturally lands near a scene edge — feels much less locked-in
-     than "mandatory" */
-  scroll-snap-type: y proximity;
+  /* "mandatory" snaps the viewport to the nearest scene edge every
+     time scrolling stops. It replaced the earlier "proximity" value
+     because a trackpad flick could carry the viewport to a mid-scene
+     rest position, which then let the IntersectionObserver register
+     an unintended scene change. Mandatory makes stray flicks resolve
+     cleanly on exactly one scene. Mobile overrides this (see the
+     touch media query below) because sticky snap feels wrong on
+     thumb-scroll. */
+  scroll-snap-type: y mandatory;
   scroll-behavior: smooth;
   scrollbar-width: none;          /* hide native scrollbar — dots do the navigating */
   /* Stop Safari's elastic bounce + scroll-chaining from fighting our
