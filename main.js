@@ -104,6 +104,16 @@ const state = {
 };
 
 // ──────────────────────────────────────────────────────────────
+// Programmatic-nav window — set by goToScene/navToScene so the
+// IntersectionObserver's "did the user over-scroll past an
+// unanswered scene?" safety net doesn't fire during our own
+// smooth-scroll animations. Clients approved the destination at
+// the call site; the observer should let the scroll land cleanly.
+// ──────────────────────────────────────────────────────────────
+let programmaticNavUntil = 0;
+const PROGRAMMATIC_NAV_MS = 850;  // covers a smooth cross-scene scroll
+
+// ──────────────────────────────────────────────────────────────
 // Scene tracking via IntersectionObserver
 // ──────────────────────────────────────────────────────────────
 const obs = new IntersectionObserver((entries) => {
@@ -114,10 +124,26 @@ const obs = new IntersectionObserver((entries) => {
       best = e;
     }
   }
-  if (best) {
-    const n = parseInt(best.target.dataset.scene, 10);
-    if (!Number.isNaN(n)) setCurrentScene(n);
+  if (!best) return;
+  const n = parseInt(best.target.dataset.scene, 10);
+  if (Number.isNaN(n)) return;
+
+  // Safety net: raw scroll (trackpad momentum, scrollbar drag, mobile
+  // touch — anything that bypasses our wheel/keyboard/dot gates) can
+  // still carry the viewport past an unanswered required scene. If we
+  // detect that, bounce the user back to the first blocker so they
+  // can't accidentally skip a question. Skip while a programmatic
+  // scroll is in flight — the destination was already approved.
+  const isProgrammatic = performance.now() < programmaticNavUntil;
+  if (!isProgrammatic && n > state.current) {
+    for (let i = state.current; i < n; i++) {
+      if (!isSceneValid(i)) {
+        nagAboutScene(i);
+        return;
+      }
+    }
   }
+  setCurrentScene(n);
 }, { threshold: [0.5, 0.75] });
 
 scenes.forEach(s => obs.observe(s));
@@ -193,10 +219,14 @@ function preloadUpcoming(fromScene, count) {
 }
 
 // Single source of truth for "go to scene N" — used by wheel,
-// keyboard, dot clicks, and Continue button.
+// keyboard, dot clicks, and Continue button. Marks the resulting
+// scroll as programmatic so the IntersectionObserver's safety net
+// won't interpret the pass-through of in-between scenes as a
+// user-initiated over-scroll.
 function goToScene(n) {
   const target = Math.max(1, Math.min(TOTAL, n));
   if (target === state.current) return;
+  programmaticNavUntil = performance.now() + PROGRAMMATIC_NAV_MS;
   scenes[target - 1].scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -443,7 +473,18 @@ function clearDraft() { safeStorage.removeSession(SESSION_ANSWERS_KEY); }
 dotsEls.forEach((dot) => {
   dot.addEventListener('click', () => {
     const n = parseInt(dot.dataset.scene, 10);
-    if (!Number.isNaN(n)) goToScene(n);
+    if (Number.isNaN(n)) return;
+    // Forward gate — backward dot jumps are always free, forward ones pause
+    // on the first unanswered required scene between here and the target.
+    if (n > state.current) {
+      for (let i = state.current; i < n; i++) {
+        if (!isSceneValid(i)) {
+          nagAboutScene(i);
+          return;
+        }
+      }
+    }
+    goToScene(n);
   });
 });
 
@@ -581,6 +622,15 @@ window.addEventListener('wheel', (e) => {
   const dir = wheelAccum > 0 ? 1 : -1;
   wheelAccum = 0;
   e.preventDefault();
+
+  // Forward gate: if the current required scene hasn't been answered,
+  // don't let a wheel flick carry the user past it. Backward is always
+  // allowed so they can still re-read earlier questions.
+  if (dir === 1 && !isSceneValid(state.current)) {
+    nagAboutScene(state.current);
+    return;
+  }
+
   lastWheelNavAt = now;
   lastNavDir = dir;
   navToScene(state.current + dir);
@@ -590,6 +640,7 @@ function navToScene(targetSceneNum) {
   const target = Math.max(1, Math.min(TOTAL, targetSceneNum));
   if (target === state.current) return;
   wheelAccum = 0;
+  programmaticNavUntil = performance.now() + PROGRAMMATIC_NAV_MS;
   scenes[target - 1].scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -605,6 +656,12 @@ window.addEventListener('keydown', (e) => {
   else if (e.key === 'End')  target = TOTAL;
   if (target === null) return;
   e.preventDefault();
+  // Forward gate — same rule as the wheel handler. Backward (Up/PageUp/Home)
+  // is always free; forward (Down/PageDown/End) pauses on an unanswered scene.
+  if (target > state.current && !isSceneValid(state.current)) {
+    nagAboutScene(state.current);
+    return;
+  }
   goToScene(target);
 });
 
