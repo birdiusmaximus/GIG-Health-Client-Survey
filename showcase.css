@@ -216,8 +216,9 @@ body.showcase .progress {
 }
 .quote-text {
   margin: 0;
-  /* Slightly smaller ceiling than before — keeps long testimonials
-     (200+ chars) inside the card without clipping the final line */
+  /* Default (q-short) — big editorial pull-quote.
+     Longer bands (q-med/long/xlong) scale down below so the text
+     fits inside .data-cell without being clipped. */
   font-size: clamp(1.1rem, 1.7vw, 1.55rem);
   font-style: italic;
   font-weight: 400;
@@ -228,6 +229,24 @@ body.showcase .progress {
   max-width: 78ch;
   text-wrap: pretty;
 }
+/* Length-responsive scaling — JS tags the <p> with one of these
+   based on the quote's character count. Keeps short testimonials
+   feeling grand while long ones still fit the card. */
+.quote-text.q-med   { font-size: clamp(1.00rem, 1.40vw, 1.30rem); }
+.quote-text.q-long  { font-size: clamp(0.92rem, 1.20vw, 1.12rem); line-height: 1.42; }
+.quote-text.q-xlong { font-size: clamp(0.86rem, 1.05vw, 1.00rem); line-height: 1.40; }
+.quote-text.q-long::before,
+.quote-text.q-xlong::before { font-size: 2.6em; top: -0.15em; }
+
+/* Safety net — if a quote is still taller than the card after
+   scaling (very long paragraphs, narrow viewports), let the card
+   scroll internally instead of clipping. Scrollbar hidden to keep
+   the editorial look clean. */
+.quote-card {
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.quote-card::-webkit-scrollbar { display: none; }
 .quote-text::before {
   content: "\201C";
   position: absolute;

@@ -162,9 +162,21 @@ function renderQuotes(quotes) {
     return;
   }
 
+  // Scale the pull-quote down for longer testimonials so they fit
+  // the fixed-height card on desktop without being clipped by
+  // .data-cell's overflow:hidden. Buckets picked by eye against
+  // ~450px of usable vertical space at 1080p.
+  const lengthClass = (text) => {
+    const n = (text || '').length;
+    if (n <= 180) return 'q-short';
+    if (n <= 320) return 'q-med';
+    if (n <= 480) return 'q-long';
+    return 'q-xlong';
+  };
+
   stage.innerHTML = quotes.map((q, i) => `
     <blockquote class="quote-card ${i === 0 ? 'is-active' : ''}" data-i="${i}">
-      <p class="quote-text">${escapeHtml(q.text)}</p>
+      <p class="quote-text ${lengthClass(q.text)}">${escapeHtml(q.text)}</p>
     </blockquote>
   `).join('');
   nav.innerHTML = quotes.map((_, i) => `
